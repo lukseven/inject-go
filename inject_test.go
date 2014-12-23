@@ -1,6 +1,7 @@
 package inject
 
 import (
+	"errors"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -343,6 +344,10 @@ func createSecondInterface(s SimpleInterface, b BarInterface) (SecondInterface, 
 	return &SecondPtrStruct{s, b}, nil
 }
 
+func createSecondInterfaceErr(s SimpleInterface, b BarInterface) (SecondInterface, error) {
+	return nil, errors.New("XYZ")
+}
+
 func createSecondInterfaceContainer(container Container) (SecondInterface, error) {
 	s, err := container.Get((*SimpleInterface)(nil))
 	if err != nil {
@@ -353,6 +358,10 @@ func createSecondInterfaceContainer(container Container) (SecondInterface, error
 		return nil, err
 	}
 	return &SecondPtrStruct{s.(SimpleInterface), b.(BarInterface)}, nil
+}
+
+func createSecondInterfaceContainerErr(container Container) (SecondInterface, error) {
+	return nil, errors.New("ABC")
 }
 
 func TestProviderDirectInterfaceInjection(t *testing.T) {
@@ -387,6 +396,34 @@ func TestProviderContainerInjection(t *testing.T) {
 	secondInterface := object.(SecondInterface)
 	require.Equal(t, "hello", secondInterface.Foo().Foo())
 	require.Equal(t, "good day", secondInterface.Bar().Bar())
+}
+
+func TestProviderErrReturned(t *testing.T) {
+	injector := CreateInjector()
+	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+	require.Nil(t, err, "%v", err)
+	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{"good day"})
+	require.Nil(t, err, "%v", err)
+	err = injector.Bind((*SecondInterface)(nil)).ToProvider(createSecondInterfaceErr)
+	require.Nil(t, err, "%v", err)
+	container, err := injector.CreateContainer()
+	require.Nil(t, err, "%v", err)
+	_, err = container.Get((*SecondInterface)(nil))
+	require.Equal(t, "XYZ", err.Error())
+}
+
+func TestProviderContainerErrReturned(t *testing.T) {
+	injector := CreateInjector()
+	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+	require.Nil(t, err, "%v", err)
+	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{"good day"})
+	require.Nil(t, err, "%v", err)
+	err = injector.Bind((*SecondInterface)(nil)).ToProvider(createSecondInterfaceContainerErr)
+	require.Nil(t, err, "%v", err)
+	container, err := injector.CreateContainer()
+	require.Nil(t, err, "%v", err)
+	_, err = container.Get((*SecondInterface)(nil))
+	require.Equal(t, "ABC", err.Error())
 }
 
 // ***** helpers *****
