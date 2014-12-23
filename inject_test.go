@@ -2,8 +2,14 @@ package inject
 
 import (
 	"errors"
+	"fmt"
 	"github.com/stretchr/testify/require"
+	"sync/atomic"
 	"testing"
+)
+
+const (
+	goRoutineIterations = 100
 )
 
 type SimpleInterface interface {
@@ -311,14 +317,14 @@ func TestTaggedSimpleStructSingletonDirectTwoBindings(t *testing.T) {
 // ***** simple provider tests *****
 
 type BarInterface interface {
-	Bar() string
+	Bar() int
 }
 
 type BarPtrStruct struct {
-	bar string
+	bar int
 }
 
-func (this *BarPtrStruct) Bar() string {
+func (this *BarPtrStruct) Bar() int {
 	return this.bar
 }
 
@@ -364,11 +370,28 @@ func createSecondInterfaceContainerErr(container Container) (SecondInterface, er
 	return nil, errors.New("ABC")
 }
 
+type BarInterfaceError struct {
+	BarInterface
+	err error
+}
+
+var evilCounter int32
+
+func createEvilBarInterface() (BarInterface, error) {
+	value := atomic.AddInt32(&evilCounter, 1)
+	return &BarPtrStruct{int(value)}, nil
+}
+
+func createEvilBarInterfaceErr() (BarInterface, error) {
+	value := atomic.AddInt32(&evilCounter, 1)
+	return nil, fmt.Errorf("XYZ %v", value)
+}
+
 func TestProviderDirectInterfaceInjection(t *testing.T) {
 	injector := CreateInjector()
 	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{"good day"})
+	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
 	require.Nil(t, err, "%v", err)
 	err = injector.Bind((*SecondInterface)(nil)).ToProvider(createSecondInterface)
 	require.Nil(t, err, "%v", err)
@@ -378,14 +401,14 @@ func TestProviderDirectInterfaceInjection(t *testing.T) {
 	require.Nil(t, err, "%v", err)
 	secondInterface := object.(SecondInterface)
 	require.Equal(t, "hello", secondInterface.Foo().Foo())
-	require.Equal(t, "good day", secondInterface.Bar().Bar())
+	require.Equal(t, 1, secondInterface.Bar().Bar())
 }
 
 func TestProviderContainerInjection(t *testing.T) {
 	injector := CreateInjector()
 	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{"good day"})
+	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
 	require.Nil(t, err, "%v", err)
 	err = injector.Bind((*SecondInterface)(nil)).ToProvider(createSecondInterfaceContainer)
 	require.Nil(t, err, "%v", err)
@@ -395,14 +418,14 @@ func TestProviderContainerInjection(t *testing.T) {
 	require.Nil(t, err, "%v", err)
 	secondInterface := object.(SecondInterface)
 	require.Equal(t, "hello", secondInterface.Foo().Foo())
-	require.Equal(t, "good day", secondInterface.Bar().Bar())
+	require.Equal(t, 1, secondInterface.Bar().Bar())
 }
 
 func TestProviderErrReturned(t *testing.T) {
 	injector := CreateInjector()
 	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{"good day"})
+	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
 	require.Nil(t, err, "%v", err)
 	err = injector.Bind((*SecondInterface)(nil)).ToProvider(createSecondInterfaceErr)
 	require.Nil(t, err, "%v", err)
@@ -416,7 +439,7 @@ func TestProviderContainerErrReturned(t *testing.T) {
 	injector := CreateInjector()
 	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{"good day"})
+	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
 	require.Nil(t, err, "%v", err)
 	err = injector.Bind((*SecondInterface)(nil)).ToProvider(createSecondInterfaceContainerErr)
 	require.Nil(t, err, "%v", err)
@@ -424,4 +447,68 @@ func TestProviderContainerErrReturned(t *testing.T) {
 	require.Nil(t, err, "%v", err)
 	_, err = container.Get((*SecondInterface)(nil))
 	require.Equal(t, "ABC", err.Error())
+}
+
+func TestProviderWithEvilCounter(t *testing.T) {
+	injector := CreateInjector()
+	err := injector.Bind((*BarInterface)(nil)).ToProvider(createEvilBarInterface)
+	require.Nil(t, err, "%v", err)
+	container, err := injector.CreateContainer()
+	require.Nil(t, err, "%v", err)
+
+	evilCounter = int32(0)
+	evilChan := make(chan BarInterfaceError)
+
+	// TODO(pedge): i know this is a terrible way to do concurrency testing
+	for i := 0; i < goRoutineIterations; i++ {
+		go func() {
+			barInterface, err := container.Get((*BarInterface)(nil))
+			if err != nil {
+				evilChan <- BarInterfaceError{nil, err}
+			} else {
+				evilChan <- BarInterfaceError{barInterface.(BarInterface), nil}
+			}
+		}()
+	}
+	count := 0
+	for i := 0; i < goRoutineIterations; i++ {
+		barInterfaceErr := <-evilChan
+		require.Nil(t, barInterfaceErr.err, "%v", barInterfaceErr.err)
+		bar := barInterfaceErr.Bar()
+		count += bar
+	}
+	// cute
+	require.Equal(t, (goRoutineIterations*(goRoutineIterations+1))/2, count)
+
+	close(evilChan)
+}
+
+func TestProviderAsSingletonWithEvilCounter(t *testing.T) {
+	injector := CreateInjector()
+	err := injector.Bind((*BarInterface)(nil)).ToProviderAsSingleton(createEvilBarInterface)
+	require.Nil(t, err, "%v", err)
+	container, err := injector.CreateContainer()
+	require.Nil(t, err, "%v", err)
+
+	evilCounter = int32(0)
+	evilChan := make(chan BarInterfaceError)
+
+	// TODO(pedge): i know this is a terrible way to do concurrency testing
+	for i := 0; i < goRoutineIterations; i++ {
+		go func() {
+			barInterface, err := container.Get((*BarInterface)(nil))
+			if err != nil {
+				evilChan <- BarInterfaceError{nil, err}
+			} else {
+				evilChan <- BarInterfaceError{barInterface.(BarInterface), nil}
+			}
+		}()
+	}
+	for i := 0; i < goRoutineIterations; i++ {
+		barInterfaceErr := <-evilChan
+		require.Nil(t, barInterfaceErr.err, "%v", barInterfaceErr.err)
+		require.Equal(t, 1, barInterfaceErr.Bar())
+	}
+
+	close(evilChan)
 }

@@ -86,14 +86,14 @@ type valueErr struct {
 
 func createInjector() *injector {
 	return &injector{
-		make(map[boundType]binding),
-		make(map[taggedBoundType]binding),
+		make(map[boundType]*binding),
+		make(map[taggedBoundType]*binding),
 	}
 }
 
 type injector struct {
-	boundTypeToBinding       map[boundType]binding
-	taggedBoundTypeToBinding map[taggedBoundType]binding
+	boundTypeToBinding       map[boundType]*binding
+	taggedBoundTypeToBinding map[taggedBoundType]*binding
 }
 
 func (this *injector) Bind(from interface{}) Binder {
@@ -123,8 +123,8 @@ func (this *injector) BindTagged(from interface{}, tag interface{}) Binder {
 
 func (this *injector) CreateContainer() (Container, error) {
 	container := container{
-		make(map[boundType]binding),
-		make(map[taggedBoundType]binding),
+		make(map[boundType]*binding),
+		make(map[taggedBoundType]*binding),
 	}
 	for taggedBoundType, binding := range this.taggedBoundTypeToBinding {
 		finalBinding, ok := this.getFinalBinding(binding)
@@ -143,12 +143,12 @@ func (this *injector) CreateContainer() (Container, error) {
 	return &container, nil
 }
 
-func (this *injector) getFinalBinding(b binding) (binding, bool) {
+func (this *injector) getFinalBinding(b *binding) (*binding, bool) {
 	var ok bool
 	for b.bindingType == bindingTypeTo {
 		b, ok = this.boundTypeToBinding[b.to]
 		if !ok {
-			return binding{}, false
+			return nil, false
 		}
 	}
 	return b, true
@@ -180,13 +180,13 @@ func (this *binder) ToType(to interface{}) error {
 	}
 	switch this.binderType {
 	case binderTypeTo:
-		this.injector.boundTypeToBinding[this.fromReflectType] = binding{
+		this.injector.boundTypeToBinding[this.fromReflectType] = &binding{
 			bindingType: bindingTypeTo,
 			to:          toReflectType,
 		}
 		return nil
 	case binderTypeTaggedTo:
-		this.injector.taggedBoundTypeToBinding[taggedBoundType{this.fromReflectType, this.tag}] = binding{
+		this.injector.taggedBoundTypeToBinding[taggedBoundType{this.fromReflectType, this.tag}] = &binding{
 			bindingType: bindingTypeTo,
 			to:          toReflectType,
 		}
@@ -209,13 +209,13 @@ func (this *binder) ToSingleton(singleton interface{}) error {
 	}
 	switch this.binderType {
 	case binderTypeTo:
-		this.injector.boundTypeToBinding[this.fromReflectType] = binding{
+		this.injector.boundTypeToBinding[this.fromReflectType] = &binding{
 			bindingType: bindingTypeToSingleton,
 			toSingleton: singleton,
 		}
 		return nil
 	case binderTypeTaggedTo:
-		this.injector.taggedBoundTypeToBinding[taggedBoundType{this.fromReflectType, this.tag}] = binding{
+		this.injector.taggedBoundTypeToBinding[taggedBoundType{this.fromReflectType, this.tag}] = &binding{
 			bindingType: bindingTypeToSingleton,
 			toSingleton: singleton,
 		}
@@ -238,13 +238,13 @@ func (this *binder) ToProvider(provider interface{}) error {
 	}
 	switch this.binderType {
 	case binderTypeTo:
-		this.injector.boundTypeToBinding[this.fromReflectType] = binding{
+		this.injector.boundTypeToBinding[this.fromReflectType] = &binding{
 			bindingType: bindingTypeToProvider,
 			toProvider:  provider,
 		}
 		return nil
 	case binderTypeTaggedTo:
-		this.injector.taggedBoundTypeToBinding[taggedBoundType{this.fromReflectType, this.tag}] = binding{
+		this.injector.taggedBoundTypeToBinding[taggedBoundType{this.fromReflectType, this.tag}] = &binding{
 			bindingType: bindingTypeToProvider,
 			toProvider:  provider,
 		}
@@ -270,7 +270,7 @@ func (this *binder) ToProviderAsSingleton(provider interface{}) error {
 	}
 	switch this.binderType {
 	case binderTypeTo:
-		this.injector.boundTypeToBinding[this.fromReflectType] = binding{
+		this.injector.boundTypeToBinding[this.fromReflectType] = &binding{
 			bindingType:             bindingTypeToProviderAsSingleton,
 			toProviderAsSingleton:   provider,
 			providerSingletonValue:  atomic.Value{},
@@ -278,7 +278,7 @@ func (this *binder) ToProviderAsSingleton(provider interface{}) error {
 		}
 		return nil
 	case binderTypeTaggedTo:
-		this.injector.taggedBoundTypeToBinding[taggedBoundType{this.fromReflectType, this.tag}] = binding{
+		this.injector.taggedBoundTypeToBinding[taggedBoundType{this.fromReflectType, this.tag}] = &binding{
 			bindingType:             bindingTypeToProviderAsSingleton,
 			toProviderAsSingleton:   provider,
 			providerSingletonValue:  atomic.Value{},
@@ -334,8 +334,8 @@ func isValidBinding(fromReflectType reflect.Type, toReflectType reflect.Type) er
 }
 
 type container struct {
-	boundTypeToBinding       map[boundType]binding
-	taggedBoundTypeToBinding map[taggedBoundType]binding
+	boundTypeToBinding       map[boundType]*binding
+	taggedBoundTypeToBinding map[taggedBoundType]*binding
 }
 
 func (this *container) Get(from interface{}) (interface{}, error) {
@@ -353,7 +353,7 @@ func (this *container) get(fromReflectType reflect.Type) (interface{}, error) {
 	if !ok {
 		return nil, fmt.Errorf("inject: %v %v", fromReflectType, noBindingMsg)
 	}
-	return this.getFromBinding(&binding)
+	return this.getFromBinding(binding)
 }
 
 func (this *container) GetTagged(from interface{}, tag interface{}) (interface{}, error) {
@@ -375,7 +375,7 @@ func (this *container) getTagged(fromReflectType reflect.Type, tag interface{}) 
 	if !ok {
 		return nil, fmt.Errorf("inject: %v with tag %v %v", fromReflectType, tag, noBindingMsg)
 	}
-	return this.getFromBinding(&binding)
+	return this.getFromBinding(binding)
 }
 
 func (this *container) getFromBinding(binding *binding) (interface{}, error) {
