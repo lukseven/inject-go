@@ -22,18 +22,16 @@ const (
 )
 
 var (
-	ErrNil                                 = errors.New("inject: Parameter is nil")
-	ErrReflectTypeNil                      = errors.New("inject: reflect.TypeOf() returns nil")
-	ErrUnknownBinderType                   = errors.New("inject: Unknown binder type")
-	ErrUnknownBindingType                  = errors.New("inject: Unknown binding type")
-	ErrNotInterfacePtr                     = errors.New("inject: Binding with Binder.To() and from is not an interface pointer")
-	ErrDoesNotImplement                    = errors.New("inject: to binding does not implement from binding")
-	ErrNotSupportedYet                     = errors.New("inject.: Binding type not supported yet, feel free to help!")
-	ErrNotAssignable                       = errors.New("inject: Binding not assignable")
-	ErrProviderNotFunction                 = errors.New("inject: Provider is not a function")
-	ErrProviderDoesNotReturnValue          = errors.New("inject: Provider function does not return a value")
-	ErrProviderSecondReturnValueIsNotError = errors.New("inject: Provider function's second return value is not an error")
-	ErrProviderNumReturnValuesInvalid      = errors.New("inject: Provider can only have one or two return values")
+	ErrNil                         = errors.New("inject: Parameter is nil")
+	ErrReflectTypeNil              = errors.New("inject: reflect.TypeOf() returns nil")
+	ErrUnknownBinderType           = errors.New("inject: Unknown binder type")
+	ErrUnknownBindingType          = errors.New("inject: Unknown binding type")
+	ErrNotInterfacePtr             = errors.New("inject: Binding with Binder.To() and from is not an interface pointer")
+	ErrDoesNotImplement            = errors.New("inject: to binding does not implement from binding")
+	ErrNotSupportedYet             = errors.New("inject.: Binding type not supported yet, feel free to help!")
+	ErrNotAssignable               = errors.New("inject: Binding not assignable")
+	ErrProviderNotFunction         = errors.New("inject: Provider is not a function")
+	ErrProviderReturnValuesInvalid = errors.New("inject: Provider can only have two return values, the first providing the value, the second being an error")
 )
 
 func CreateInjector() Injector {
@@ -292,28 +290,18 @@ func isValidProvider(fromReflectType reflect.Type, provider interface{}) error {
 	if providerReflectType.Kind() != reflect.Func {
 		return ErrProviderNotFunction
 	}
-	switch providerReflectType.NumOut() {
-	case 0:
-		return ErrProviderDoesNotReturnValue
-	case 1:
-		err := isValidBinding(fromReflectType, providerReflectType.Out(0))
-		if err != nil {
-			return err
-		}
-		return nil
-	case 2:
-		err := isValidBinding(fromReflectType, providerReflectType.Out(0))
-		if err != nil {
-			return err
-		}
-		// TODO(pedge): can this be simplified?
-		if !providerReflectType.Out(1).AssignableTo(reflect.TypeOf((*error)(nil)).Elem()) {
-			return ErrProviderSecondReturnValueIsNotError
-		}
-		return nil
-	default:
-		return ErrProviderNumReturnValuesInvalid
+	if providerReflectType.NumOut() != 2 {
+		return ErrProviderReturnValuesInvalid
 	}
+	err := isValidBinding(fromReflectType, providerReflectType.Out(0))
+	if err != nil {
+		return err
+	}
+	// TODO(pedge): can this be simplified?
+	if !providerReflectType.Out(1).AssignableTo(reflect.TypeOf((*error)(nil)).Elem()) {
+		return ErrProviderReturnValuesInvalid
+	}
+	return nil
 }
 
 func isValidBinding(fromReflectType reflect.Type, toReflectType reflect.Type) error {
