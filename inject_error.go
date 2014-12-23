@@ -19,8 +19,18 @@ func (this *InjectError) Error() string {
 	buffer.WriteString(injectErrorPrefix)
 	buffer.WriteString(this.errorType)
 	if len(this.tags) > 0 {
-		buffer.WriteString(" ")
-		buffer.WriteString(fmt.Sprintf("%v", this.tags))
+		buffer.WriteString(" tags:{ ")
+		for key, value := range this.tags {
+			buffer.WriteString(key)
+			buffer.WriteString(":")
+			if stringer, ok := value.(fmt.Stringer); ok {
+				buffer.WriteString(fmt.Sprintf("%v", stringer.String()))
+			} else {
+				buffer.WriteString(fmt.Sprintf("%v", value))
+			}
+			buffer.WriteString(" ")
+		}
+		buffer.WriteString("}")
 	}
 	return buffer.String()
 }

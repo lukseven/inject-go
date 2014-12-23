@@ -111,7 +111,6 @@ func (this *baseBuilder) verifyToReflectType(toReflectType reflect.Type) error {
 }
 
 func (this *baseBuilder) verifyConstructorReflectType(constructorReflectType reflect.Type) error {
-	bindingKeyReflectType := this.bindingKey.reflectType()
 	if constructorReflectType.Kind() != reflect.Func {
 		eb := newErrorBuilder(InjectErrorTypeConstructorNotFunction)
 		eb = eb.addTag("constructorReflectType", constructorReflectType)

@@ -8,7 +8,7 @@ type injector struct {
 	bindings map[bindingKey]binding
 }
 
-func createInjector(modules ...Module) (Injector, error) {
+func createInjector(modules []Module) (Injector, error) {
 	injector := injector{make(map[bindingKey]binding)}
 	for _, m := range modules {
 		castModule, ok := m.(*module)
@@ -64,7 +64,7 @@ func (this *injector) get(bindingType reflect.Type) (interface{}, error) {
 	binding, ok := this.bindings[newBindingKey(bindingType)]
 	if !ok {
 		eb := newErrorBuilder(InjectErrorTypeNoBinding)
-		eb.add("bindingType", bindingType)
+		eb.addTag("bindingType", bindingType)
 		return nil, eb.build()
 	}
 	return binding.get(this)
@@ -81,11 +81,11 @@ func (this *injector) getTagged(bindingType reflect.Type, tag string) (interface
 	if tag == "" {
 		return nil, newErrorBuilder(InjectErrorTypeTagEmpty).build()
 	}
-	binding, ok := this.binding[newBindingKey(bindingType, tag)]
+	binding, ok := this.bindings[newTaggedBindingKey(bindingType, tag)]
 	if !ok {
 		eb := newErrorBuilder(InjectErrorTypeNoBinding)
-		eb.add("bindingType", bindingType)
-		eb.add("tag", tag)
+		eb.addTag("bindingType", bindingType)
+		eb.addTag("tag", tag)
 		return nil, eb.build()
 	}
 	return binding.get(this)

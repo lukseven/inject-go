@@ -18,8 +18,10 @@ const (
 	InjectErrorTypeIntermediateBinding            = "Trying to get for an intermediate binding"
 	InjectErrorTypeFinalBinding                   = "Trying to get bindingKey for a final binding"
 	InjectErrorTypeCannotCastModule               = "Cannot cast Module to internal module type"
+	InjectErrorTypeNoBinding                      = "No binding for binding key"
 	InjectErrorTypeNoFinalBinding                 = "No final binding for binding key"
 	InjectErrorTypeAlreadyBound                   = "Already found a binding for this binding key"
+	InjectErrorTypeTagEmpty                       = "Tag empty"
 )
 
 type Module interface {

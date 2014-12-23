@@ -32,5 +32,13 @@ func (this *module) BindTagged(from interface{}, tag string) Builder {
 }
 
 func (this *module) assignBinding(bindingKey bindingKey, binding binding) error {
+	foundBinding, ok := this.bindings[bindingKey]
+	if ok {
+		eb := newErrorBuilder(InjectErrorTypeAlreadyBound)
+		eb.addTag("bindingKey", bindingKey)
+		eb.addTag("foundBinding", foundBinding)
+		return eb.build()
+	}
 	this.bindings[bindingKey] = binding
+	return nil
 }
