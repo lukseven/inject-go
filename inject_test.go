@@ -25,6 +25,18 @@ func (this *SimplePtrStruct) Foo() string {
 	return this.foo
 }
 
+func TestFromNil(t *testing.T) {
+	injector := CreateInjector()
+	err := injector.Bind(nil).ToSingleton(SimpleStruct{"hello"})
+	require.Equal(t, err, ErrNil)
+}
+
+func TestFromReflectTypeNil(t *testing.T) {
+	injector := CreateInjector()
+	err := injector.Bind((SimpleInterface)(nil)).ToSingleton(SimpleStruct{"hello"})
+	require.Equal(t, err, ErrNil)
+}
+
 func TestSimpleStructSingletonDirect(t *testing.T) {
 	injector := CreateInjector()
 	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"hello"})
@@ -120,8 +132,7 @@ func TestSimplePtrStructIndirectFailsWhenNoFinalBinding(t *testing.T) {
 	err := injector.Bind((*SimpleInterface)(nil)).To(&SimplePtrStruct{})
 	requireErrNil(t, err)
 	_, err = injector.CreateContainer()
-	require.NotNil(t, err)
-	require.Contains(t, err.Error(), noBindingMsg)
+	requireErrMsgContains(t, err, noBindingMsg)
 }
 
 // ***** HELPERS *****
@@ -131,4 +142,9 @@ func requireErrNil(t *testing.T, err error) {
 	if err != nil {
 		require.Nil(t, err, err.Error())
 	}
+}
+
+func requireErrMsgContains(t *testing.T, err error, s string) {
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), s)
 }

@@ -23,7 +23,7 @@ var (
 	ErrReflectTypeNil     = errors.New("inject: reflect.TypeOf() returns nil")
 	ErrTagValueInvalid    = errors.New("inject: Tag value is invalid")
 	ErrUnknownBinderType  = errors.New("inject: Unknown binder type")
-	ErrUnknownBindingType = errors.New("inject: Unknown binder type")
+	ErrUnknownBindingType = errors.New("inject: Unknown binding type")
 	ErrNotInterfacePtr    = errors.New("inject: Binding with Binder.To() and from is not an interface pointer")
 	ErrDoesNotImplement   = errors.New("inject: to binding does not implement from binding")
 	ErrNotSupportedYet    = errors.New("inject.: Binding type not supported yet, feel free to help!")
