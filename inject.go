@@ -64,7 +64,7 @@ type injector struct {
 
 func createInjector() *injector {
 	return &injector{
-		make(map[boundType]*binding),
+		make(map[reflect.Type]*binding),
 		make(map[taggedBoundType]*binding),
 	}
 }
