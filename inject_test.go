@@ -121,6 +121,7 @@ func TestSimplePtrStructIndirectFailsWhenNoFinalBinding(t *testing.T) {
 	requireErrNil(t, err)
 	_, err = injector.CreateContainer()
 	require.NotNil(t, err)
+	require.Contains(t, err.Error(), noBindingMsg)
 }
 
 // ***** HELPERS *****

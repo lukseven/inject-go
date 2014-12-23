@@ -14,6 +14,8 @@ const (
 	bindingTypeToSingleton
 	bindingTypeToProvider
 	bindingTypeToProviderAsSingleton
+
+	noBindingMsg = "has no binding to a singleton or provider"
 )
 
 var (
@@ -114,14 +116,14 @@ func (this *injector) CreateContainer() (Container, error) {
 	for taggedBoundType, binding := range this.taggedBoundTypeToBinding {
 		finalBinding, ok := this.getFinalBinding(binding)
 		if !ok {
-			return nil, fmt.Errorf("inject: %v has no binding to a singleton or provider", taggedBoundType)
+			return nil, fmt.Errorf("inject: %v %v", taggedBoundType, noBindingMsg)
 		}
 		container.taggedBoundTypeToBinding[taggedBoundType] = finalBinding
 	}
 	for boundType, binding := range this.boundTypeToBinding {
 		finalBinding, ok := this.getFinalBinding(binding)
 		if !ok {
-			return nil, fmt.Errorf("inject: %v has no binding to a singleton or provider", boundType)
+			return nil, fmt.Errorf("inject: %v %v", boundType, noBindingMsg)
 		}
 		container.boundTypeToBinding[boundType] = finalBinding
 	}
