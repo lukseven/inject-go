@@ -15,13 +15,13 @@ const (
 	bindingTypeToProvider
 	bindingTypeToProviderAsSingleton
 
-	noBindingMsg = "has no binding to a singleton or provider"
+	noBindingMsg                      = "has no binding"
+	noBindingToSingletonOrProviderMsg = "has no binding to a singleton or provider"
 )
 
 var (
 	ErrNil                = errors.New("inject: Parameter is nil")
 	ErrReflectTypeNil     = errors.New("inject: reflect.TypeOf() returns nil")
-	ErrTagValueInvalid    = errors.New("inject: Tag value is invalid")
 	ErrUnknownBinderType  = errors.New("inject: Unknown binder type")
 	ErrUnknownBindingType = errors.New("inject: Unknown binding type")
 	ErrNotInterfacePtr    = errors.New("inject: Binding with Binder.To() and from is not an interface pointer")
@@ -101,10 +101,6 @@ func (this *injector) BindTagged(from interface{}, tag interface{}) Binder {
 	if fromReflectType == nil {
 		return &binder{binderTypeTaggedTo, nil, nil, nil, ErrReflectTypeNil}
 	}
-	tagReflectValue := reflect.ValueOf(tag)
-	if !tagReflectValue.IsValid() {
-		return &binder{binderTypeTaggedTo, nil, nil, nil, ErrTagValueInvalid}
-	}
 	return &binder{binderTypeTaggedTo, this, fromReflectType, tag, nil}
 }
 
@@ -116,14 +112,14 @@ func (this *injector) CreateContainer() (Container, error) {
 	for taggedBoundType, binding := range this.taggedBoundTypeToBinding {
 		finalBinding, ok := this.getFinalBinding(binding)
 		if !ok {
-			return nil, fmt.Errorf("inject: %v %v", taggedBoundType, noBindingMsg)
+			return nil, fmt.Errorf("inject: %v %v", taggedBoundType, noBindingToSingletonOrProviderMsg)
 		}
 		container.taggedBoundTypeToBinding[taggedBoundType] = finalBinding
 	}
 	for boundType, binding := range this.boundTypeToBinding {
 		finalBinding, ok := this.getFinalBinding(binding)
 		if !ok {
-			return nil, fmt.Errorf("inject: %v %v", boundType, noBindingMsg)
+			return nil, fmt.Errorf("inject: %v %v", boundType, noBindingToSingletonOrProviderMsg)
 		}
 		container.boundTypeToBinding[boundType] = finalBinding
 	}
@@ -256,7 +252,7 @@ func (this *container) Get(from interface{}) (interface{}, error) {
 	}
 	binding, ok := this.boundTypeToBinding[fromReflectType]
 	if !ok {
-		return nil, fmt.Errorf("inject: No binding for %v", fromReflectType)
+		return nil, fmt.Errorf("inject: %v %v", fromReflectType, noBindingMsg)
 	}
 	switch binding.bindingType {
 	case bindingTypeToSingleton:
@@ -277,14 +273,10 @@ func (this *container) GetTagged(from interface{}, tag interface{}) (interface{}
 	if fromReflectType == nil {
 		return nil, ErrReflectTypeNil
 	}
-	tagReflectValue := reflect.ValueOf(tag)
-	if !tagReflectValue.IsValid() {
-		return nil, ErrTagValueInvalid
-	}
 	taggedBoundType := taggedBoundType{fromReflectType, tag}
 	binding, ok := this.taggedBoundTypeToBinding[taggedBoundType]
 	if !ok {
-		return nil, fmt.Errorf("inject: No binding for %v with tag %v", fromReflectType, tag)
+		return nil, fmt.Errorf("inject: %v with tag %v %v", fromReflectType, tag, noBindingMsg)
 	}
 	switch binding.bindingType {
 	case bindingTypeToSingleton:
