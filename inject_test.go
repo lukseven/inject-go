@@ -343,13 +343,42 @@ func createSecondInterface(s SimpleInterface, b BarInterface) (SecondInterface, 
 	return &SecondPtrStruct{s, b}, nil
 }
 
-func TestProviderOne(t *testing.T) {
+func createSecondInterfaceContainer(container Container) (SecondInterface, error) {
+	s, err := container.Get((*SimpleInterface)(nil))
+	if err != nil {
+		return nil, err
+	}
+	b, err := container.Get((*BarInterface)(nil))
+	if err != nil {
+		return nil, err
+	}
+	return &SecondPtrStruct{s.(SimpleInterface), b.(BarInterface)}, nil
+}
+
+func TestProviderDirectInterfaceInjection(t *testing.T) {
 	injector := CreateInjector()
 	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
 	require.Nil(t, err, "%v", err)
 	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{"good day"})
 	require.Nil(t, err, "%v", err)
 	err = injector.Bind((*SecondInterface)(nil)).ToProvider(createSecondInterface)
+	require.Nil(t, err, "%v", err)
+	container, err := injector.CreateContainer()
+	require.Nil(t, err, "%v", err)
+	object, err := container.Get((*SecondInterface)(nil))
+	require.Nil(t, err, "%v", err)
+	secondInterface := object.(SecondInterface)
+	require.Equal(t, "hello", secondInterface.Foo().Foo())
+	require.Equal(t, "good day", secondInterface.Bar().Bar())
+}
+
+func TestProviderContainerInjection(t *testing.T) {
+	injector := CreateInjector()
+	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+	require.Nil(t, err, "%v", err)
+	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{"good day"})
+	require.Nil(t, err, "%v", err)
+	err = injector.Bind((*SecondInterface)(nil)).ToProvider(createSecondInterfaceContainer)
 	require.Nil(t, err, "%v", err)
 	container, err := injector.CreateContainer()
 	require.Nil(t, err, "%v", err)
