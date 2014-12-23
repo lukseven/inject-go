@@ -10,7 +10,6 @@ var (
 	ErrNil                         = errors.New("inject: Parameter is nil")
 	ErrReflectTypeNil              = errors.New("inject: reflect.TypeOf() returns nil")
 	ErrUnknownBinderType           = errors.New("inject: Unknown binder type")
-	ErrUnknownBindingType          = errors.New("inject: Unknown binding type")
 	ErrNotInterfacePtr             = errors.New("inject: Binding with Binder.ToType() and from is not an interface pointer")
 	ErrDoesNotImplement            = errors.New("inject: to binding does not implement from binding")
 	ErrNotSupportedYet             = errors.New("inject.: Binding type not supported yet, feel free to help!")
@@ -53,15 +52,13 @@ const (
 	noBindingToSingletonOrProviderMsg = "has no binding to a singleton or provider"
 )
 
-type boundType reflect.Type
-
 type taggedBoundType struct {
-	boundType
-	tag interface{}
+	boundType reflect.Type
+	tag       interface{}
 }
 
 type injector struct {
-	boundTypeToBinding       map[boundType]*binding
+	boundTypeToBinding       map[reflect.Type]*binding
 	taggedBoundTypeToBinding map[taggedBoundType]*binding
 }
 
@@ -99,7 +96,7 @@ func (this *injector) BindTagged(from interface{}, tag interface{}) Binder {
 
 func (this *injector) CreateContainer() (Container, error) {
 	container := container{
-		make(map[boundType]*finalBinding),
+		make(map[reflect.Type]*finalBinding),
 		make(map[taggedBoundType]*finalBinding),
 	}
 	for taggedBoundType, binding := range this.taggedBoundTypeToBinding {
@@ -256,7 +253,7 @@ func isValidBinding(fromReflectType reflect.Type, toReflectType reflect.Type) er
 }
 
 type container struct {
-	boundTypeToBinding       map[boundType]*finalBinding
+	boundTypeToBinding       map[reflect.Type]*finalBinding
 	taggedBoundTypeToBinding map[taggedBoundType]*finalBinding
 }
 
