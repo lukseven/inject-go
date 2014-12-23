@@ -32,6 +32,7 @@ var (
 	ErrNotAssignable               = errors.New("inject: Binding not assignable")
 	ErrProviderNotFunction         = errors.New("inject: Provider is not a function")
 	ErrProviderReturnValuesInvalid = errors.New("inject: Provider can only have two return values, the first providing the value, the second being an error")
+	ErrInvalidReturnFromProvider   = errors.New("inject: Invalid return values from provider")
 )
 
 func CreateInjector() Injector {
@@ -167,6 +168,7 @@ func (this *binder) To(to interface{}) error {
 		return ErrNil
 	}
 	toReflectType := reflect.TypeOf(to)
+	// TODO(pedge): is this restriction necessary/warranted? how about structs with anonymous fields?
 	if !(this.fromReflectType.Kind() == reflect.Ptr && this.fromReflectType.Elem().Kind() == reflect.Interface) {
 		return ErrNotInterfacePtr
 	}
@@ -387,5 +389,31 @@ func (this *container) getFromBinding(binding *binding) (interface{}, error) {
 
 // TODO(pedge)
 func (this *container) getFromProvider(provider interface{}) (interface{}, error) {
-	return nil, errors.New("NOT IMPLEMENTED")
+	// assuming this is a valid provider/that this is already checked
+	providerReflectType := reflect.TypeOf(provider)
+	numIn := providerReflectType.NumIn()
+	parameterValues := make([]reflect.Value, numIn)
+	if numIn == 1 && providerReflectType.In(0).AssignableTo(reflect.TypeOf((*Container)(nil)).Elem()) {
+		parameterValues[0] = reflect.ValueOf(this)
+	} else {
+		for i := 0; i < numIn; i++ {
+			inReflectType := providerReflectType.In(i)
+			parameter, err := this.Get(inReflectType)
+			if err != nil {
+				return nil, err
+			}
+			parameterValues[i] = reflect.ValueOf(parameter)
+		}
+	}
+	returnValues := reflect.ValueOf(provider).Call(parameterValues)
+	return1 := returnValues[0].Interface()
+	return2 := returnValues[1].Interface()
+	switch {
+	case return1 != nil && return2 != nil:
+		return nil, ErrInvalidReturnFromProvider
+	case return2 != nil:
+		return nil, return2.(error)
+	default:
+		return return1, nil
+	}
 }

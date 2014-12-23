@@ -307,6 +307,59 @@ func TestTaggedSimpleStructSingletonDirectTwoBindings(t *testing.T) {
 	require.Equal(t, "good day", simpleInterface.Foo())
 }
 
+// ***** simple provider tests *****
+
+type BarInterface interface {
+	Bar() string
+}
+
+type BarPtrStruct struct {
+	bar string
+}
+
+func (this *BarPtrStruct) Bar() string {
+	return this.bar
+}
+
+type SecondInterface interface {
+	Foo() SimpleInterface
+	Bar() BarInterface
+}
+
+type SecondPtrStruct struct {
+	foo SimpleInterface
+	bar BarInterface
+}
+
+func (this *SecondPtrStruct) Foo() SimpleInterface {
+	return this.foo
+}
+
+func (this *SecondPtrStruct) Bar() BarInterface {
+	return this.bar
+}
+
+func createSecondInterface(s SimpleInterface, b BarInterface) (SecondInterface, error) {
+	return &SecondPtrStruct{s, b}, nil
+}
+
+func TestProviderOne(t *testing.T) {
+	injector := CreateInjector()
+	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+	requireErrNil(t, err)
+	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{"good day"})
+	requireErrNil(t, err)
+	err = injector.Bind((*SecondInterface)(nil)).ToProvider(createSecondInterface)
+	requireErrNil(t, err)
+	container, err := injector.CreateContainer()
+	requireErrNil(t, err)
+	object, err := container.Get((*SecondInterface)(nil))
+	requireErrNil(t, err)
+	secondInterface := object.(SecondInterface)
+	require.Equal(t, "hello", secondInterface.Foo().Foo())
+	require.Equal(t, "good day", secondInterface.Bar().Bar())
+}
+
 // ***** helpers *****
 
 // TODO(pedge): is there something for this in testify? if not, send a pull request
