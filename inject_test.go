@@ -73,6 +73,7 @@ func TestSimplePtrStructSingletonDirect(t *testing.T) {
 func TestSimplePtrStructSingletonDirectFailsWhenNotPtr(t *testing.T) {
 	module := CreateModule()
 	err := module.Bind((*SimpleInterface)(nil)).ToSingleton(SimplePtrStruct{"hello"})
+	require.Error(t, err)
 	require.Contains(t, err.Error(), InjectErrorTypeDoesNotImplement)
 }
 
