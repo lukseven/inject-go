@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sync"
+	"sync/atomic"
 )
 
 const (
@@ -20,14 +22,18 @@ const (
 )
 
 var (
-	ErrNil                = errors.New("inject: Parameter is nil")
-	ErrReflectTypeNil     = errors.New("inject: reflect.TypeOf() returns nil")
-	ErrUnknownBinderType  = errors.New("inject: Unknown binder type")
-	ErrUnknownBindingType = errors.New("inject: Unknown binding type")
-	ErrNotInterfacePtr    = errors.New("inject: Binding with Binder.To() and from is not an interface pointer")
-	ErrDoesNotImplement   = errors.New("inject: to binding does not implement from binding")
-	ErrNotSupportedYet    = errors.New("inject.: Binding type not supported yet, feel free to help!")
-	ErrNotAssignable      = errors.New("inject: Binding not assignable")
+	ErrNil                                 = errors.New("inject: Parameter is nil")
+	ErrReflectTypeNil                      = errors.New("inject: reflect.TypeOf() returns nil")
+	ErrUnknownBinderType                   = errors.New("inject: Unknown binder type")
+	ErrUnknownBindingType                  = errors.New("inject: Unknown binding type")
+	ErrNotInterfacePtr                     = errors.New("inject: Binding with Binder.To() and from is not an interface pointer")
+	ErrDoesNotImplement                    = errors.New("inject: to binding does not implement from binding")
+	ErrNotSupportedYet                     = errors.New("inject.: Binding type not supported yet, feel free to help!")
+	ErrNotAssignable                       = errors.New("inject: Binding not assignable")
+	ErrProviderNotFunction                 = errors.New("inject: Provider is not a function")
+	ErrProviderDoesNotReturnValue          = errors.New("inject: Provider function does not return a value")
+	ErrProviderSecondReturnValueIsNotError = errors.New("inject: Provider function's second return value is not an error")
+	ErrProviderNumReturnValuesInvalid      = errors.New("inject: Provider can only have one or two return values")
 )
 
 func CreateInjector() Injector {
@@ -72,6 +78,15 @@ type binding struct {
 	toSingleton           interface{}
 	toProvider            interface{}
 	toProviderAsSingleton interface{}
+
+	// TODO(pedge): is atomic.Value the equivalent of a volatile variable in Java?
+	providerSingletonValue  atomic.Value
+	providerSingletonLoader sync.Once
+}
+
+type valueErr struct {
+	value interface{}
+	err   error
 }
 
 type injector struct {
@@ -150,6 +165,9 @@ func (this *binder) To(to interface{}) error {
 	if this.err != nil {
 		return this.err
 	}
+	if to == nil {
+		return ErrNil
+	}
 	toReflectType := reflect.TypeOf(to)
 	if !(this.fromReflectType.Kind() == reflect.Ptr && this.fromReflectType.Elem().Kind() == reflect.Interface) {
 		return ErrNotInterfacePtr
@@ -179,29 +197,12 @@ func (this *binder) ToSingleton(singleton interface{}) error {
 	if this.err != nil {
 		return this.err
 	}
-	singletonReflectType := reflect.TypeOf(singleton)
-	switch {
-	// from is an interface
-	case this.fromReflectType.Kind() == reflect.Ptr && this.fromReflectType.Elem().Kind() == reflect.Interface:
-		if !singletonReflectType.Implements(this.fromReflectType.Elem()) {
-			return ErrDoesNotImplement
-		}
-	// from is a struct pointer
-	case this.fromReflectType.Kind() == reflect.Ptr && this.fromReflectType.Elem().Kind() == reflect.Struct:
-		// TODO(pedge): is this correct?
-		if !singletonReflectType.AssignableTo(this.fromReflectType) {
-			return ErrNotAssignable
-		}
-	// from is a struct
-	case this.fromReflectType.Kind() == reflect.Struct:
-		// TODO(pedge): is this correct?
-		if !singletonReflectType.AssignableTo(this.fromReflectType) {
-			return ErrNotAssignable
-		}
-	// nothing else is supported for now
-	// TODO(pedge): at least support primitives with tags
-	default:
-		return ErrNotSupportedYet
+	if singleton == nil {
+		return ErrNil
+	}
+	err := isValidBinding(this.fromReflectType, reflect.TypeOf(singleton))
+	if err != nil {
+		return err
 	}
 	switch this.binderType {
 	case binderTypeTo:
@@ -225,15 +226,117 @@ func (this *binder) ToProvider(provider interface{}) error {
 	if this.err != nil {
 		return this.err
 	}
-	//providerReflectType := reflect.TypeOf(provider)
-	return nil
+	if provider == nil {
+		return ErrNil
+	}
+	err := isValidProvider(this.fromReflectType, provider)
+	if err != nil {
+		return err
+	}
+	switch this.binderType {
+	case binderTypeTo:
+		this.injector.boundTypeToBinding[this.fromReflectType] = binding{
+			bindingType: bindingTypeToProvider,
+			toProvider:  provider,
+		}
+		return nil
+	case binderTypeTaggedTo:
+		this.injector.taggedBoundTypeToBinding[taggedBoundType{this.fromReflectType, this.tag}] = binding{
+			bindingType: bindingTypeToProvider,
+			toProvider:  provider,
+		}
+		return nil
+	default:
+		return ErrUnknownBinderType
+	}
 }
 
 func (this *binder) ToProviderAsSingleton(provider interface{}) error {
 	if this.err != nil {
 		return this.err
 	}
-	//providerReflectType := reflect.TypeOf(provider)
+	if this.err != nil {
+		return this.err
+	}
+	if provider == nil {
+		return ErrNil
+	}
+	err := isValidProvider(this.fromReflectType, provider)
+	if err != nil {
+		return err
+	}
+	switch this.binderType {
+	case binderTypeTo:
+		this.injector.boundTypeToBinding[this.fromReflectType] = binding{
+			bindingType:             bindingTypeToProviderAsSingleton,
+			toProviderAsSingleton:   provider,
+			providerSingletonValue:  atomic.Value{},
+			providerSingletonLoader: sync.Once{},
+		}
+		return nil
+	case binderTypeTaggedTo:
+		this.injector.taggedBoundTypeToBinding[taggedBoundType{this.fromReflectType, this.tag}] = binding{
+			bindingType:             bindingTypeToProviderAsSingleton,
+			toProviderAsSingleton:   provider,
+			providerSingletonValue:  atomic.Value{},
+			providerSingletonLoader: sync.Once{},
+		}
+		return nil
+	default:
+		return ErrUnknownBinderType
+	}
+}
+
+func isValidProvider(fromReflectType reflect.Type, provider interface{}) error {
+	providerReflectType := reflect.TypeOf(provider)
+	if providerReflectType.Kind() != reflect.Func {
+		return ErrProviderNotFunction
+	}
+	switch providerReflectType.NumOut() {
+	case 0:
+		return ErrProviderDoesNotReturnValue
+	case 1:
+		err := isValidBinding(fromReflectType, providerReflectType.Out(0))
+		if err != nil {
+			return err
+		}
+		return nil
+	case 2:
+		err := isValidBinding(fromReflectType, providerReflectType.Out(0))
+		if err != nil {
+			return err
+		}
+		// TODO(pedge): can this be simplified?
+		if !providerReflectType.Out(1).AssignableTo(reflect.TypeOf((*error)(nil)).Elem()) {
+			return ErrProviderSecondReturnValueIsNotError
+		}
+		return nil
+	default:
+		return ErrProviderNumReturnValuesInvalid
+	}
+}
+
+func isValidBinding(fromReflectType reflect.Type, toReflectType reflect.Type) error {
+	switch {
+	// from is an interface
+	case fromReflectType.Kind() == reflect.Ptr && fromReflectType.Elem().Kind() == reflect.Interface:
+		if !toReflectType.Implements(fromReflectType.Elem()) {
+			return ErrDoesNotImplement
+		}
+	// from is a struct pointer
+	case fromReflectType.Kind() == reflect.Ptr && fromReflectType.Elem().Kind() == reflect.Struct:
+		fallthrough
+	// from is a struct
+	case fromReflectType.Kind() == reflect.Struct:
+		// TODO(pedge): is this correct?
+		if !toReflectType.AssignableTo(fromReflectType) {
+			return ErrNotAssignable
+		}
+	// nothing else is supported for now
+	// TODO(pedge): at least support primitives with tags
+	default:
+		return ErrNotSupportedYet
+	}
 	return nil
 }
 
@@ -254,12 +357,7 @@ func (this *container) Get(from interface{}) (interface{}, error) {
 	if !ok {
 		return nil, fmt.Errorf("inject: %v %v", fromReflectType, noBindingMsg)
 	}
-	switch binding.bindingType {
-	case bindingTypeToSingleton:
-		return binding.toSingleton, nil
-	default:
-		return nil, ErrNotSupportedYet
-	}
+	return this.getFromBinding(&binding)
 }
 
 func (this *container) GetTagged(from interface{}, tag interface{}) (interface{}, error) {
@@ -278,10 +376,28 @@ func (this *container) GetTagged(from interface{}, tag interface{}) (interface{}
 	if !ok {
 		return nil, fmt.Errorf("inject: %v with tag %v %v", fromReflectType, tag, noBindingMsg)
 	}
+	return this.getFromBinding(&binding)
+}
+
+func (this *container) getFromBinding(binding *binding) (interface{}, error) {
 	switch binding.bindingType {
 	case bindingTypeToSingleton:
 		return binding.toSingleton, nil
+	case bindingTypeToProvider:
+		return this.getFromProvider(binding.toProvider)
+	case bindingTypeToProviderAsSingleton:
+		binding.providerSingletonLoader.Do(func() {
+			value, err := this.getFromProvider(binding.toProviderAsSingleton)
+			binding.providerSingletonValue.Store(&valueErr{value, err})
+		})
+		valueErr := binding.providerSingletonValue.Load().(*valueErr)
+		return valueErr.value, valueErr.err
 	default:
 		return nil, ErrNotSupportedYet
 	}
+}
+
+// TODO(pedge)
+func (this *container) getFromProvider(provider interface{}) (interface{}, error) {
+	return nil, errors.New("NOT IMPLEMENTED")
 }
