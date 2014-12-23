@@ -141,7 +141,7 @@ func TestTaggedTagEmpty(t *testing.T) {
 	module := CreateModule()
 	err := module.BindTagged((*SimpleInterface)(nil), "").ToSingleton(SimpleStruct{"hello"})
 	require.Error(t, err)
-	require.Contains(t, InjectErrorTypeTagEmpty, err.Error())
+	require.Contains(t, err.Error(), InjectErrorTypeTagEmpty)
 }
 
 func TestTaggedSimpleStructSingletonDirect(t *testing.T) {
