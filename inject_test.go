@@ -512,3 +512,32 @@ func TestProviderAsSingletonWithEvilCounter(t *testing.T) {
 
 	close(evilChan)
 }
+
+func TestProviderAsSingletonWithEvilCounterErr(t *testing.T) {
+	injector := CreateInjector()
+	err := injector.Bind((*BarInterface)(nil)).ToProviderAsSingleton(createEvilBarInterfaceErr)
+	require.Nil(t, err, "%v", err)
+	container, err := injector.CreateContainer()
+	require.Nil(t, err, "%v", err)
+
+	evilCounter = int32(0)
+	evilChan := make(chan BarInterfaceError)
+
+	// TODO(pedge): i know this is a terrible way to do concurrency testing
+	for i := 0; i < goRoutineIterations; i++ {
+		go func() {
+			barInterface, err := container.Get((*BarInterface)(nil))
+			if err != nil {
+				evilChan <- BarInterfaceError{nil, err}
+			} else {
+				evilChan <- BarInterfaceError{barInterface.(BarInterface), nil}
+			}
+		}()
+	}
+	for i := 0; i < goRoutineIterations; i++ {
+		barInterfaceErr := <-evilChan
+		require.Equal(t, "XYZ 1", barInterfaceErr.err.Error())
+	}
+
+	close(evilChan)
+}
