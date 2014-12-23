@@ -140,7 +140,7 @@ func TestSimplePtrStructIndirectFailsWhenNoFinalBinding(t *testing.T) {
 	err := injector.Bind((*SimpleInterface)(nil)).To(&SimplePtrStruct{})
 	require.Nil(t, err, "%v", err)
 	_, err = injector.CreateContainer()
-	requireErrMsgContains(t, err, noBindingToSingletonOrProviderMsg)
+	require.Contains(t, err.Error(), noBindingToSingletonOrProviderMsg)
 }
 
 // ***** simple BindTagged tests *****
@@ -177,9 +177,9 @@ func TestTaggedSimpleStructSingletonDirect(t *testing.T) {
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 	_, err = container.Get((*SimpleInterface)(nil))
-	requireErrMsgContains(t, err, noBindingMsg)
+	require.Contains(t, err.Error(), noBindingMsg)
 	_, err = container.GetTagged((*SimpleInterface)(nil), "tagTwo")
-	requireErrMsgContains(t, err, noBindingMsg)
+	require.Contains(t, err.Error(), noBindingMsg)
 }
 
 func TestTaggedSimpleStructSingletonDirectSucceedsWhenPtr(t *testing.T) {
@@ -193,9 +193,9 @@ func TestTaggedSimpleStructSingletonDirectSucceedsWhenPtr(t *testing.T) {
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 	_, err = container.Get((*SimpleInterface)(nil))
-	requireErrMsgContains(t, err, noBindingMsg)
+	require.Contains(t, err.Error(), noBindingMsg)
 	_, err = container.GetTagged((*SimpleInterface)(nil), "tagTwo")
-	requireErrMsgContains(t, err, noBindingMsg)
+	require.Contains(t, err.Error(), noBindingMsg)
 }
 
 func TestTaggedSimplePtrStructSingletonDirect(t *testing.T) {
@@ -209,9 +209,9 @@ func TestTaggedSimplePtrStructSingletonDirect(t *testing.T) {
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 	_, err = container.Get((*SimpleInterface)(nil))
-	requireErrMsgContains(t, err, noBindingMsg)
+	require.Contains(t, err.Error(), noBindingMsg)
 	_, err = container.GetTagged((*SimpleInterface)(nil), "tagTwo")
-	requireErrMsgContains(t, err, noBindingMsg)
+	require.Contains(t, err.Error(), noBindingMsg)
 }
 
 func TestTaggedSimplePtrStructSingletonDirectFailsWhenNotPtr(t *testing.T) {
@@ -233,9 +233,9 @@ func TestTaggedSimpleStructSingletonIndirect(t *testing.T) {
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 	_, err = container.Get((*SimpleInterface)(nil))
-	requireErrMsgContains(t, err, noBindingMsg)
+	require.Contains(t, err.Error(), noBindingMsg)
 	_, err = container.GetTagged((*SimpleInterface)(nil), "tagTwo")
-	requireErrMsgContains(t, err, noBindingMsg)
+	require.Contains(t, err.Error(), noBindingMsg)
 }
 
 func TestTaggedSimpleStructSingletonIndirectSucceedsWhenPtr(t *testing.T) {
@@ -251,9 +251,9 @@ func TestTaggedSimpleStructSingletonIndirectSucceedsWhenPtr(t *testing.T) {
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 	_, err = container.Get((*SimpleInterface)(nil))
-	requireErrMsgContains(t, err, noBindingMsg)
+	require.Contains(t, err.Error(), noBindingMsg)
 	_, err = container.GetTagged((*SimpleInterface)(nil), "tagTwo")
-	requireErrMsgContains(t, err, noBindingMsg)
+	require.Contains(t, err.Error(), noBindingMsg)
 }
 
 func TestTaggedSimplePtrStructSingletonIndirect(t *testing.T) {
@@ -269,9 +269,9 @@ func TestTaggedSimplePtrStructSingletonIndirect(t *testing.T) {
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 	_, err = container.Get((*SimpleInterface)(nil))
-	requireErrMsgContains(t, err, noBindingMsg)
+	require.Contains(t, err.Error(), noBindingMsg)
 	_, err = container.GetTagged((*SimpleInterface)(nil), "tagTwo")
-	requireErrMsgContains(t, err, noBindingMsg)
+	require.Contains(t, err.Error(), noBindingMsg)
 }
 
 func TestTaggedSimplePtrStructSingletonIndirectFailsWhenNotPtr(t *testing.T) {
@@ -285,7 +285,7 @@ func TestTaggedSimplePtrStructIndirectFailsWhenNoFinalBinding(t *testing.T) {
 	err := injector.BindTagged((*SimpleInterface)(nil), "tagOne").To(&SimplePtrStruct{})
 	require.Nil(t, err, "%v", err)
 	_, err = injector.CreateContainer()
-	requireErrMsgContains(t, err, noBindingToSingletonOrProviderMsg)
+	require.Contains(t, err.Error(), noBindingToSingletonOrProviderMsg)
 }
 
 // ***** additional simple tagged tests *****
@@ -424,18 +424,4 @@ func TestProviderContainerErrReturned(t *testing.T) {
 	require.Nil(t, err, "%v", err)
 	_, err = container.Get((*SecondInterface)(nil))
 	require.Equal(t, "ABC", err.Error())
-}
-
-// ***** helpers *****
-
-// TODO(pedge): is there something for this in testify? if not, send a pull request
-func requireErrNil(t *testing.T, err error) {
-	if err != nil {
-		require.Nil(t, err, err.Error())
-	}
-}
-
-func requireErrMsgContains(t *testing.T, err error, s string) {
-	require.NotNil(t, err)
-	require.Contains(t, err.Error(), s)
 }
