@@ -31,7 +31,7 @@ func installModuleToInjector(injector *injector, module *module) error {
 			eb.addTag("foundBinding", foundBinding)
 			return eb.build()
 		}
-		finalBinding, ok := getFinalBinding(injector, binding)
+		finalBinding, ok := getFinalBinding(module, binding)
 		if !ok {
 			eb := newErrorBuilder(InjectErrorTypeNoFinalBinding)
 			eb.addTag("bindingKey", bindingKey)
@@ -42,10 +42,10 @@ func installModuleToInjector(injector *injector, module *module) error {
 	return nil
 }
 
-func getFinalBinding(injector *injector, binding binding) (binding, bool) {
+func getFinalBinding(module *module, binding binding) (binding, bool) {
 	var ok bool
 	for bindingKey, err := binding.bindingKey(); err == nil; bindingKey, err = binding.bindingKey() {
-		binding, ok = injector.bindings[bindingKey]
+		binding, ok = module.bindings[bindingKey]
 		if !ok {
 			return nil, false
 		}
