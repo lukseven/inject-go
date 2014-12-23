@@ -25,6 +25,8 @@ func (this *SimplePtrStruct) Foo() string {
 	return this.foo
 }
 
+type SimpleTag struct{}
+
 // ***** simple Bind tests *****
 
 func TestFromNil(t *testing.T) {
@@ -285,7 +287,27 @@ func TestTaggedSimplePtrStructIndirectFailsWhenNoFinalBinding(t *testing.T) {
 	requireErrMsgContains(t, err, noBindingToSingletonOrProviderMsg)
 }
 
-// ***** HELPERS *****
+// ***** additional simple tagged tests *****
+
+func TestTaggedSimpleStructSingletonDirectTwoBindings(t *testing.T) {
+	injector := CreateInjector()
+	err := injector.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(SimpleStruct{"hello"})
+	requireErrNil(t, err)
+	err = injector.BindTagged((*SimpleInterface)(nil), SimpleTag{}).ToSingleton(SimpleStruct{"good day"})
+	requireErrNil(t, err)
+	container, err := injector.CreateContainer()
+	requireErrNil(t, err)
+	object, err := container.GetTagged((*SimpleInterface)(nil), "tagOne")
+	requireErrNil(t, err)
+	simpleInterface := object.(SimpleInterface)
+	require.Equal(t, "hello", simpleInterface.Foo())
+	object, err = container.GetTagged((*SimpleInterface)(nil), SimpleTag{})
+	requireErrNil(t, err)
+	simpleInterface = object.(SimpleInterface)
+	require.Equal(t, "good day", simpleInterface.Foo())
+}
+
+// ***** helpers *****
 
 // TODO(pedge): is there something for this in testify? if not, send a pull request
 func requireErrNil(t *testing.T, err error) {
