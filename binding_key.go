@@ -16,14 +16,14 @@ type baseBindingKey struct {
 }
 
 func newBindingKey(reflectType reflect.Type) bindingKey {
-	return &baseBindingKey{reflectType}
+	return baseBindingKey{reflectType}
 }
 
-func (this *baseBindingKey) reflectType() reflect.Type {
+func (this baseBindingKey) reflectType() reflect.Type {
 	return this.rt
 }
 
-func (this *baseBindingKey) String() string {
+func (this baseBindingKey) String() string {
 	var buffer bytes.Buffer
 	buffer.WriteString("baseBindingKey{reflectType:")
 	buffer.WriteString(this.reflectType().String())
@@ -37,10 +37,10 @@ type taggedBindingKey struct {
 }
 
 func newTaggedBindingKey(reflectType reflect.Type, tag string) bindingKey {
-	return &taggedBindingKey{baseBindingKey{reflectType}, tag}
+	return taggedBindingKey{baseBindingKey{reflectType}, tag}
 }
 
-func (this *taggedBindingKey) String() string {
+func (this taggedBindingKey) String() string {
 	var buffer bytes.Buffer
 	buffer.WriteString("baseBindingKey{reflectType:")
 	buffer.WriteString(this.reflectType().String())

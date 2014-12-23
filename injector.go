@@ -44,7 +44,7 @@ func installModuleToInjector(injector *injector, module *module) error {
 
 func getFinalBinding(injector *injector, binding binding) (binding, bool) {
 	var ok bool
-	for bindingKey, err := binding.bindingKey(); err != nil; bindingKey, err = binding.bindingKey() {
+	for bindingKey, err := binding.bindingKey(); err == nil; bindingKey, err = binding.bindingKey() {
 		binding, ok = injector.bindings[bindingKey]
 		if !ok {
 			return nil, false
