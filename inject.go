@@ -8,20 +8,6 @@ import (
 	"sync/atomic"
 )
 
-const (
-	binderTypeTo = iota
-	binderTypeTaggedTo
-
-	// TODO(pedge): rename to bindingTypeToType
-	bindingTypeTo
-	bindingTypeToSingleton
-	bindingTypeToProvider
-	bindingTypeToProviderAsSingleton
-
-	noBindingMsg                      = "has no binding"
-	noBindingToSingletonOrProviderMsg = "has no binding to a singleton or provider"
-)
-
 var (
 	ErrNil                         = errors.New("inject: Parameter is nil")
 	ErrReflectTypeNil              = errors.New("inject: reflect.TypeOf() returns nil")
@@ -36,17 +22,11 @@ var (
 	ErrInvalidReturnFromProvider   = errors.New("inject: Invalid return values from provider")
 )
 
-func CreateInjector() Injector {
-	return &injector{
-		make(map[boundType]binding),
-		make(map[taggedBoundType]binding),
-	}
-}
+func CreateInjector() Injector { return createInjector() }
 
 type Injector interface {
 	BindType(from interface{}) Binder
 	BindTaggedType(from interface{}, tag interface{}) Binder
-
 	CreateContainer() (Container, error)
 }
 
@@ -63,6 +43,20 @@ type Container interface {
 }
 
 // private
+
+const (
+	binderTypeTo = iota
+	binderTypeTaggedTo
+
+	// TODO(pedge): rename to bindingTypeToType
+	bindingTypeTo
+	bindingTypeToSingleton
+	bindingTypeToProvider
+	bindingTypeToProviderAsSingleton
+
+	noBindingMsg                      = "has no binding"
+	noBindingToSingletonOrProviderMsg = "has no binding to a singleton or provider"
+)
 
 type boundType reflect.Type
 
@@ -88,6 +82,13 @@ type binding struct {
 type valueErr struct {
 	value interface{}
 	err   error
+}
+
+func createInjector() *injector {
+	return &injector{
+		make(map[boundType]binding),
+		make(map[taggedBoundType]binding),
+	}
 }
 
 type injector struct {
