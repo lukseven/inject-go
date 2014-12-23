@@ -36,124 +36,109 @@ type SimpleTag struct{}
 
 // ***** simple Bind tests *****
 
-func TestFromNil(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind(nil).ToSingleton(SimpleStruct{"hello"})
-	require.Equal(t, ErrNil, err)
-}
-
-// TODO(pedge): this test is still useful to make sure if someone does not
-// provide a pointer to an interface, it fails, but this is not the correct
-// behavior, find a value that is not nil but reflect.TypeOf(...) returns nil
-func TestFromReflectTypeNil(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((SimpleInterface)(nil)).ToSingleton(SimpleStruct{"hello"})
-	require.Equal(t, ErrNil, err)
-}
-
 func TestSimpleStructSingletonDirect(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"hello"})
+	module := CreateModule()
+	err := module.Bind((*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
-	object, err := container.Get((*SimpleInterface)(nil))
+	object, err := injector.Get((*SimpleInterface)(nil))
 	require.Nil(t, err, "%v", err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 }
 
 func TestSimpleStructSingletonDirectSucceedsWhenPtr(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(&SimpleStruct{"hello"})
+	module := CreateModule()
+	err := module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimpleStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
-	object, err := container.Get((*SimpleInterface)(nil))
+	object, err := injector.Get((*SimpleInterface)(nil))
 	require.Nil(t, err, "%v", err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 }
 
 func TestSimplePtrStructSingletonDirect(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+	module := CreateModule()
+	err := module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
-	object, err := container.Get((*SimpleInterface)(nil))
+	object, err := injector.Get((*SimpleInterface)(nil))
 	require.Nil(t, err, "%v", err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 }
 
 func TestSimplePtrStructSingletonDirectFailsWhenNotPtr(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(SimplePtrStruct{"hello"})
-	require.Equal(t, ErrDoesNotImplement, err)
+	module := CreateModule()
+	err := module.Bind((*SimpleInterface)(nil)).ToSingleton(SimplePtrStruct{"hello"})
+	require.Contains(t, err.Error(), InjectErrorTypeDoesNotImplement)
 }
 
 func TestSimpleStructSingletonIndirect(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((*SimpleInterface)(nil)).ToType(SimpleStruct{})
+	module := CreateModule()
+	err := module.Bind((*SimpleInterface)(nil)).To(SimpleStruct{})
 	require.Nil(t, err, "%v", err)
-	err = injector.Bind(SimpleStruct{}).ToSingleton(SimpleStruct{"hello"})
+	err = module.Bind(SimpleStruct{}).ToSingleton(SimpleStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
-	object, err := container.Get((*SimpleInterface)(nil))
+	object, err := injector.Get((*SimpleInterface)(nil))
 	require.Nil(t, err, "%v", err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 }
 
 func TestSimpleStructSingletonIndirectSucceedsWhenPtr(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((*SimpleInterface)(nil)).ToType(&SimpleStruct{})
+	module := CreateModule()
+	err := module.Bind((*SimpleInterface)(nil)).To(&SimpleStruct{})
 	require.Nil(t, err, "%v", err)
-	err = injector.Bind(&SimpleStruct{}).ToSingleton(&SimpleStruct{"hello"})
+	err = module.Bind(&SimpleStruct{}).ToSingleton(&SimpleStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
-	object, err := container.Get((*SimpleInterface)(nil))
+	object, err := injector.Get((*SimpleInterface)(nil))
 	require.Nil(t, err, "%v", err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 }
 
 func TestSimplePtrStructSingletonIndirect(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((*SimpleInterface)(nil)).ToType(&SimplePtrStruct{})
+	module := CreateModule()
+	err := module.Bind((*SimpleInterface)(nil)).To(&SimplePtrStruct{})
 	require.Nil(t, err, "%v", err)
-	err = injector.Bind(&SimplePtrStruct{}).ToSingleton(&SimplePtrStruct{"hello"})
+	err = module.Bind(&SimplePtrStruct{}).ToSingleton(&SimplePtrStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
-	object, err := container.Get((*SimpleInterface)(nil))
+	object, err := injector.Get((*SimpleInterface)(nil))
 	require.Nil(t, err, "%v", err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 }
 
 func TestSimplePtrStructSingletonIndirectFailsWhenNotPtr(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((*SimpleInterface)(nil)).ToType(SimplePtrStruct{})
-	require.Equal(t, ErrDoesNotImplement, err)
+	module := CreateModule()
+	err := module.Bind((*SimpleInterface)(nil)).To(SimplePtrStruct{})
+	require.Contains(t, err.Error(), InjectErrorTypeDoesNotImplement)
 }
 
 func TestSimplePtrStructIndirectFailsWhenNoFinalBinding(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((*SimpleInterface)(nil)).ToType(&SimplePtrStruct{})
+	module := CreateModule()
+	err := module.Bind((*SimpleInterface)(nil)).To(&SimplePtrStruct{})
 	require.Nil(t, err, "%v", err)
-	_, err = injector.CreateContainer()
-	require.Contains(t, err.Error(), noBindingToSingletonOrProviderMsg)
+	_, err = CreateInjector(module)()
+	require.Contains(t, err.Error(), InjectErrorTypeNoBinding)
 }
 
 // ***** simple BindTagged tests *****
 
 func TestTaggedFromNil(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.BindTagged(nil, "tagOne").ToSingleton(SimpleStruct{"hello"})
+	module := CreateModule()
+	err := module.BindTagged(nil, "tagOne").ToSingleton(SimpleStruct{"hello"})
 	require.Equal(t, ErrNil, err)
 }
 
@@ -161,154 +146,154 @@ func TestTaggedFromNil(t *testing.T) {
 // provide a pointer to an interface, it fails, but this is not the correct
 // behavior, find a value that is not nil but reflect.TypeOf(...) returns nil
 func TestTaggedFromReflectTypeNil(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.BindTagged((SimpleInterface)(nil), "tagOne").ToSingleton(SimpleStruct{"hello"})
+	module := CreateModule()
+	err := module.BindTagged((SimpleInterface)(nil), "tagOne").ToSingleton(SimpleStruct{"hello"})
 	require.Equal(t, ErrNil, err)
 }
 
-func TestTaggedTagNil(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.BindTagged((*SimpleInterface)(nil), nil).ToSingleton(SimpleStruct{"hello"})
-	require.Equal(t, ErrNil, err)
+func TestTaggedTagEmpty(t *testing.T) {
+	module := CreateModule()
+	err := module.BindTagged((*SimpleInterface)(nil), "").ToSingleton(SimpleStruct{"hello"})
+	require.Contains(t, InjectErrorTypeTagEmpty, err.Error())
 }
 
 func TestTaggedSimpleStructSingletonDirect(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(SimpleStruct{"hello"})
+	module := CreateModule()
+	err := module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(SimpleStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
-	object, err := container.GetTagged((*SimpleInterface)(nil), "tagOne")
+	object, err := injector.GetTagged((*SimpleInterface)(nil), "tagOne")
 	require.Nil(t, err, "%v", err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
-	_, err = container.Get((*SimpleInterface)(nil))
-	require.Contains(t, err.Error(), noBindingMsg)
-	_, err = container.GetTagged((*SimpleInterface)(nil), "tagTwo")
-	require.Contains(t, err.Error(), noBindingMsg)
+	_, err = injector.Get((*SimpleInterface)(nil))
+	require.Contains(t, err.Error(), InjectErrorTypeNoBinding)
+	_, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	require.Contains(t, err.Error(), InjectErrorTypeNoBinding)
 }
 
 func TestTaggedSimpleStructSingletonDirectSucceedsWhenPtr(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(&SimpleStruct{"hello"})
+	module := CreateModule()
+	err := module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(&SimpleStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
-	object, err := container.GetTagged((*SimpleInterface)(nil), "tagOne")
+	object, err := injector.GetTagged((*SimpleInterface)(nil), "tagOne")
 	require.Nil(t, err, "%v", err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
-	_, err = container.Get((*SimpleInterface)(nil))
-	require.Contains(t, err.Error(), noBindingMsg)
-	_, err = container.GetTagged((*SimpleInterface)(nil), "tagTwo")
-	require.Contains(t, err.Error(), noBindingMsg)
+	_, err = injector.Get((*SimpleInterface)(nil))
+	require.Contains(t, err.Error(), InjectErrorTypeNoBinding)
+	_, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	require.Contains(t, err.Error(), InjectErrorTypeNoBinding)
 }
 
 func TestTaggedSimplePtrStructSingletonDirect(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(&SimplePtrStruct{"hello"})
+	module := CreateModule()
+	err := module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(&SimplePtrStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
-	object, err := container.GetTagged((*SimpleInterface)(nil), "tagOne")
+	object, err := injector.GetTagged((*SimpleInterface)(nil), "tagOne")
 	require.Nil(t, err, "%v", err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
-	_, err = container.Get((*SimpleInterface)(nil))
-	require.Contains(t, err.Error(), noBindingMsg)
-	_, err = container.GetTagged((*SimpleInterface)(nil), "tagTwo")
-	require.Contains(t, err.Error(), noBindingMsg)
+	_, err = injector.Get((*SimpleInterface)(nil))
+	require.Contains(t, err.Error(), InjectErrorTypeNoBinding)
+	_, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	require.Contains(t, err.Error(), InjectErrorTypeNoBinding)
 }
 
 func TestTaggedSimplePtrStructSingletonDirectFailsWhenNotPtr(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(SimplePtrStruct{"hello"})
-	require.Equal(t, ErrDoesNotImplement, err)
+	module := CreateModule()
+	err := module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(SimplePtrStruct{"hello"})
+	require.Contains(t, err.Error(), InjectErrorTypeDoesNotImplement)
 }
 
 func TestTaggedSimpleStructSingletonIndirect(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.BindTagged((*SimpleInterface)(nil), "tagOne").ToType(SimpleStruct{})
+	module := CreateModule()
+	err := module.BindTagged((*SimpleInterface)(nil), "tagOne").To(SimpleStruct{})
 	require.Nil(t, err, "%v", err)
-	err = injector.Bind(SimpleStruct{}).ToSingleton(SimpleStruct{"hello"})
+	err = module.Bind(SimpleStruct{}).ToSingleton(SimpleStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
-	object, err := container.GetTagged((*SimpleInterface)(nil), "tagOne")
+	object, err := injector.GetTagged((*SimpleInterface)(nil), "tagOne")
 	require.Nil(t, err, "%v", err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
-	_, err = container.Get((*SimpleInterface)(nil))
-	require.Contains(t, err.Error(), noBindingMsg)
-	_, err = container.GetTagged((*SimpleInterface)(nil), "tagTwo")
-	require.Contains(t, err.Error(), noBindingMsg)
+	_, err = injector.Get((*SimpleInterface)(nil))
+	require.Contains(t, err.Error(), InjectErrorTypeNoBinding)
+	_, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	require.Contains(t, err.Error(), InjectErrorTypeNoBinding)
 }
 
 func TestTaggedSimpleStructSingletonIndirectSucceedsWhenPtr(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.BindTagged((*SimpleInterface)(nil), "tagOne").ToType(&SimpleStruct{})
+	module := CreateModule()
+	err := module.BindTagged((*SimpleInterface)(nil), "tagOne").To(&SimpleStruct{})
 	require.Nil(t, err, "%v", err)
-	err = injector.Bind(&SimpleStruct{}).ToSingleton(&SimpleStruct{"hello"})
+	err = module.Bind(&SimpleStruct{}).ToSingleton(&SimpleStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
-	object, err := container.GetTagged((*SimpleInterface)(nil), "tagOne")
+	object, err := injector.GetTagged((*SimpleInterface)(nil), "tagOne")
 	require.Nil(t, err, "%v", err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
-	_, err = container.Get((*SimpleInterface)(nil))
-	require.Contains(t, err.Error(), noBindingMsg)
-	_, err = container.GetTagged((*SimpleInterface)(nil), "tagTwo")
-	require.Contains(t, err.Error(), noBindingMsg)
+	_, err = injector.Get((*SimpleInterface)(nil))
+	require.Contains(t, err.Error(), InjectErrorTypeNoBinding)
+	_, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	require.Contains(t, err.Error(), InjectErrorTypeNoBinding)
 }
 
 func TestTaggedSimplePtrStructSingletonIndirect(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.BindTagged((*SimpleInterface)(nil), "tagOne").ToType(&SimplePtrStruct{})
+	module := CreateModule()
+	err := module.BindTagged((*SimpleInterface)(nil), "tagOne").To(&SimplePtrStruct{})
 	require.Nil(t, err, "%v", err)
-	err = injector.Bind(&SimplePtrStruct{}).ToSingleton(&SimplePtrStruct{"hello"})
+	err = module.Bind(&SimplePtrStruct{}).ToSingleton(&SimplePtrStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
-	object, err := container.GetTagged((*SimpleInterface)(nil), "tagOne")
+	object, err := injector.GetTagged((*SimpleInterface)(nil), "tagOne")
 	require.Nil(t, err, "%v", err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
-	_, err = container.Get((*SimpleInterface)(nil))
-	require.Contains(t, err.Error(), noBindingMsg)
-	_, err = container.GetTagged((*SimpleInterface)(nil), "tagTwo")
-	require.Contains(t, err.Error(), noBindingMsg)
+	_, err = injector.Get((*SimpleInterface)(nil))
+	require.Contains(t, err.Error(), InjectErrorTypeNoBinding)
+	_, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	require.Contains(t, err.Error(), InjectErrorTypeNoBinding)
 }
 
 func TestTaggedSimplePtrStructSingletonIndirectFailsWhenNotPtr(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.BindTagged((*SimpleInterface)(nil), "tagOne").ToType(SimplePtrStruct{})
-	require.Equal(t, ErrDoesNotImplement, err)
+	module := CreateModule()
+	err := module.BindTagged((*SimpleInterface)(nil), "tagOne").To(SimplePtrStruct{})
+	require.Contains(t, err.Error(), InjectErrorTypeDoesNotImplement)
 }
 
 func TestTaggedSimplePtrStructIndirectFailsWhenNoFinalBinding(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.BindTagged((*SimpleInterface)(nil), "tagOne").ToType(&SimplePtrStruct{})
+	module := CreateModule()
+	err := module.BindTagged((*SimpleInterface)(nil), "tagOne").To(&SimplePtrStruct{})
 	require.Nil(t, err, "%v", err)
-	_, err = injector.CreateContainer()
-	require.Contains(t, err.Error(), noBindingToSingletonOrProviderMsg)
+	_, err = CreateInjector(module)
+	require.Contains(t, err.Error(), InjectErrorTypeNoBinding)
 }
 
 // ***** additional simple tagged tests *****
 
 func TestTaggedSimpleStructSingletonDirectTwoBindings(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(SimpleStruct{"hello"})
+	module := CreateModule()
+	err := module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(SimpleStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	err = injector.BindTagged((*SimpleInterface)(nil), SimpleTag{}).ToSingleton(SimpleStruct{"good day"})
+	err = module.BindTagged((*SimpleInterface)(nil), SimpleTag{}).ToSingleton(SimpleStruct{"good day"})
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
-	object, err := container.GetTagged((*SimpleInterface)(nil), "tagOne")
+	object, err := injector.GetTagged((*SimpleInterface)(nil), "tagOne")
 	require.Nil(t, err, "%v", err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
-	object, err = container.GetTagged((*SimpleInterface)(nil), SimpleTag{})
+	object, err = injector.GetTagged((*SimpleInterface)(nil), SimpleTag{})
 	require.Nil(t, err, "%v", err)
 	simpleInterface = object.(SimpleInterface)
 	require.Equal(t, "good day", simpleInterface.Foo())
@@ -354,19 +339,19 @@ func createSecondInterfaceErr(s SimpleInterface, b BarInterface) (SecondInterfac
 	return nil, errors.New("XYZ")
 }
 
-func createSecondInterfaceContainer(container Container) (SecondInterface, error) {
-	s, err := container.Get((*SimpleInterface)(nil))
+func createSecondInterfaceInjector(injector Injector) (SecondInterface, error) {
+	s, err := injector.Get((*SimpleInterface)(nil))
 	if err != nil {
 		return nil, err
 	}
-	b, err := container.Get((*BarInterface)(nil))
+	b, err := injector.Get((*BarInterface)(nil))
 	if err != nil {
 		return nil, err
 	}
 	return &SecondPtrStruct{s.(SimpleInterface), b.(BarInterface)}, nil
 }
 
-func createSecondInterfaceContainerErr(container Container) (SecondInterface, error) {
+func createSecondInterfaceInjectorErr(injector Injector) (SecondInterface, error) {
 	return nil, errors.New("ABC")
 }
 
@@ -387,73 +372,73 @@ func createEvilBarInterfaceErr() (BarInterface, error) {
 	return nil, fmt.Errorf("XYZ %v", value)
 }
 
-func TestProviderDirectInterfaceInjection(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+func TestConstructorDirectInterfaceInjection(t *testing.T) {
+	module := CreateModule()
+	err := module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
+	err = module.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
 	require.Nil(t, err, "%v", err)
-	err = injector.Bind((*SecondInterface)(nil)).ToProvider(createSecondInterface)
+	err = module.Bind((*SecondInterface)(nil)).ToConstructor(createSecondInterface)
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
-	object, err := container.Get((*SecondInterface)(nil))
-	require.Nil(t, err, "%v", err)
-	secondInterface := object.(SecondInterface)
-	require.Equal(t, "hello", secondInterface.Foo().Foo())
-	require.Equal(t, 1, secondInterface.Bar().Bar())
-}
-
-func TestProviderContainerInjection(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
-	require.Nil(t, err, "%v", err)
-	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
-	require.Nil(t, err, "%v", err)
-	err = injector.Bind((*SecondInterface)(nil)).ToProvider(createSecondInterfaceContainer)
-	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
-	require.Nil(t, err, "%v", err)
-	object, err := container.Get((*SecondInterface)(nil))
+	object, err := injector.Get((*SecondInterface)(nil))
 	require.Nil(t, err, "%v", err)
 	secondInterface := object.(SecondInterface)
 	require.Equal(t, "hello", secondInterface.Foo().Foo())
 	require.Equal(t, 1, secondInterface.Bar().Bar())
 }
 
-func TestProviderErrReturned(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+func TestConstructorInjectorInjection(t *testing.T) {
+	module := CreateModule()
+	err := module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
+	err = module.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
 	require.Nil(t, err, "%v", err)
-	err = injector.Bind((*SecondInterface)(nil)).ToProvider(createSecondInterfaceErr)
+	err = module.Bind((*SecondInterface)(nil)).ToConstructor(createSecondInterfaceInjector)
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
-	_, err = container.Get((*SecondInterface)(nil))
+	object, err := injector.Get((*SecondInterface)(nil))
+	require.Nil(t, err, "%v", err)
+	secondInterface := object.(SecondInterface)
+	require.Equal(t, "hello", secondInterface.Foo().Foo())
+	require.Equal(t, 1, secondInterface.Bar().Bar())
+}
+
+func TestConstructorErrReturned(t *testing.T) {
+	module := CreateModule()
+	err := module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+	require.Nil(t, err, "%v", err)
+	err = module.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
+	require.Nil(t, err, "%v", err)
+	err = module.Bind((*SecondInterface)(nil)).ToConstructor(createSecondInterfaceErr)
+	require.Nil(t, err, "%v", err)
+	injector, err := CreateInjector(module)
+	require.Nil(t, err, "%v", err)
+	_, err = injector.Get((*SecondInterface)(nil))
 	require.Equal(t, "XYZ", err.Error())
 }
 
-func TestProviderContainerErrReturned(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+func TestConstructorInjectorErrReturned(t *testing.T) {
+	module := CreateModule()
+	err := module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
 	require.Nil(t, err, "%v", err)
-	err = injector.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
+	err = module.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
 	require.Nil(t, err, "%v", err)
-	err = injector.Bind((*SecondInterface)(nil)).ToProvider(createSecondInterfaceContainerErr)
+	err = module.Bind((*SecondInterface)(nil)).ToConstructor(createSecondInterfaceInjectorErr)
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
-	_, err = container.Get((*SecondInterface)(nil))
+	_, err = injector.Get((*SecondInterface)(nil))
 	require.Equal(t, "ABC", err.Error())
 }
 
-func TestProviderWithEvilCounter(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((*BarInterface)(nil)).ToProvider(createEvilBarInterface)
+func TestConstructorWithEvilCounter(t *testing.T) {
+	module := CreateModule()
+	err := module.Bind((*BarInterface)(nil)).ToConstructor(createEvilBarInterface)
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
 
 	evilCounter = int32(0)
@@ -462,7 +447,7 @@ func TestProviderWithEvilCounter(t *testing.T) {
 	// TODO(pedge): i know this is a terrible way to do concurrency testing
 	for i := 0; i < goRoutineIterations; i++ {
 		go func() {
-			barInterface, err := container.Get((*BarInterface)(nil))
+			barInterface, err := injector.Get((*BarInterface)(nil))
 			if err != nil {
 				evilChan <- BarInterfaceError{nil, err}
 			} else {
@@ -483,11 +468,11 @@ func TestProviderWithEvilCounter(t *testing.T) {
 	close(evilChan)
 }
 
-func TestProviderAsSingletonWithEvilCounter(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((*BarInterface)(nil)).ToProviderAsSingleton(createEvilBarInterface)
+func TestSingletonConstructorWithEvilCounter(t *testing.T) {
+	module := CreateModule()
+	err := module.Bind((*BarInterface)(nil)).ToSingletonConstructor(createEvilBarInterface)
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
 
 	evilCounter = int32(0)
@@ -496,7 +481,7 @@ func TestProviderAsSingletonWithEvilCounter(t *testing.T) {
 	// TODO(pedge): i know this is a terrible way to do concurrency testing
 	for i := 0; i < goRoutineIterations; i++ {
 		go func() {
-			barInterface, err := container.Get((*BarInterface)(nil))
+			barInterface, err := injector.Get((*BarInterface)(nil))
 			if err != nil {
 				evilChan <- BarInterfaceError{nil, err}
 			} else {
@@ -513,11 +498,11 @@ func TestProviderAsSingletonWithEvilCounter(t *testing.T) {
 	close(evilChan)
 }
 
-func TestProviderAsSingletonWithEvilCounterErr(t *testing.T) {
-	injector := CreateInjector()
-	err := injector.Bind((*BarInterface)(nil)).ToProviderAsSingleton(createEvilBarInterfaceErr)
+func TestSingletonConstructorWithEvilCounterErr(t *testing.T) {
+	module := CreateModule()
+	err := module.Bind((*BarInterface)(nil)).ToSingletonConstructor(createEvilBarInterfaceErr)
 	require.Nil(t, err, "%v", err)
-	container, err := injector.CreateContainer()
+	injector, err := CreateInjector(module)
 	require.Nil(t, err, "%v", err)
 
 	evilCounter = int32(0)
@@ -526,7 +511,7 @@ func TestProviderAsSingletonWithEvilCounterErr(t *testing.T) {
 	// TODO(pedge): i know this is a terrible way to do concurrency testing
 	for i := 0; i < goRoutineIterations; i++ {
 		go func() {
-			barInterface, err := container.Get((*BarInterface)(nil))
+			barInterface, err := injector.Get((*BarInterface)(nil))
 			if err != nil {
 				evilChan <- BarInterfaceError{nil, err}
 			} else {

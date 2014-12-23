@@ -6,77 +6,108 @@ import (
 	"sync/atomic"
 )
 
-const (
-	bindingTypeIntermediate = iota
-	bindingTypeFinal
-
-	finalBindingTypeSingleton
-	finalBindingTypeProvider
-	finalBindingTypeSingletonProvider
-)
-
-type binding struct {
-	bindingType int
-
-	intermediateBinding reflect.Type
-	finalBinding        *finalBinding
+// TODO(pedge): we could implement this where an intermediate binding resolves
+// the final binding at runtime, however for performance and safety, intermediate
+// bindings are eliminated from Injectors. get() returns an error for intermediateBinding,
+// getBindingKey() returns an error for all other. This is unclean and could be typed
+type binding interface {
+	get(*injector) (interface{}, error)
+	bindingKey() (bindingKey, error)
 }
 
-func newBindingIntermediate(intermediate reflect.Type) *binding {
-	return &binding{bindingTypeIntermediate, intermediate, nil}
+type intermediateBinding struct {
+	bk bindingKey
 }
 
-func newBindingFinal(final *finalBinding) *binding {
-	return &binding{bindingTypeFinal, nil, final}
+func newIntermediateBinding(bindingKey bindingKey) binding {
+	return &intermediateBinding{bindingKey}
 }
 
-type finalBinding struct {
-	finalBindingType int
-
-	singleton         interface{}
-	provider          interface{}
-	singletonProvider *singletonProvider
+func (this *intermediateBinding) get(injector *injector) (interface{}, error) {
+	eb := newErrorBuilder(InjectErrorTypeIntermediateBinding)
+	eb = eb.addTag("bindingKey", this.bk)
+	return nil, eb.build()
 }
 
-func newFinalBindingSingleton(singleton interface{}) *finalBinding {
-	return &finalBinding{finalBindingTypeSingleton, singleton, nil, nil}
+func (this *intermediateBinding) bindingKey() (bindingKey, error) {
+	return this.bk, nil
 }
 
-func newFinalBindingProvider(provider interface{}) *finalBinding {
-	return &finalBinding{finalBindingTypeProvider, nil, provider, nil}
+type singletonBinding struct {
+	singleton interface{}
 }
 
-func newFinalBindingSingletonProvider(provider interface{}) *finalBinding {
-	return &finalBinding{finalBindingTypeSingletonProvider, nil, nil, newSingletonProvider(provider)}
+func newSingletonBinding(singleton interface{}) binding {
+	return &singletonBinding{singleton}
 }
 
-func (this *finalBinding) get(c *container) (interface{}, error) {
-	switch this.finalBindingType {
-	case finalBindingTypeSingleton:
-		return this.singleton, nil
-	case finalBindingTypeProvider:
-		return getFromProvider(c, this.provider)
-	case finalBindingTypeSingletonProvider:
-		return this.singletonProvider.get(c)
+func (this *singletonBinding) get(injector *injector) (interface{}, error) {
+	return this.singleton, nil
+}
+
+func (this *singletonBinding) bindingKey() (bindingKey, error) {
+	return nil, newErrorBuilder(InjectErrorTypeFinalBinding).build()
+}
+
+type constructorBinding struct {
+	constructor interface{}
+}
+
+func newConstructorBinding(constructor interface{}) binding {
+	return &constructorBinding{constructor}
+}
+
+func (this *constructorBinding) get(injector *injector) (interface{}, error) {
+	// assuming this is a valid provider/that this is already checked
+	constructorReflectType := reflect.TypeOf(this.constructor)
+	numIn := constructorReflectType.NumIn()
+	parameterValues := make([]reflect.Value, numIn)
+	if numIn == 1 && constructorReflectType.In(0).AssignableTo(reflect.TypeOf((*Injector)(nil)).Elem()) {
+		parameterValues[0] = reflect.ValueOf(injector)
+	} else {
+		for i := 0; i < numIn; i++ {
+			inReflectType := constructorReflectType.In(i)
+			// TODO(pedge): this is really specific logic, and there wil need to be more
+			// of this if more types are allowed for binding - this should be abstracted
+			if inReflectType.Kind() == reflect.Interface {
+				inReflectType = reflect.PtrTo(inReflectType)
+			}
+			parameter, err := injector.get(inReflectType)
+			if err != nil {
+				return nil, err
+			}
+			parameterValues[i] = reflect.ValueOf(parameter)
+		}
+	}
+	returnValues := reflect.ValueOf(this.constructor).Call(parameterValues)
+	return1 := returnValues[0].Interface()
+	return2 := returnValues[1].Interface()
+	switch {
+	case return2 != nil:
+		return nil, return2.(error)
 	default:
-		return nil, ErrNotSupportedYet
+		return return1, nil
 	}
 }
 
-type singletonProvider struct {
-	provider interface{}
+func (this *constructorBinding) bindingKey() (bindingKey, error) {
+	return nil, newErrorBuilder(InjectErrorTypeFinalBinding).build()
+}
+
+type singletonConstructorBinding struct {
+	constructorBinding
 	// TODO(pedge): is atomic.Value the equivalent of a volatile variable in Java?
 	value atomic.Value
 	once  sync.Once
 }
 
-func newSingletonProvider(provider interface{}) *singletonProvider {
-	return &singletonProvider{provider, atomic.Value{}, sync.Once{}}
+func newSingletonConstructorBinding(constructor interface{}) binding {
+	return &singletonConstructorBinding{constructorBinding{constructor}, atomic.Value{}, sync.Once{}}
 }
 
-func (this *singletonProvider) get(c *container) (interface{}, error) {
+func (this *singletonConstructorBinding) get(injector *injector) (interface{}, error) {
 	this.once.Do(func() {
-		value, err := getFromProvider(c, this.provider)
+		value, err := this.constructorBinding.get(injector)
 		this.value.Store(&valueErr{value, err})
 	})
 	valueErr := this.value.Load().(*valueErr)
@@ -86,40 +117,4 @@ func (this *singletonProvider) get(c *container) (interface{}, error) {
 type valueErr struct {
 	value interface{}
 	err   error
-}
-
-// TODO(pedge): this is really hacky, and probably slow, clean this up
-func getFromProvider(c *container, provider interface{}) (interface{}, error) {
-	// assuming this is a valid provider/that this is already checked
-	providerReflectType := reflect.TypeOf(provider)
-	numIn := providerReflectType.NumIn()
-	parameterValues := make([]reflect.Value, numIn)
-	if numIn == 1 && providerReflectType.In(0).AssignableTo(reflect.TypeOf((*Container)(nil)).Elem()) {
-		parameterValues[0] = reflect.ValueOf(c)
-	} else {
-		for i := 0; i < numIn; i++ {
-			inReflectType := providerReflectType.In(i)
-			// TODO(pedge): this is really specific logic, and there wil need to be more
-			// of this if more types are allowed for binding - this should be abstracted
-			if inReflectType.Kind() == reflect.Interface {
-				inReflectType = reflect.PtrTo(inReflectType)
-			}
-			parameter, err := c.get(inReflectType)
-			if err != nil {
-				return nil, err
-			}
-			parameterValues[i] = reflect.ValueOf(parameter)
-		}
-	}
-	returnValues := reflect.ValueOf(provider).Call(parameterValues)
-	return1 := returnValues[0].Interface()
-	return2 := returnValues[1].Interface()
-	switch {
-	case return1 != nil && return2 != nil:
-		return nil, ErrInvalidReturnFromProvider
-	case return2 != nil:
-		return nil, return2.(error)
-	default:
-		return return1, nil
-	}
 }
