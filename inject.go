@@ -25,8 +25,8 @@ var (
 func CreateInjector() Injector { return createInjector() }
 
 type Injector interface {
-	BindType(from interface{}) Binder
-	BindTaggedType(from interface{}, tag interface{}) Binder
+	Bind(from interface{}) Binder
+	BindTagged(from interface{}, tag interface{}) Binder
 	CreateContainer() (Container, error)
 }
 
@@ -96,7 +96,7 @@ type injector struct {
 	taggedBoundTypeToBinding map[taggedBoundType]binding
 }
 
-func (this *injector) BindType(from interface{}) Binder {
+func (this *injector) Bind(from interface{}) Binder {
 	if from == nil {
 		return &binder{binderTypeTo, nil, nil, nil, ErrNil}
 	}
@@ -107,7 +107,7 @@ func (this *injector) BindType(from interface{}) Binder {
 	return &binder{binderTypeTo, this, fromReflectType, nil, nil}
 }
 
-func (this *injector) BindTaggedType(from interface{}, tag interface{}) Binder {
+func (this *injector) BindTagged(from interface{}, tag interface{}) Binder {
 	if from == nil {
 		return &binder{binderTypeTaggedTo, nil, nil, nil, ErrNil}
 	}
