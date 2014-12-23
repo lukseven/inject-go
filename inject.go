@@ -12,6 +12,7 @@ const (
 	binderTypeTo = iota
 	binderTypeTaggedTo
 
+	// TODO(pedge): rename to bindingTypeToType
 	bindingTypeTo
 	bindingTypeToSingleton
 	bindingTypeToProvider
@@ -26,7 +27,7 @@ var (
 	ErrReflectTypeNil              = errors.New("inject: reflect.TypeOf() returns nil")
 	ErrUnknownBinderType           = errors.New("inject: Unknown binder type")
 	ErrUnknownBindingType          = errors.New("inject: Unknown binding type")
-	ErrNotInterfacePtr             = errors.New("inject: Binding with Binder.To() and from is not an interface pointer")
+	ErrNotInterfacePtr             = errors.New("inject: Binding with Binder.ToType() and from is not an interface pointer")
 	ErrDoesNotImplement            = errors.New("inject: to binding does not implement from binding")
 	ErrNotSupportedYet             = errors.New("inject.: Binding type not supported yet, feel free to help!")
 	ErrNotAssignable               = errors.New("inject: Binding not assignable")
@@ -43,14 +44,14 @@ func CreateInjector() Injector {
 }
 
 type Injector interface {
-	Bind(from interface{}) Binder
-	BindTagged(from interface{}, tag interface{}) Binder
+	BindType(from interface{}) Binder
+	BindTaggedType(from interface{}, tag interface{}) Binder
 
 	CreateContainer() (Container, error)
 }
 
 type Binder interface {
-	To(to interface{}) error
+	ToType(to interface{}) error
 	ToSingleton(singleton interface{}) error
 	ToProvider(provider interface{}) error
 	ToProviderAsSingleton(provider interface{}) error
@@ -73,6 +74,7 @@ type taggedBoundType struct {
 type binding struct {
 	bindingType int
 
+	// TODO(pedge): rename to toType
 	to                    reflect.Type
 	toSingleton           interface{}
 	toProvider            interface{}
@@ -93,7 +95,7 @@ type injector struct {
 	taggedBoundTypeToBinding map[taggedBoundType]binding
 }
 
-func (this *injector) Bind(from interface{}) Binder {
+func (this *injector) BindType(from interface{}) Binder {
 	if from == nil {
 		return &binder{binderTypeTo, nil, nil, nil, ErrNil}
 	}
@@ -104,7 +106,7 @@ func (this *injector) Bind(from interface{}) Binder {
 	return &binder{binderTypeTo, this, fromReflectType, nil, nil}
 }
 
-func (this *injector) BindTagged(from interface{}, tag interface{}) Binder {
+func (this *injector) BindTaggedType(from interface{}, tag interface{}) Binder {
 	if from == nil {
 		return &binder{binderTypeTaggedTo, nil, nil, nil, ErrNil}
 	}
@@ -160,7 +162,7 @@ type binder struct {
 	err             error
 }
 
-func (this *binder) To(to interface{}) error {
+func (this *binder) ToType(to interface{}) error {
 	if this.err != nil {
 		return this.err
 	}
@@ -393,7 +395,7 @@ func (this *container) getFromBinding(binding *binding) (interface{}, error) {
 	}
 }
 
-// TODO(pedge)
+// TODO(pedge): this is really hacky, and probably slow, clean this up
 func (this *container) getFromProvider(provider interface{}) (interface{}, error) {
 	// assuming this is a valid provider/that this is already checked
 	providerReflectType := reflect.TypeOf(provider)
