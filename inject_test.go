@@ -115,6 +115,16 @@ func TestSimplePtrStructSingletonIndirectFailsWhenNotPtr(t *testing.T) {
 	require.Equal(t, ErrDoesNotImplement, err)
 }
 
+func TestSimplePtrStructIndirectFailsWhenNoFinalBinding(t *testing.T) {
+	injector := CreateInjector()
+	err := injector.Bind((*SimpleInterface)(nil)).To(&SimplePtrStruct{})
+	requireErrNil(t, err)
+	_, err = injector.CreateContainer()
+	require.NotNil(t, err)
+}
+
+// ***** HELPERS *****
+
 // TODO(pedge): is there something for this in testify? if not, send a pull request
 func requireErrNil(t *testing.T, err error) {
 	if err != nil {
