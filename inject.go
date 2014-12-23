@@ -339,7 +339,10 @@ func (this *container) Get(from interface{}) (interface{}, error) {
 	if from == nil {
 		return nil, ErrNil
 	}
-	fromReflectType := reflect.TypeOf(from)
+	return this.get(reflect.TypeOf(from))
+}
+
+func (this *container) get(fromReflectType reflect.Type) (interface{}, error) {
 	if fromReflectType == nil {
 		return nil, ErrReflectTypeNil
 	}
@@ -354,10 +357,13 @@ func (this *container) GetTagged(from interface{}, tag interface{}) (interface{}
 	if from == nil {
 		return nil, ErrNil
 	}
+	return this.getTagged(reflect.TypeOf(from), tag)
+}
+
+func (this *container) getTagged(fromReflectType reflect.Type, tag interface{}) (interface{}, error) {
 	if tag == nil {
 		return nil, ErrNil
 	}
-	fromReflectType := reflect.TypeOf(from)
 	if fromReflectType == nil {
 		return nil, ErrReflectTypeNil
 	}
@@ -398,7 +404,12 @@ func (this *container) getFromProvider(provider interface{}) (interface{}, error
 	} else {
 		for i := 0; i < numIn; i++ {
 			inReflectType := providerReflectType.In(i)
-			parameter, err := this.Get(inReflectType)
+			// TODO(pedge): this is really specific logic, and there wil need to be more
+			// of this if more types are allowed for binding - this should be abstracted
+			if inReflectType.Kind() == reflect.Interface {
+				inReflectType = reflect.PtrTo(inReflectType)
+			}
+			parameter, err := this.get(inReflectType)
 			if err != nil {
 				return nil, err
 			}
