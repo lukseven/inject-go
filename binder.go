@@ -32,44 +32,35 @@ func newBinderErr(err error) *binder {
 }
 
 func (this *binder) ToType(to interface{}) error {
-	switch this.binderType {
-	case binderTypeErr:
-		return this.err
-	case binderTypeValidBinder:
-		return this.validBinder.toType(to)
-	default:
-		return ErrUnknownBinderType
-	}
+	return switchBinderType(this, to, func(validBinder *validBinder, object interface{}) error {
+		return validBinder.toType(object)
+	})
 }
 
 func (this *binder) ToSingleton(singleton interface{}) error {
-	switch this.binderType {
-	case binderTypeErr:
-		return this.err
-	case binderTypeValidBinder:
-		return this.validBinder.toSingleton(singleton)
-	default:
-		return ErrUnknownBinderType
-	}
+	return switchBinderType(this, singleton, func(validBinder *validBinder, object interface{}) error {
+		return validBinder.toSingleton(object)
+	})
 }
 
 func (this *binder) ToProvider(provider interface{}) error {
-	switch this.binderType {
-	case binderTypeErr:
-		return this.err
-	case binderTypeValidBinder:
-		return this.validBinder.toProvider(provider)
-	default:
-		return ErrUnknownBinderType
-	}
+	return switchBinderType(this, provider, func(validBinder *validBinder, object interface{}) error {
+		return validBinder.toProvider(object)
+	})
 }
 
 func (this *binder) ToProviderAsSingleton(provider interface{}) error {
-	switch this.binderType {
+	return switchBinderType(this, provider, func(validBinder *validBinder, object interface{}) error {
+		return validBinder.toProviderAsSingleton(object)
+	})
+}
+
+func switchBinderType(binder *binder, object interface{}, validBinderFunc func(*validBinder, interface{}) error) error {
+	switch binder.binderType {
 	case binderTypeErr:
-		return this.err
+		return binder.err
 	case binderTypeValidBinder:
-		return this.validBinder.toProviderAsSingleton(provider)
+		return validBinderFunc(binder.validBinder, object)
 	default:
 		return ErrUnknownBinderType
 	}
@@ -93,105 +84,71 @@ func newValidBinderTaggedBoundType(injector *injector, taggedBoundType taggedBou
 }
 
 func (this *validBinder) toType(to interface{}) error {
-	if to == nil {
-		return ErrNil
+	err := verifyValidBinderInput(this, to, verifyToType)
+	if err != nil {
+		return err
 	}
-	toReflectType := reflect.TypeOf(to)
-	switch this.validBinderType {
-	case validBinderTypeBoundType:
-		err := verifyToType(this.boundType, toReflectType)
-		if err != nil {
-			return err
-		}
-	case validBinderTypeTaggedBoundType:
-		err := verifyToType(this.taggedBoundType.boundType, toReflectType)
-		if err != nil {
-			return err
-		}
-	default:
-		return ErrUnknownValidBinderType
-	}
-	return this.assignBinding(newBindingIntermediate(toReflectType))
+	return assignValidBinderBinding(this, newBindingIntermediate(reflect.TypeOf(to)))
 }
 
 func (this *validBinder) toSingleton(singleton interface{}) error {
-	if singleton == nil {
-		return ErrNil
+	err := verifyValidBinderInput(this, singleton, verifyBinding)
+	if err != nil {
+		return err
 	}
-	singletonReflectType := reflect.TypeOf(singleton)
-	switch this.validBinderType {
-	case validBinderTypeBoundType:
-		err := verifyBinding(this.boundType, singletonReflectType)
-		if err != nil {
-			return err
-		}
-	case validBinderTypeTaggedBoundType:
-		err := verifyBinding(this.taggedBoundType.boundType, singletonReflectType)
-		if err != nil {
-			return err
-		}
-	default:
-		return ErrUnknownValidBinderType
-	}
-	return this.assignBinding(newBindingFinal(newFinalBindingSingleton(singleton)))
+	return assignValidBinderBinding(this, newBindingFinal(newFinalBindingSingleton(singleton)))
 }
 
 func (this *validBinder) toProvider(provider interface{}) error {
-	if provider == nil {
-		return ErrNil
+	err := verifyValidBinderInput(this, provider, verifyProvider)
+	if err != nil {
+		return err
 	}
-	switch this.validBinderType {
-	case validBinderTypeBoundType:
-		err := verifyProvider(this.boundType, provider)
-		if err != nil {
-			return err
-		}
-	case validBinderTypeTaggedBoundType:
-		err := verifyProvider(this.taggedBoundType.boundType, provider)
-		if err != nil {
-			return err
-		}
-	default:
-		return ErrUnknownValidBinderType
-	}
-	return this.assignBinding(newBindingFinal(newFinalBindingProvider(provider)))
+	return assignValidBinderBinding(this, newBindingFinal(newFinalBindingProvider(provider)))
 }
 
 func (this *validBinder) toProviderAsSingleton(provider interface{}) error {
-	if provider == nil {
-		return ErrNil
+	err := verifyValidBinderInput(this, provider, verifyProvider)
+	if err != nil {
+		return err
 	}
-	switch this.validBinderType {
-	case validBinderTypeBoundType:
-		err := verifyProvider(this.boundType, provider)
-		if err != nil {
-			return err
-		}
-	case validBinderTypeTaggedBoundType:
-		err := verifyProvider(this.taggedBoundType.boundType, provider)
-		if err != nil {
-			return err
-		}
-	default:
-		return ErrUnknownValidBinderType
-	}
-	return this.assignBinding(newBindingFinal(newFinalBindingSingletonProvider(provider)))
+	return assignValidBinderBinding(this, newBindingFinal(newFinalBindingSingletonProvider(provider)))
 }
 
-func (this *validBinder) assignBinding(binding *binding) error {
-	switch this.validBinderType {
+func verifyValidBinderInput(validBinder *validBinder, object interface{}, verifyFunc func(reflect.Type, interface{}) error) error {
+	switch validBinder.validBinderType {
 	case validBinderTypeBoundType:
-		this.injector.boundTypeToBinding[this.boundType] = binding
+		err := verifyFunc(validBinder.boundType, object)
+		if err != nil {
+			return err
+		}
 		return nil
 	case validBinderTypeTaggedBoundType:
-		this.injector.taggedBoundTypeToBinding[this.taggedBoundType] = binding
+		err := verifyToType(validBinder.taggedBoundType.boundType, object)
+		if err != nil {
+			return err
+		}
 		return nil
 	default:
 		return ErrUnknownValidBinderType
 	}
 }
 
-func verifyToType(fromReflectType reflect.Type, toReflectType reflect.Type) error {
+func assignValidBinderBinding(validBinder *validBinder, binding *binding) error {
+	switch validBinder.validBinderType {
+	case validBinderTypeBoundType:
+		validBinder.injector.boundTypeToBinding[validBinder.boundType] = binding
+		return nil
+	case validBinderTypeTaggedBoundType:
+		validBinder.injector.taggedBoundTypeToBinding[validBinder.taggedBoundType] = binding
+		return nil
+	default:
+		return ErrUnknownValidBinderType
+	}
+}
+
+func verifyToType(fromReflectType reflect.Type, to interface{}) error {
+	toReflectType := reflect.TypeOf(to)
 	// TODO(pedge): is this restriction necessary/warranted? how about structs with anonymous fields?
 	if !(fromReflectType.Kind() == reflect.Ptr && fromReflectType.Elem().Kind() == reflect.Interface) {
 		return ErrNotInterfacePtr
@@ -210,7 +167,7 @@ func verifyProvider(fromReflectType reflect.Type, provider interface{}) error {
 	if providerReflectType.NumOut() != 2 {
 		return ErrProviderReturnValuesInvalid
 	}
-	err := verifyBinding(fromReflectType, providerReflectType.Out(0))
+	err := verifyBindingReflectType(fromReflectType, providerReflectType.Out(0))
 	if err != nil {
 		return err
 	}
@@ -221,7 +178,11 @@ func verifyProvider(fromReflectType reflect.Type, provider interface{}) error {
 	return nil
 }
 
-func verifyBinding(fromReflectType reflect.Type, toReflectType reflect.Type) error {
+func verifyBinding(fromReflectType reflect.Type, to interface{}) error {
+	return verifyBindingReflectType(fromReflectType, reflect.TypeOf(to))
+}
+
+func verifyBindingReflectType(fromReflectType reflect.Type, toReflectType reflect.Type) error {
 	switch {
 	// from is an interface
 	case fromReflectType.Kind() == reflect.Ptr && fromReflectType.Elem().Kind() == reflect.Interface:
