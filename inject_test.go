@@ -518,6 +518,40 @@ func TestSingletonConstructorWithEvilCounterErr(t *testing.T) {
 	close(evilChan)
 }
 
+func TestSingletonConstructorWithEvilCounterMultipleInjectors(t *testing.T) {
+	t.Skip()
+	module := CreateModule()
+	err := module.Bind((*BarInterface)(nil)).ToSingletonConstructor(createEvilBarInterface)
+	require.NoError(t, err)
+	injector1, err := CreateInjector(module)
+	require.NoError(t, err)
+	injector2, err := CreateInjector(module)
+	require.NoError(t, err)
+	injector3, err := CreateInjector(module)
+	require.NoError(t, err)
+
+	evilCounter = int32(0)
+
+	barInterface1, err := injector1.Get((*BarInterface)(nil))
+	require.NoError(t, err)
+	barInterface2, err := injector2.Get((*BarInterface)(nil))
+	require.NoError(t, err)
+	barInterface3, err := injector3.Get((*BarInterface)(nil))
+	require.NoError(t, err)
+	require.Equal(t, 1, barInterface1.(BarInterface).Bar())
+	require.Equal(t, 2, barInterface2.(BarInterface).Bar())
+	require.Equal(t, 3, barInterface3.(BarInterface).Bar())
+	barInterface1, err = injector1.Get((*BarInterface)(nil))
+	require.NoError(t, err)
+	barInterface2, err = injector2.Get((*BarInterface)(nil))
+	require.NoError(t, err)
+	barInterface3, err = injector3.Get((*BarInterface)(nil))
+	require.NoError(t, err)
+	require.Equal(t, 1, barInterface1.(BarInterface).Bar())
+	require.Equal(t, 2, barInterface2.(BarInterface).Bar())
+	require.Equal(t, 3, barInterface3.(BarInterface).Bar())
+}
+
 func TestTaggedConstructorSimple(t *testing.T) {
 	module := CreateModule()
 	err := module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(&SimplePtrStruct{"hello"})
