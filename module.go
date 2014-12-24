@@ -31,7 +31,12 @@ func (this *module) BindTagged(from interface{}, tag string) Builder {
 	return newTaggedBuilder(this, fromReflectType, tag)
 }
 
-func (this *module) assignBinding(bindingKey bindingKey, binding binding) error {
+func (this *module) binding(bindingKey bindingKey) (binding, bool) {
+	binding, ok := this.bindings[bindingKey]
+	return binding, ok
+}
+
+func (this *module) setBinding(bindingKey bindingKey, binding binding) error {
 	foundBinding, ok := this.bindings[bindingKey]
 	if ok {
 		eb := newErrorBuilder(InjectErrorTypeAlreadyBound)

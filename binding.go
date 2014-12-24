@@ -6,31 +6,30 @@ import (
 	"sync/atomic"
 )
 
-// TODO(pedge): we could implement this where an intermediate binding resolves
-// the final binding at runtime, however for performance and safety, intermediate
-// bindings are eliminated from Injectors. get() returns an error for intermediateBinding,
-// getBindingKey() returns an error for all other. This is unclean and could be typed
 type binding interface {
+	resolvedBinding(*module) (resolvedBinding, error)
+}
+
+type resolvedBinding interface {
 	get(*injector) (interface{}, error)
-	bindingKey() (bindingKey, error)
 }
 
 type intermediateBinding struct {
-	bk bindingKey
+	bindingKey bindingKey
 }
 
 func newIntermediateBinding(bindingKey bindingKey) binding {
 	return &intermediateBinding{bindingKey}
 }
 
-func (this *intermediateBinding) get(injector *injector) (interface{}, error) {
-	eb := newErrorBuilder(InjectErrorTypeIntermediateBinding)
-	eb = eb.addTag("bindingKey", this.bk)
-	return nil, eb.build()
-}
-
-func (this *intermediateBinding) bindingKey() (bindingKey, error) {
-	return this.bk, nil
+func (this *intermediateBinding) resolvedBinding(module *module) (resolvedBinding, error) {
+	binding, ok := module.binding(this.bindingKey)
+	if !ok {
+		eb := newErrorBuilder(InjectErrorTypeNoFinalBinding)
+		eb.addTag("bindingKey", this.bindingKey)
+		return nil, eb.build()
+	}
+	return binding.resolvedBinding(module)
 }
 
 type singletonBinding struct {
@@ -43,6 +42,10 @@ func newSingletonBinding(singleton interface{}) binding {
 
 func (this *singletonBinding) get(injector *injector) (interface{}, error) {
 	return this.singleton, nil
+}
+
+func (this *singletonBinding) resolvedBinding(module *module) (resolvedBinding, error) {
+	return this, nil
 }
 
 func (this *singletonBinding) bindingKey() (bindingKey, error) {
@@ -90,6 +93,10 @@ func (this *constructorBinding) get(injector *injector) (interface{}, error) {
 	}
 }
 
+func (this *constructorBinding) resolvedBinding(module *module) (resolvedBinding, error) {
+	return this, nil
+}
+
 func (this *constructorBinding) bindingKey() (bindingKey, error) {
 	return nil, newErrorBuilder(InjectErrorTypeFinalBinding).build()
 }
@@ -112,6 +119,10 @@ func (this *singletonConstructorBinding) get(injector *injector) (interface{}, e
 	})
 	valueErr := this.value.Load().(*valueErr)
 	return valueErr.value, valueErr.err
+}
+
+func (this *singletonConstructorBinding) resolvedBinding(moduke *module) (resolvedBinding, error) {
+	return this, nil
 }
 
 type valueErr struct {

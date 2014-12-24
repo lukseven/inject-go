@@ -55,7 +55,7 @@ func (this *baseBuilder) To(to interface{}) error {
 	if err != nil {
 		return err
 	}
-	return this.assignBinding(newIntermediateBinding(newBindingKey(toReflectType)))
+	return this.setBinding(newIntermediateBinding(newBindingKey(toReflectType)))
 }
 
 func (this *baseBuilder) ToSingleton(singleton interface{}) error {
@@ -64,7 +64,7 @@ func (this *baseBuilder) ToSingleton(singleton interface{}) error {
 	if err != nil {
 		return err
 	}
-	return this.assignBinding(newSingletonBinding(singleton))
+	return this.setBinding(newSingletonBinding(singleton))
 }
 
 func (this *baseBuilder) ToConstructor(constructor interface{}) error {
@@ -73,7 +73,7 @@ func (this *baseBuilder) ToConstructor(constructor interface{}) error {
 	if err != nil {
 		return err
 	}
-	return this.assignBinding(newConstructorBinding(constructor))
+	return this.setBinding(newConstructorBinding(constructor))
 }
 
 func (this *baseBuilder) ToSingletonConstructor(constructor interface{}) error {
@@ -82,7 +82,7 @@ func (this *baseBuilder) ToSingletonConstructor(constructor interface{}) error {
 	if err != nil {
 		return err
 	}
-	return this.assignBinding(newSingletonConstructorBinding(constructor))
+	return this.setBinding(newSingletonConstructorBinding(constructor))
 }
 
 func (this *baseBuilder) ToTaggedConstructor(constructor interface{}) error {
@@ -167,6 +167,6 @@ func (this *baseBuilder) verifyBindingReflectType(bindingReflectType reflect.Typ
 	return nil
 }
 
-func (this *baseBuilder) assignBinding(binding binding) error {
-	return this.module.assignBinding(this.bindingKey, binding)
+func (this *baseBuilder) setBinding(binding binding) error {
+	return this.module.setBinding(this.bindingKey, binding)
 }

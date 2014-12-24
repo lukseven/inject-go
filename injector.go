@@ -5,11 +5,11 @@ import (
 )
 
 type injector struct {
-	bindings map[bindingKey]binding
+	bindings map[bindingKey]resolvedBinding
 }
 
 func createInjector(modules []Module) (Injector, error) {
-	injector := injector{make(map[bindingKey]binding)}
+	injector := injector{make(map[bindingKey]resolvedBinding)}
 	for _, m := range modules {
 		castModule, ok := m.(*module)
 		if !ok {
@@ -31,26 +31,13 @@ func installModuleToInjector(injector *injector, module *module) error {
 			eb.addTag("foundBinding", foundBinding)
 			return eb.build()
 		}
-		finalBinding, ok := getFinalBinding(module, binding)
-		if !ok {
-			eb := newErrorBuilder(InjectErrorTypeNoFinalBinding)
-			eb.addTag("bindingKey", bindingKey)
-			return eb.build()
+		resolvedBinding, err := binding.resolvedBinding(module)
+		if err != nil {
+			return err
 		}
-		injector.bindings[bindingKey] = finalBinding
+		injector.bindings[bindingKey] = resolvedBinding
 	}
 	return nil
-}
-
-func getFinalBinding(module *module, binding binding) (binding, bool) {
-	var ok bool
-	for bindingKey, err := binding.bindingKey(); err == nil; bindingKey, err = binding.bindingKey() {
-		binding, ok = module.bindings[bindingKey]
-		if !ok {
-			return nil, false
-		}
-	}
-	return binding, true
 }
 
 func (this *injector) Get(from interface{}) (interface{}, error) {
