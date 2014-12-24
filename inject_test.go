@@ -349,6 +349,20 @@ func createSecondInterfaceErrNoBinding(s SimpleInterface, b BarInterface, u Unbo
 	return &SecondPtrStruct{s, b}, nil
 }
 
+func createSecondInterfaceTaggedOne(str struct {
+	S SimpleInterface `inject:"tagOne"`
+	B BarInterface    `inject:"tagTwo"`
+}) (SecondInterface, error) {
+	return &SecondPtrStruct{str.S, str.B}, nil
+}
+
+func createSecondInterfaceTaggedTwo(str struct {
+	S SimpleInterface `inject:"tagOne"`
+	B BarInterface
+}) (SecondInterface, error) {
+	return &SecondPtrStruct{str.S, str.B}, nil
+}
+
 type BarInterfaceError struct {
 	BarInterface
 	err error
@@ -502,4 +516,21 @@ func TestSingletonConstructorWithEvilCounterErr(t *testing.T) {
 	}
 
 	close(evilChan)
+}
+
+func TestTaggedConstructorSimple(t *testing.T) {
+	module := CreateModule()
+	err := module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(&SimplePtrStruct{"hello"})
+	require.NoError(t, err)
+	err = module.BindTagged((*BarInterface)(nil), "tagTwo").ToSingleton(&BarPtrStruct{1})
+	require.NoError(t, err)
+	err = module.Bind((*SecondInterface)(nil)).ToTaggedConstructor(createSecondInterfaceTaggedOne)
+	require.NoError(t, err)
+	injector, err := CreateInjector(module)
+	require.NoError(t, err)
+	object, err := injector.Get((*SecondInterface)(nil))
+	require.NoError(t, err)
+	secondInterface := object.(SecondInterface)
+	require.Equal(t, "hello", secondInterface.Foo().Foo())
+	require.Equal(t, 1, secondInterface.Bar().Bar())
 }

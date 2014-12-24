@@ -179,6 +179,11 @@ func (this *taggedConstructorBinding) getBindingKeys() []bindingKey {
 	for i := 0; i < numFields; i++ {
 		structField := inReflectType.Field(i)
 		structFieldReflectType := structField.Type
+		// TODO(pedge): this is really specific logic, and there wil need to be more
+		// of this if more types are allowed for binding - this should be abstracted
+		if structFieldReflectType.Kind() == reflect.Interface {
+			structFieldReflectType = reflect.PtrTo(structFieldReflectType)
+		}
 		tag := structField.Tag.Get(taggedConstructorStructFieldTag)
 		if tag != "" {
 			bindingKeys[i] = newTaggedBindingKey(structFieldReflectType, tag)
