@@ -86,11 +86,21 @@ func (this *baseBuilder) ToSingletonConstructor(constructor interface{}) error {
 }
 
 func (this *baseBuilder) ToTaggedConstructor(constructor interface{}) error {
-	return newErrorBuilder("NOT IMPLEMENTED").build()
+	constructorReflectType := reflect.TypeOf(constructor)
+	err := this.verifyTaggedConstructorReflectType(constructorReflectType)
+	if err != nil {
+		return err
+	}
+	return this.setBinding(newTaggedConstructorBinding(constructor))
 }
 
 func (this *baseBuilder) ToTaggedSingletonConstructor(constructor interface{}) error {
-	return newErrorBuilder("NOT IMPLEMENTED").build()
+	constructorReflectType := reflect.TypeOf(constructor)
+	err := this.verifyTaggedConstructorReflectType(constructorReflectType)
+	if err != nil {
+		return err
+	}
+	return this.setBinding(newTaggedSingletonConstructorBinding(constructor))
 }
 
 func (this *baseBuilder) verifyToReflectType(toReflectType reflect.Type) error {
@@ -157,6 +167,30 @@ func (this *baseBuilder) verifyConstructorReflectType(constructorReflectType ref
 	// TODO(pedge): can this be simplified?
 	if !constructorReflectType.Out(1).AssignableTo(reflect.TypeOf((*error)(nil)).Elem()) {
 		eb := newErrorBuilder(InjectErrorTypeConstructorReturnValuesInvalid)
+		eb = eb.addTag("constructorReflectType", constructorReflectType)
+		return eb.build()
+	}
+	return nil
+}
+
+func (this *baseBuilder) verifyTaggedConstructorReflectType(constructorReflectType reflect.Type) error {
+	err := this.verifyConstructorReflectType(constructorReflectType)
+	if err != nil {
+		return err
+	}
+	if constructorReflectType.NumIn() != 1 {
+		eb := newErrorBuilder(InjectErrorTypeTaggedConstructorParametersInvalid)
+		eb = eb.addTag("constructorReflectType", constructorReflectType)
+		return eb.build()
+	}
+	inReflectType := constructorReflectType.In(0)
+	if !isStruct(inReflectType) {
+		eb := newErrorBuilder(InjectErrorTypeTaggedConstructorParametersInvalid)
+		eb = eb.addTag("constructorReflectType", constructorReflectType)
+		return eb.build()
+	}
+	if inReflectType.Name() != "" {
+		eb := newErrorBuilder(InjectErrorTypeTaggedConstructorParametersInvalid)
 		eb = eb.addTag("constructorReflectType", constructorReflectType)
 		return eb.build()
 	}

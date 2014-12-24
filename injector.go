@@ -55,54 +55,26 @@ func validate(injector *injector) error {
 }
 
 func (this *injector) Get(from interface{}) (interface{}, error) {
-	return this.get(reflect.TypeOf(from))
-}
-
-func (this *injector) get(bindingType reflect.Type) (interface{}, error) {
-	binding, err := this.getBinding(bindingType)
-	if err != nil {
-		return nil, err
-	}
-	return binding.get(this)
+	return this.get(newBindingKey(reflect.TypeOf(from)))
 }
 
 func (this *injector) GetTagged(from interface{}, tag string) (interface{}, error) {
-	return this.getTagged(reflect.TypeOf(from), tag)
+	return this.get(newTaggedBindingKey(reflect.TypeOf(from), tag))
 }
 
-func (this *injector) getTagged(bindingType reflect.Type, tag string) (interface{}, error) {
-	binding, err := this.getTaggedBinding(bindingType, tag)
+func (this *injector) get(bindingKey bindingKey) (interface{}, error) {
+	binding, err := this.getBinding(bindingKey)
 	if err != nil {
 		return nil, err
 	}
 	return binding.get(this)
 }
 
-func (this *injector) getBinding(bindingType reflect.Type) (resolvedBinding, error) {
-	if bindingType == nil {
-		return nil, newErrorBuilder(InjectErrorTypeReflectTypeNil).build()
-	}
-	binding, ok := this.bindings[newBindingKey(bindingType)]
+func (this *injector) getBinding(bindingKey bindingKey) (resolvedBinding, error) {
+	binding, ok := this.bindings[bindingKey]
 	if !ok {
 		eb := newErrorBuilder(InjectErrorTypeNoBinding)
-		eb.addTag("bindingType", bindingType)
-		return nil, eb.build()
-	}
-	return binding, nil
-}
-
-func (this *injector) getTaggedBinding(bindingType reflect.Type, tag string) (resolvedBinding, error) {
-	if bindingType == nil {
-		return nil, newErrorBuilder(InjectErrorTypeReflectTypeNil).build()
-	}
-	if tag == "" {
-		return nil, newErrorBuilder(InjectErrorTypeTagEmpty).build()
-	}
-	binding, ok := this.bindings[newTaggedBindingKey(bindingType, tag)]
-	if !ok {
-		eb := newErrorBuilder(InjectErrorTypeNoBinding)
-		eb.addTag("bindingType", bindingType)
-		eb.addTag("tag", tag)
+		eb.addTag("bindingKey", bindingKey)
 		return nil, eb.build()
 	}
 	return binding, nil
