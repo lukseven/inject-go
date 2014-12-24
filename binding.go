@@ -156,7 +156,8 @@ func (this *taggedConstructorBinding) get(injector *injector) (interface{}, erro
 	constructorReflectType := reflect.TypeOf(this.constructor)
 	inReflectType := constructorReflectType.In(0)
 	numFields := inReflectType.NumField()
-	value := reflect.Zero(inReflectType)
+	valuePtr := reflect.New(inReflectType)
+	value := reflect.Indirect(valuePtr)
 	for i := 0; i < numFields; i++ {
 		field, err := injector.get(bindingKeys[i])
 		if err != nil {
