@@ -333,12 +333,20 @@ func (this *SecondPtrStruct) Bar() BarInterface {
 	return this.bar
 }
 
+type UnboundInterface interface {
+	Baz() string
+}
+
 func createSecondInterface(s SimpleInterface, b BarInterface) (SecondInterface, error) {
 	return &SecondPtrStruct{s, b}, nil
 }
 
 func createSecondInterfaceErr(s SimpleInterface, b BarInterface) (SecondInterface, error) {
 	return nil, errors.New("XYZ")
+}
+
+func createSecondInterfaceErrNoBinding(s SimpleInterface, b BarInterface, u UnboundInterface) (SecondInterface, error) {
+	return &SecondPtrStruct{s, b}, nil
 }
 
 type BarInterfaceError struct {
@@ -387,6 +395,20 @@ func TestConstructorErrReturned(t *testing.T) {
 	require.NoError(t, err)
 	_, err = injector.Get((*SecondInterface)(nil))
 	require.Equal(t, "XYZ", err.Error())
+}
+
+func TestConstructorErrNoBindingReturned(t *testing.T) {
+	module := CreateModule()
+	err := module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+	require.NoError(t, err)
+	err = module.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
+	require.NoError(t, err)
+	err = module.Bind((*SecondInterface)(nil)).ToConstructor(createSecondInterfaceErrNoBinding)
+	require.NoError(t, err)
+	_, err = CreateInjector(module)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), InjectErrorTypeNoBinding)
+	require.Contains(t, err.Error(), "inject.UnboundInterface")
 }
 
 func TestConstructorWithEvilCounter(t *testing.T) {
