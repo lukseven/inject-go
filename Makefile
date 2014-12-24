@@ -11,6 +11,10 @@ build: deps
 test: deps
 	go test -test.v ./...
 
+cov: deps
+	go get -v github.com/axw/gocov/gocov
+	gocov test | gocov report
+
 install: deps
 	go install ./...
 

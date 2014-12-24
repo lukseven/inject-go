@@ -110,8 +110,37 @@ func (this *baseBuilder) verifyToReflectType(toReflectType reflect.Type) error {
 	return nil
 }
 
+func (this *baseBuilder) verifyBindingReflectType(bindingReflectType reflect.Type) error {
+	bindingKeyReflectType := this.bindingKey.reflectType()
+	switch {
+	case isInterfacePtr(bindingKeyReflectType):
+		if !bindingReflectType.Implements(bindingKeyReflectType.Elem()) {
+			eb := newErrorBuilder(InjectErrorTypeDoesNotImplement)
+			eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
+			eb = eb.addTag("bindingReflectType", bindingReflectType)
+			return eb.build()
+		}
+	// from is a struct pointer
+	case isStructPtr(bindingKeyReflectType), isStruct(bindingKeyReflectType):
+		// TODO(pedge): is this correct?
+		if !bindingReflectType.AssignableTo(bindingKeyReflectType) {
+			eb := newErrorBuilder(InjectErrorTypeNotAssignable)
+			eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
+			eb = eb.addTag("bindingReflectType", bindingReflectType)
+			return eb.build()
+		}
+	// nothing else is supported for now
+	// TODO(pedge): at least support primitives with tags
+	default:
+		eb := newErrorBuilder(InjectErrorTypeNotSupportedYet)
+		eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
+		return eb.build()
+	}
+	return nil
+}
+
 func (this *baseBuilder) verifyConstructorReflectType(constructorReflectType reflect.Type) error {
-	if constructorReflectType.Kind() != reflect.Func {
+	if !isFunc(constructorReflectType) {
 		eb := newErrorBuilder(InjectErrorTypeConstructorNotFunction)
 		eb = eb.addTag("constructorReflectType", constructorReflectType)
 		return eb.build()
@@ -134,39 +163,30 @@ func (this *baseBuilder) verifyConstructorReflectType(constructorReflectType ref
 	return nil
 }
 
-func (this *baseBuilder) verifyBindingReflectType(bindingReflectType reflect.Type) error {
-	bindingKeyReflectType := this.bindingKey.reflectType()
-	switch {
-	// from is an interface
-	case bindingKeyReflectType.Kind() == reflect.Ptr && bindingKeyReflectType.Elem().Kind() == reflect.Interface:
-		if !bindingReflectType.Implements(bindingKeyReflectType.Elem()) {
-			eb := newErrorBuilder(InjectErrorTypeDoesNotImplement)
-			eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
-			eb = eb.addTag("bindingReflectType", bindingReflectType)
-			return eb.build()
-		}
-	// from is a struct pointer
-	case bindingKeyReflectType.Kind() == reflect.Ptr && bindingKeyReflectType.Elem().Kind() == reflect.Struct:
-		fallthrough
-	// from is a struct
-	case bindingKeyReflectType.Kind() == reflect.Struct:
-		// TODO(pedge): is this correct?
-		if !bindingReflectType.AssignableTo(bindingKeyReflectType) {
-			eb := newErrorBuilder(InjectErrorTypeNotAssignable)
-			eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
-			eb = eb.addTag("bindingReflectType", bindingReflectType)
-			return eb.build()
-		}
-	// nothing else is supported for now
-	// TODO(pedge): at least support primitives with tags
-	default:
-		eb := newErrorBuilder(InjectErrorTypeNotSupportedYet)
-		eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
-		return eb.build()
-	}
-	return nil
-}
-
 func (this *baseBuilder) setBinding(binding binding) error {
 	return this.module.setBinding(this.bindingKey, binding)
+}
+
+func isInterfacePtr(reflectType reflect.Type) bool {
+	return isPtr(reflectType) && isInterface(reflectType.Elem())
+}
+
+func isStructPtr(reflectType reflect.Type) bool {
+	return isPtr(reflectType) && isStruct(reflectType.Elem())
+}
+
+func isInterface(reflectType reflect.Type) bool {
+	return reflectType.Kind() == reflect.Interface
+}
+
+func isStruct(reflectType reflect.Type) bool {
+	return reflectType.Kind() == reflect.Struct
+}
+
+func isPtr(reflectType reflect.Type) bool {
+	return reflectType.Kind() == reflect.Ptr
+}
+
+func isFunc(reflectType reflect.Type) bool {
+	return reflectType.Kind() == reflect.Func
 }

@@ -61,26 +61,22 @@ func newConstructorBinding(constructor interface{}) binding {
 }
 
 func (this *constructorBinding) get(injector *injector) (interface{}, error) {
-	// assuming this is a valid provider/that this is already checked
+	// assuming this is a valid constructor/that this is already checked
 	constructorReflectType := reflect.TypeOf(this.constructor)
 	numIn := constructorReflectType.NumIn()
 	parameterValues := make([]reflect.Value, numIn)
-	if numIn == 1 && constructorReflectType.In(0).AssignableTo(reflect.TypeOf((*Injector)(nil)).Elem()) {
-		parameterValues[0] = reflect.ValueOf(injector)
-	} else {
-		for i := 0; i < numIn; i++ {
-			inReflectType := constructorReflectType.In(i)
-			// TODO(pedge): this is really specific logic, and there wil need to be more
-			// of this if more types are allowed for binding - this should be abstracted
-			if inReflectType.Kind() == reflect.Interface {
-				inReflectType = reflect.PtrTo(inReflectType)
-			}
-			parameter, err := injector.get(inReflectType)
-			if err != nil {
-				return nil, err
-			}
-			parameterValues[i] = reflect.ValueOf(parameter)
+	for i := 0; i < numIn; i++ {
+		inReflectType := constructorReflectType.In(i)
+		// TODO(pedge): this is really specific logic, and there wil need to be more
+		// of this if more types are allowed for binding - this should be abstracted
+		if inReflectType.Kind() == reflect.Interface {
+			inReflectType = reflect.PtrTo(inReflectType)
 		}
+		parameter, err := injector.get(inReflectType)
+		if err != nil {
+			return nil, err
+		}
+		parameterValues[i] = reflect.ValueOf(parameter)
 	}
 	returnValues := reflect.ValueOf(this.constructor).Call(parameterValues)
 	return1 := returnValues[0].Interface()
