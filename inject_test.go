@@ -519,7 +519,6 @@ func TestSingletonConstructorWithEvilCounterErr(t *testing.T) {
 }
 
 func TestSingletonConstructorWithEvilCounterMultipleInjectors(t *testing.T) {
-	t.Skip()
 	module := CreateModule()
 	err := module.Bind((*BarInterface)(nil)).ToSingletonConstructor(createEvilBarInterface)
 	require.NoError(t, err)

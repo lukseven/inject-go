@@ -35,7 +35,7 @@ func installModuleToInjector(injector *injector, module *module) error {
 			eb.addTag("foundBinding", foundBinding)
 			return eb.build()
 		}
-		resolvedBinding, err := binding.resolvedBinding(module)
+		resolvedBinding, err := binding.resolvedBinding(module, injector)
 		if err != nil {
 			return err
 		}
@@ -46,7 +46,7 @@ func installModuleToInjector(injector *injector, module *module) error {
 
 func validate(injector *injector) error {
 	for _, resolvedBinding := range injector.bindings {
-		err := resolvedBinding.validate(injector)
+		err := resolvedBinding.validate()
 		if err != nil {
 			return err
 		}
@@ -67,7 +67,7 @@ func (this *injector) get(bindingKey bindingKey) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return binding.get(this)
+	return binding.get()
 }
 
 func (this *injector) getBinding(bindingKey bindingKey) (resolvedBinding, error) {

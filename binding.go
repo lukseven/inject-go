@@ -11,12 +11,12 @@ const (
 )
 
 type binding interface {
-	resolvedBinding(*module) (resolvedBinding, error)
+	resolvedBinding(*module, *injector) (resolvedBinding, error)
 }
 
 type resolvedBinding interface {
-	validate(*injector) error
-	get(*injector) (interface{}, error)
+	validate() error
+	get() (interface{}, error)
 }
 
 type intermediateBinding struct {
@@ -27,39 +27,41 @@ func newIntermediateBinding(bindingKey bindingKey) binding {
 	return &intermediateBinding{bindingKey}
 }
 
-func (this *intermediateBinding) resolvedBinding(module *module) (resolvedBinding, error) {
+func (this *intermediateBinding) resolvedBinding(module *module, injector *injector) (resolvedBinding, error) {
 	binding, ok := module.binding(this.bindingKey)
 	if !ok {
 		eb := newErrorBuilder(InjectErrorTypeNoFinalBinding)
 		eb.addTag("bindingKey", this.bindingKey)
 		return nil, eb.build()
 	}
-	return binding.resolvedBinding(module)
+	return binding.resolvedBinding(module, injector)
 }
 
 type singletonBinding struct {
 	singleton interface{}
+	injector  *injector
 }
 
 func newSingletonBinding(singleton interface{}) binding {
-	return &singletonBinding{singleton}
+	return &singletonBinding{singleton, nil}
 }
 
-func (this *singletonBinding) validate(injector *injector) error {
+func (this *singletonBinding) validate() error {
 	return nil
 }
 
-func (this *singletonBinding) get(injector *injector) (interface{}, error) {
+func (this *singletonBinding) get() (interface{}, error) {
 	return this.singleton, nil
 }
 
-func (this *singletonBinding) resolvedBinding(module *module) (resolvedBinding, error) {
-	return this, nil
+func (this *singletonBinding) resolvedBinding(module *module, injector *injector) (resolvedBinding, error) {
+	return &singletonBinding{this.singleton, injector}, nil
 }
 
 type constructorBinding struct {
 	constructor interface{}
 	cache       *constructorBindingCache
+	injector    *injector
 }
 
 type constructorBindingCache struct {
@@ -68,7 +70,7 @@ type constructorBindingCache struct {
 }
 
 func newConstructorBinding(constructor interface{}) binding {
-	return &constructorBinding{constructor, newConstructorBindingCache(constructor)}
+	return &constructorBinding{constructor, newConstructorBindingCache(constructor), nil}
 }
 
 func newConstructorBindingCache(constructor interface{}) *constructorBindingCache {
@@ -90,14 +92,14 @@ func newConstructorBindingCache(constructor interface{}) *constructorBindingCach
 	}
 }
 
-func (this *constructorBinding) validate(injector *injector) error {
-	return validateBindingKeys(this.cache.bindingKeys, injector)
+func (this *constructorBinding) validate() error {
+	return validateBindingKeys(this.cache.bindingKeys, this.injector)
 }
 
-func (this *constructorBinding) get(injector *injector) (interface{}, error) {
+func (this *constructorBinding) get() (interface{}, error) {
 	parameterValues := make([]reflect.Value, this.cache.numIn)
 	for i := 0; i < this.cache.numIn; i++ {
-		parameter, err := injector.get(this.cache.bindingKeys[i])
+		parameter, err := this.injector.get(this.cache.bindingKeys[i])
 		if err != nil {
 			return nil, err
 		}
@@ -106,8 +108,8 @@ func (this *constructorBinding) get(injector *injector) (interface{}, error) {
 	return callConstructor(this.constructor, parameterValues)
 }
 
-func (this *constructorBinding) resolvedBinding(module *module) (resolvedBinding, error) {
-	return this, nil
+func (this *constructorBinding) resolvedBinding(module *module, injector *injector) (resolvedBinding, error) {
+	return &constructorBinding{this.constructor, this.cache, injector}, nil
 }
 
 type singletonConstructorBinding struct {
@@ -116,20 +118,21 @@ type singletonConstructorBinding struct {
 }
 
 func newSingletonConstructorBinding(constructor interface{}) binding {
-	return &singletonConstructorBinding{constructorBinding{constructor, newConstructorBindingCache(constructor)}, newLoader()}
+	return &singletonConstructorBinding{constructorBinding{constructor, newConstructorBindingCache(constructor), nil}, nil}
 }
 
-func (this *singletonConstructorBinding) get(injector *injector) (interface{}, error) {
-	return this.loader.load(func() (interface{}, error) { return this.constructorBinding.get(injector) })
+func (this *singletonConstructorBinding) get() (interface{}, error) {
+	return this.loader.load(func() (interface{}, error) { return this.constructorBinding.get() })
 }
 
-func (this *singletonConstructorBinding) resolvedBinding(module *module) (resolvedBinding, error) {
-	return this, nil
+func (this *singletonConstructorBinding) resolvedBinding(module *module, injector *injector) (resolvedBinding, error) {
+	return &singletonConstructorBinding{constructorBinding{this.constructorBinding.constructor, this.constructorBinding.cache, injector}, newLoader()}, nil
 }
 
 type taggedConstructorBinding struct {
 	constructor interface{}
 	cache       *taggedConstructorBindingCache
+	injector    *injector
 }
 
 type taggedConstructorBindingCache struct {
@@ -139,7 +142,7 @@ type taggedConstructorBindingCache struct {
 }
 
 func newTaggedConstructorBinding(constructor interface{}) binding {
-	return &taggedConstructorBinding{constructor, newTaggedConstructorBindingCache(constructor)}
+	return &taggedConstructorBinding{constructor, newTaggedConstructorBindingCache(constructor), nil}
 }
 
 func newTaggedConstructorBindingCache(constructor interface{}) *taggedConstructorBindingCache {
@@ -170,15 +173,15 @@ func newTaggedConstructorBindingCache(constructor interface{}) *taggedConstructo
 	}
 }
 
-func (this *taggedConstructorBinding) validate(injector *injector) error {
-	return validateBindingKeys(this.cache.bindingKeys, injector)
+func (this *taggedConstructorBinding) validate() error {
+	return validateBindingKeys(this.cache.bindingKeys, this.injector)
 }
 
-func (this *taggedConstructorBinding) get(injector *injector) (interface{}, error) {
+func (this *taggedConstructorBinding) get() (interface{}, error) {
 	valuePtr := reflect.New(this.cache.inReflectType)
 	value := reflect.Indirect(valuePtr)
 	for i := 0; i < this.cache.numFields; i++ {
-		field, err := injector.get(this.cache.bindingKeys[i])
+		field, err := this.injector.get(this.cache.bindingKeys[i])
 		if err != nil {
 			return nil, err
 		}
@@ -187,8 +190,8 @@ func (this *taggedConstructorBinding) get(injector *injector) (interface{}, erro
 	return callConstructor(this.constructor, []reflect.Value{value})
 }
 
-func (this *taggedConstructorBinding) resolvedBinding(module *module) (resolvedBinding, error) {
-	return this, nil
+func (this *taggedConstructorBinding) resolvedBinding(module *module, injector *injector) (resolvedBinding, error) {
+	return &taggedConstructorBinding{this.constructor, this.cache, injector}, nil
 }
 
 type taggedSingletonConstructorBinding struct {
@@ -197,15 +200,15 @@ type taggedSingletonConstructorBinding struct {
 }
 
 func newTaggedSingletonConstructorBinding(constructor interface{}) binding {
-	return &taggedSingletonConstructorBinding{taggedConstructorBinding{constructor, newTaggedConstructorBindingCache(constructor)}, newLoader()}
+	return &taggedSingletonConstructorBinding{taggedConstructorBinding{constructor, newTaggedConstructorBindingCache(constructor), nil}, nil}
 }
 
-func (this *taggedSingletonConstructorBinding) get(injector *injector) (interface{}, error) {
-	return this.loader.load(func() (interface{}, error) { return this.taggedConstructorBinding.get(injector) })
+func (this *taggedSingletonConstructorBinding) get() (interface{}, error) {
+	return this.loader.load(func() (interface{}, error) { return this.taggedConstructorBinding.get() })
 }
 
-func (this *taggedSingletonConstructorBinding) resolvedBinding(module *module) (resolvedBinding, error) {
-	return this, nil
+func (this *taggedSingletonConstructorBinding) resolvedBinding(module *module, injector *injector) (resolvedBinding, error) {
+	return &taggedSingletonConstructorBinding{taggedConstructorBinding{this.taggedConstructorBinding.constructor, this.taggedConstructorBinding.cache, injector}, newLoader()}, nil
 }
 
 func callConstructor(constructor interface{}, reflectValues []reflect.Value) (interface{}, error) {
