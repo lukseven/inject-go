@@ -59,28 +59,45 @@ func (this *singletonBinding) resolvedBinding(module *module) (resolvedBinding, 
 
 type constructorBinding struct {
 	constructor interface{}
+	cache       *constructorBindingCache
+}
+
+type constructorBindingCache struct {
+	numIn       int
+	bindingKeys []bindingKey
 }
 
 func newConstructorBinding(constructor interface{}) binding {
-	return &constructorBinding{constructor}
+	return &constructorBinding{constructor, newConstructorBindingCache(constructor)}
+}
+
+func newConstructorBindingCache(constructor interface{}) *constructorBindingCache {
+	constructorReflectType := reflect.TypeOf(constructor)
+	numIn := constructorReflectType.NumIn()
+	bindingKeys := make([]bindingKey, numIn)
+	for i := 0; i < numIn; i++ {
+		inReflectType := constructorReflectType.In(i)
+		// TODO(pedge): this is really specific logic, and there wil need to be more
+		// of this if more types are allowed for binding - this should be abstracted
+		if inReflectType.Kind() == reflect.Interface {
+			inReflectType = reflect.PtrTo(inReflectType)
+		}
+		bindingKeys[i] = newBindingKey(inReflectType)
+	}
+	return &constructorBindingCache{
+		numIn,
+		bindingKeys,
+	}
 }
 
 func (this *constructorBinding) validate(injector *injector) error {
-	for _, bindingKey := range this.getBindingKeys() {
-		_, err := injector.getBinding(bindingKey)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return validateBindingKeys(this.cache.bindingKeys, injector)
 }
 
 func (this *constructorBinding) get(injector *injector) (interface{}, error) {
-	bindingKeys := this.getBindingKeys()
-	numIn := len(bindingKeys)
-	parameterValues := make([]reflect.Value, numIn)
-	for i := 0; i < numIn; i++ {
-		parameter, err := injector.get(bindingKeys[i])
+	parameterValues := make([]reflect.Value, this.cache.numIn)
+	for i := 0; i < this.cache.numIn; i++ {
+		parameter, err := injector.get(this.cache.bindingKeys[i])
 		if err != nil {
 			return nil, err
 		}
@@ -93,40 +110,17 @@ func (this *constructorBinding) resolvedBinding(module *module) (resolvedBinding
 	return this, nil
 }
 
-func (this *constructorBinding) getBindingKeys() []bindingKey {
-	constructorReflectType := reflect.TypeOf(this.constructor)
-	numIn := constructorReflectType.NumIn()
-	bindingKeys := make([]bindingKey, numIn)
-	for i := 0; i < numIn; i++ {
-		inReflectType := constructorReflectType.In(i)
-		// TODO(pedge): this is really specific logic, and there wil need to be more
-		// of this if more types are allowed for binding - this should be abstracted
-		if inReflectType.Kind() == reflect.Interface {
-			inReflectType = reflect.PtrTo(inReflectType)
-		}
-		bindingKeys[i] = newBindingKey(inReflectType)
-	}
-	return bindingKeys
-}
-
 type singletonConstructorBinding struct {
 	constructorBinding
-	// TODO(pedge): is atomic.Value the equivalent of a volatile variable in Java?
-	value atomic.Value
-	once  sync.Once
+	loader *loader
 }
 
 func newSingletonConstructorBinding(constructor interface{}) binding {
-	return &singletonConstructorBinding{constructorBinding{constructor}, atomic.Value{}, sync.Once{}}
+	return &singletonConstructorBinding{constructorBinding{constructor, newConstructorBindingCache(constructor)}, newLoader()}
 }
 
 func (this *singletonConstructorBinding) get(injector *injector) (interface{}, error) {
-	this.once.Do(func() {
-		value, err := this.constructorBinding.get(injector)
-		this.value.Store(&valueErr{value, err})
-	})
-	valueErr := this.value.Load().(*valueErr)
-	return valueErr.value, valueErr.err
+	return this.loader.load(func() (interface{}, error) { return this.constructorBinding.get(injector) })
 }
 
 func (this *singletonConstructorBinding) resolvedBinding(module *module) (resolvedBinding, error) {
@@ -135,45 +129,21 @@ func (this *singletonConstructorBinding) resolvedBinding(module *module) (resolv
 
 type taggedConstructorBinding struct {
 	constructor interface{}
+	cache       *taggedConstructorBindingCache
+}
+
+type taggedConstructorBindingCache struct {
+	inReflectType reflect.Type
+	numFields     int
+	bindingKeys   []bindingKey
 }
 
 func newTaggedConstructorBinding(constructor interface{}) binding {
-	return &taggedConstructorBinding{constructor}
+	return &taggedConstructorBinding{constructor, newTaggedConstructorBindingCache(constructor)}
 }
 
-func (this *taggedConstructorBinding) validate(injector *injector) error {
-	for _, bindingKey := range this.getBindingKeys() {
-		_, err := injector.getBinding(bindingKey)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (this *taggedConstructorBinding) get(injector *injector) (interface{}, error) {
-	bindingKeys := this.getBindingKeys()
-	constructorReflectType := reflect.TypeOf(this.constructor)
-	inReflectType := constructorReflectType.In(0)
-	numFields := inReflectType.NumField()
-	valuePtr := reflect.New(inReflectType)
-	value := reflect.Indirect(valuePtr)
-	for i := 0; i < numFields; i++ {
-		field, err := injector.get(bindingKeys[i])
-		if err != nil {
-			return nil, err
-		}
-		value.Field(i).Set(reflect.ValueOf(field))
-	}
-	return callConstructor(this.constructor, []reflect.Value{value})
-}
-
-func (this *taggedConstructorBinding) resolvedBinding(module *module) (resolvedBinding, error) {
-	return this, nil
-}
-
-func (this *taggedConstructorBinding) getBindingKeys() []bindingKey {
-	constructorReflectType := reflect.TypeOf(this.constructor)
+func newTaggedConstructorBindingCache(constructor interface{}) *taggedConstructorBindingCache {
+	constructorReflectType := reflect.TypeOf(constructor)
 	inReflectType := constructorReflectType.In(0)
 	numFields := inReflectType.NumField()
 	bindingKeys := make([]bindingKey, numFields)
@@ -192,27 +162,46 @@ func (this *taggedConstructorBinding) getBindingKeys() []bindingKey {
 			bindingKeys[i] = newBindingKey(structFieldReflectType)
 		}
 	}
-	return bindingKeys
+
+	return &taggedConstructorBindingCache{
+		inReflectType,
+		numFields,
+		bindingKeys,
+	}
+}
+
+func (this *taggedConstructorBinding) validate(injector *injector) error {
+	return validateBindingKeys(this.cache.bindingKeys, injector)
+}
+
+func (this *taggedConstructorBinding) get(injector *injector) (interface{}, error) {
+	valuePtr := reflect.New(this.cache.inReflectType)
+	value := reflect.Indirect(valuePtr)
+	for i := 0; i < this.cache.numFields; i++ {
+		field, err := injector.get(this.cache.bindingKeys[i])
+		if err != nil {
+			return nil, err
+		}
+		value.Field(i).Set(reflect.ValueOf(field))
+	}
+	return callConstructor(this.constructor, []reflect.Value{value})
+}
+
+func (this *taggedConstructorBinding) resolvedBinding(module *module) (resolvedBinding, error) {
+	return this, nil
 }
 
 type taggedSingletonConstructorBinding struct {
 	taggedConstructorBinding
-	// TODO(pedge): is atomic.Value the equivalent of a volatile variable in Java?
-	value atomic.Value
-	once  sync.Once
+	loader *loader
 }
 
 func newTaggedSingletonConstructorBinding(constructor interface{}) binding {
-	return &taggedSingletonConstructorBinding{taggedConstructorBinding{constructor}, atomic.Value{}, sync.Once{}}
+	return &taggedSingletonConstructorBinding{taggedConstructorBinding{constructor, newTaggedConstructorBindingCache(constructor)}, newLoader()}
 }
 
 func (this *taggedSingletonConstructorBinding) get(injector *injector) (interface{}, error) {
-	this.once.Do(func() {
-		value, err := this.taggedConstructorBinding.get(injector)
-		this.value.Store(&valueErr{value, err})
-	})
-	valueErr := this.value.Load().(*valueErr)
-	return valueErr.value, valueErr.err
+	return this.loader.load(func() (interface{}, error) { return this.taggedConstructorBinding.get(injector) })
 }
 
 func (this *taggedSingletonConstructorBinding) resolvedBinding(module *module) (resolvedBinding, error) {
@@ -229,6 +218,34 @@ func callConstructor(constructor interface{}, reflectValues []reflect.Value) (in
 	default:
 		return return1, nil
 	}
+}
+
+func validateBindingKeys(bindingKeys []bindingKey, injector *injector) error {
+	for _, bindingKey := range bindingKeys {
+		_, err := injector.getBinding(bindingKey)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type loader struct {
+	once  sync.Once
+	value atomic.Value
+}
+
+func newLoader() *loader {
+	return &loader{sync.Once{}, atomic.Value{}}
+}
+
+func (this *loader) load(f func() (interface{}, error)) (interface{}, error) {
+	this.once.Do(func() {
+		value, err := f()
+		this.value.Store(&valueErr{value, err})
+	})
+	valueErr := this.value.Load().(*valueErr)
+	return valueErr.value, valueErr.err
 }
 
 type valueErr struct {
