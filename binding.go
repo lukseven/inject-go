@@ -11,6 +11,9 @@ const (
 )
 
 type binding interface {
+	// has to be a copy constructor
+	// https://github.com/peter-edge/inject/commit/e525825afc80f0de819f35a6afc26a4bf3d3a192
+	// this could be designed better
 	resolvedBinding(*module, *injector) (resolvedBinding, error)
 }
 
