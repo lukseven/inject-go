@@ -341,22 +341,6 @@ func createSecondInterfaceErr(s SimpleInterface, b BarInterface) (SecondInterfac
 	return nil, errors.New("XYZ")
 }
 
-func createSecondInterfaceInjector(injector Injector) (SecondInterface, error) {
-	s, err := injector.Get((*SimpleInterface)(nil))
-	if err != nil {
-		return nil, err
-	}
-	b, err := injector.Get((*BarInterface)(nil))
-	if err != nil {
-		return nil, err
-	}
-	return &SecondPtrStruct{s.(SimpleInterface), b.(BarInterface)}, nil
-}
-
-func createSecondInterfaceInjectorErr(injector Injector) (SecondInterface, error) {
-	return nil, errors.New("ABC")
-}
-
 type BarInterfaceError struct {
 	BarInterface
 	err error
@@ -391,23 +375,6 @@ func TestConstructorDirectInterfaceInjection(t *testing.T) {
 	require.Equal(t, 1, secondInterface.Bar().Bar())
 }
 
-func TestConstructorInjectorInjection(t *testing.T) {
-	module := CreateModule()
-	err := module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
-	require.NoError(t, err)
-	err = module.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
-	require.NoError(t, err)
-	err = module.Bind((*SecondInterface)(nil)).ToConstructor(createSecondInterfaceInjector)
-	require.NoError(t, err)
-	injector, err := CreateInjector(module)
-	require.NoError(t, err)
-	object, err := injector.Get((*SecondInterface)(nil))
-	require.NoError(t, err)
-	secondInterface := object.(SecondInterface)
-	require.Equal(t, "hello", secondInterface.Foo().Foo())
-	require.Equal(t, 1, secondInterface.Bar().Bar())
-}
-
 func TestConstructorErrReturned(t *testing.T) {
 	module := CreateModule()
 	err := module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
@@ -420,20 +387,6 @@ func TestConstructorErrReturned(t *testing.T) {
 	require.NoError(t, err)
 	_, err = injector.Get((*SecondInterface)(nil))
 	require.Equal(t, "XYZ", err.Error())
-}
-
-func TestConstructorInjectorErrReturned(t *testing.T) {
-	module := CreateModule()
-	err := module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
-	require.NoError(t, err)
-	err = module.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
-	require.NoError(t, err)
-	err = module.Bind((*SecondInterface)(nil)).ToConstructor(createSecondInterfaceInjectorErr)
-	require.NoError(t, err)
-	injector, err := CreateInjector(module)
-	require.NoError(t, err)
-	_, err = injector.Get((*SecondInterface)(nil))
-	require.Equal(t, "ABC", err.Error())
 }
 
 func TestConstructorWithEvilCounter(t *testing.T) {
