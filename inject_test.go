@@ -301,7 +301,7 @@ func TestTaggedSimpleStructSingletonDirectTwoBindings(t *testing.T) {
 	require.Equal(t, "good day", simpleInterface.Foo())
 }
 
-// ***** simple provider tests *****
+// ***** simple constructor tests *****
 
 type BarInterface interface {
 	Bar() int
