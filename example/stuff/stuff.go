@@ -1,0 +1,25 @@
+package stuff
+
+import (
+	"gopkg.in/peter-edge/inject.v1"
+)
+
+func CreateModule() inject.Module {
+	module := inject.CreateModule()
+	module.Bind((*StuffService)(nil)).ToConstructor(createStuffService)
+	return module
+}
+
+type StuffService interface {
+	DoStuff(string) (int, error)
+}
+
+type stuffService struct{}
+
+func createStuffService() (StuffService, error) {
+	return &stuffService{}, nil
+}
+
+func (this *stuffService) DoStuff(s string) (int, error) {
+	return 0, nil
+}
