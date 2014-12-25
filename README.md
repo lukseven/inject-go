@@ -36,6 +36,7 @@ const (
 	InjectErrorTypeAlreadyBound                       = "Already found a binding for this binding key"
 	InjectErrorTypeTagEmpty                           = "Tag empty"
 	InjectErrorTypeTaggedConstructorParametersInvalid = "Tagged constructor must have one anonymous struct parameter"
+	InjectErrorTypeBindingErrors                      = "Errors with bindings"
 )
 ```
 
@@ -43,12 +44,12 @@ const (
 
 ```go
 type Builder interface {
-	To(to interface{}) error
-	ToSingleton(singleton interface{}) error
-	ToConstructor(constructor interface{}) error
-	ToSingletonConstructor(constructor interface{}) error
-	ToTaggedConstructor(constructor interface{}) error
-	ToTaggedSingletonConstructor(constructor interface{}) error
+	To(to interface{})
+	ToSingleton(singleton interface{})
+	ToConstructor(constructor interface{})
+	ToSingletonConstructor(constructor interface{})
+	ToTaggedConstructor(constructor interface{})
+	ToTaggedSingletonConstructor(constructor interface{})
 }
 ```
 
