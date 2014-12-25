@@ -349,6 +349,17 @@ func createEvilBarInterfaceErr() (BarInterface, error) {
 	return nil, fmt.Errorf("XYZ %v", value)
 }
 
+func TestMultipleBindingErrors(t *testing.T) {
+	module := CreateModule()
+	module.Bind((*SimpleInterface)(nil)).ToSingleton(SimplePtrStruct{"hello"})
+	module.Bind((*BarInterface)(nil)).ToSingleton(BarPtrStruct{1})
+	_, err := CreateInjector(module)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "1:inject:")
+	require.Contains(t, err.Error(), "2:inject:")
+	require.Contains(t, err.Error(), InjectErrorTypeDoesNotImplement)
+}
+
 func TestConstructorSimple(t *testing.T) {
 	module := CreateModule()
 	module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
