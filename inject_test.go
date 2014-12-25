@@ -637,3 +637,35 @@ func TestTaggedConstructorOneHasNoTagMultipleBindings(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "another", object.(SimpleInterface).Foo())
 }
+
+func createModuleForTheTestBelow(t *testing.T) Module {
+	module := CreateModule()
+	err := module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(&SimplePtrStruct{"hello"})
+	require.NoError(t, err)
+	err = module.BindTagged((*SimpleInterface)(nil), "tagTwo").ToSingleton(&SimplePtrStruct{"goodbye"})
+	require.NoError(t, err)
+	err = module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"another"})
+	require.NoError(t, err)
+	err = module.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
+	require.NoError(t, err)
+	err = module.Bind((*SecondInterface)(nil)).ToTaggedConstructor(createSecondInterfaceTaggedOneHasNoTag)
+	require.NoError(t, err)
+	return module
+}
+
+// had a situation where I thought I might have a pointer issue, keeping this test anyways for now
+func TestTaggedConstructorOneHasNoTagMultipleBindingsModuleFromFunction(t *testing.T) {
+	injector, err := CreateInjector(createModuleForTheTestBelow(t))
+	require.NoError(t, err)
+	object, err := injector.Get((*SecondInterface)(nil))
+	require.NoError(t, err)
+	secondInterface := object.(SecondInterface)
+	require.Equal(t, "hello", secondInterface.Foo().Foo())
+	require.Equal(t, 1, secondInterface.Bar().Bar())
+	object, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	require.NoError(t, err)
+	require.Equal(t, "goodbye", object.(SimpleInterface).Foo())
+	object, err = injector.Get((*SimpleInterface)(nil))
+	require.NoError(t, err)
+	require.Equal(t, "another", object.(SimpleInterface).Foo())
+}
