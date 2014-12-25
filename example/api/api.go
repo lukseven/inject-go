@@ -35,11 +35,11 @@ type api struct {
 }
 
 func createApi(s struct {
-	awsProvider          cloud.Provider `inject:"aws"`
-	digitalOceanProvider cloud.Provider `inject:"digitalOcean"`
-	moreThings           more.MoreThings
+	AwsProvider          cloud.Provider `inject:"aws"`
+	DigitalOceanProvider cloud.Provider `inject:"digitalOcean"`
+	MoreThings           more.MoreThings
 }) (Api, error) {
-	return &api{s.awsProvider, s.digitalOceanProvider, s.moreThings}, nil
+	return &api{s.AwsProvider, s.DigitalOceanProvider, s.MoreThings}, nil
 }
 
 func (this *api) Do(request Request) (*Response, error) {
