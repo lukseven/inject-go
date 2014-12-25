@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"fmt"
 	"gopkg.in/peter-edge/inject.v1"
 	"gopkg.in/peter-edge/inject.v1/example/cloud"
 	"gopkg.in/peter-edge/inject.v1/example/more"
@@ -54,7 +55,7 @@ func (this *api) Do(request Request) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	s, err := moreThings.MoreStuffToDo(1)
+	s, err := this.moreThings.MoreStuffToDo(1)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +65,7 @@ func (this *api) Do(request Request) (*Response, error) {
 	buffer.WriteString(result.Message)
 	buffer.WriteString(" ")
 	buffer.WriteString(s)
-	return &Response{buffer.String(), result.ExitCode}
+	return &Response{buffer.String(), result.ExitCode}, nil
 }
 
 func (this *api) getProvider(provider string) (cloud.Provider, error) {
@@ -72,7 +73,7 @@ func (this *api) getProvider(provider string) (cloud.Provider, error) {
 	case "aws":
 		return this.awsProvider, nil
 	case "digitalOcean":
-		return digitalOceanProvider, nil
+		return this.digitalOceanProvider, nil
 	default:
 		return nil, fmt.Errorf("api: Unknown provider %v", provider)
 	}
