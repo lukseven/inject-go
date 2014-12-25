@@ -41,12 +41,8 @@ type baseBuilder struct {
 	bindingKey bindingKey
 }
 
-func newBuilder(module *module, bindingType reflect.Type) Builder {
-	return &baseBuilder{module, newBindingKey(bindingType)}
-}
-
-func newTaggedBuilder(module *module, bindingType reflect.Type, tag string) Builder {
-	return &baseBuilder{module, newTaggedBindingKey(bindingType, tag)}
+func newBuilder(module *module, bindingKey bindingKey) Builder {
+	return &baseBuilder{module, bindingKey}
 }
 
 func (this *baseBuilder) To(to interface{}) error {
@@ -109,7 +105,6 @@ func (this *baseBuilder) verifyBindingReflectType(bindingReflectType reflect.Typ
 			eb = eb.addTag("bindingReflectType", bindingReflectType)
 			return eb.build()
 		}
-	// from is a struct pointer
 	case isStructPtr(bindingKeyReflectType), isStruct(bindingKeyReflectType):
 		// TODO(pedge): is this correct?
 		if !bindingReflectType.AssignableTo(bindingKeyReflectType) {

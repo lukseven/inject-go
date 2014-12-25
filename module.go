@@ -17,7 +17,7 @@ func (this *module) Bind(from interface{}) Builder {
 	if fromReflectType == nil {
 		return newPropogatedErrorBuilder(newErrorBuilder(InjectErrorTypeNil).build())
 	}
-	return newBuilder(this, fromReflectType)
+	return newBuilder(this, newBindingKey(fromReflectType))
 }
 
 func (this *module) BindTagged(from interface{}, tag string) Builder {
@@ -28,7 +28,7 @@ func (this *module) BindTagged(from interface{}, tag string) Builder {
 	if tag == "" {
 		return newPropogatedErrorBuilder(newErrorBuilder(InjectErrorTypeTagEmpty).build())
 	}
-	return newTaggedBuilder(this, fromReflectType, tag)
+	return newBuilder(this, newTaggedBindingKey(fromReflectType, tag))
 }
 
 func (this *module) binding(bindingKey bindingKey) (binding, bool) {
