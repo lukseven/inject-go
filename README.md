@@ -16,3 +16,7 @@ import (
     "gopkg.in/peter-edge/inject.v1"
 )
 ```
+
+### Documentation
+
+https://godoc.org/github.com/peter-edge/inject

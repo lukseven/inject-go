@@ -1,4 +1,4 @@
 /*
-Dependency injection for go
+Dependency injection for Go
 */
 package inject
