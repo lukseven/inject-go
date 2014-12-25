@@ -20,7 +20,7 @@ install: deps
 
 doc:
 	go get -v github.com/robertkrimen/godocdown/godocdown
-	cp readme.header README.md
+	cp .readme.header README.md
 	godocdown | tail -n +5 >> README.md
 
 clean:
