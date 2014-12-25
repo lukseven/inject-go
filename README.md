@@ -14,7 +14,7 @@ import (
 )
 ```
 
-# [Godoc](https://godoc.org/github.com/peter-edge/inject)
+# Godoc
 
 Dependency injection for Go
 
