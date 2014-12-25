@@ -4,26 +4,6 @@ import (
 	"fmt"
 )
 
-const (
-	InjectErrorTypeNil                                = "Parameter is nil"
-	InjectErrorTypeReflectTypeNil                     = "reflect.TypeOf() returns nil"
-	InjectErrorTypeNotInterfacePtr                    = "Binding with Binder.ToType() and from is not an interface pointer"
-	InjectErrorTypeDoesNotImplement                   = "to binding does not implement from binding"
-	InjectErrorTypeNotSupportedYet                    = "Binding type not supported yet, feel free to help!"
-	InjectErrorTypeNotAssignable                      = "Binding not assignable"
-	InjectErrorTypeConstructorNotFunction             = "Constructor is not a function"
-	InjectErrorTypeConstructorReturnValuesInvalid     = "Constructor can only have two return values, the first providing the value, the second being an error"
-	InjectErrorTypeIntermediateBinding                = "Trying to get for an intermediate binding"
-	InjectErrorTypeFinalBinding                       = "Trying to get bindingKey for a final binding"
-	InjectErrorTypeCannotCastModule                   = "Cannot cast Module to internal module type"
-	InjectErrorTypeNoBinding                          = "No binding for binding key"
-	InjectErrorTypeNoFinalBinding                     = "No final binding for binding key"
-	InjectErrorTypeAlreadyBound                       = "Already found a binding for this binding key"
-	InjectErrorTypeTagEmpty                           = "Tag empty"
-	InjectErrorTypeTaggedConstructorParametersInvalid = "Tagged constructor must have one anonymous struct parameter"
-	InjectErrorTypeBindingErrors                      = "Errors with bindings"
-)
-
 type Module interface {
 	fmt.Stringer
 	Bind(from interface{}) Builder
