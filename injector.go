@@ -3,6 +3,7 @@ package inject
 import (
 	"bytes"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -30,6 +31,14 @@ func createInjector(modules []Module) (Injector, error) {
 }
 
 func installModuleToInjector(injector *injector, module *module) error {
+	numBindingErrors := len(module.bindingErrors)
+	if numBindingErrors > 0 {
+		eb := newErrorBuilder(InjectErrorTypeBindingErrors)
+		for i := 0; i < numBindingErrors; i++ {
+			eb.addTag(strconv.Itoa(i+1), module.bindingErrors[i].Error())
+		}
+		return eb.build()
+	}
 	for bindingKey, binding := range module.bindings {
 		if foundBinding, ok := injector.bindings[bindingKey]; ok {
 			eb := newErrorBuilder(InjectErrorTypeAlreadyBound)

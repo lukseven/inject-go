@@ -7,17 +7,19 @@ import (
 )
 
 type module struct {
-	bindings map[bindingKey]binding
+	bindings      map[bindingKey]binding
+	bindingErrors []error
 }
 
 func createModule() *module {
-	return &module{make(map[bindingKey]binding)}
+	return &module{make(map[bindingKey]binding), make([]error, 0)}
 }
 
 func (this *module) Bind(from interface{}) Builder {
 	fromReflectType := reflect.TypeOf(from)
 	if fromReflectType == nil {
-		return newPropogatedErrorBuilder(newErrorBuilder(InjectErrorTypeNil).build())
+		this.addBindingError(newErrorBuilder(InjectErrorTypeNil).build())
+		return newNoOpBuilder()
 	}
 	return newBuilder(this, newBindingKey(fromReflectType))
 }
@@ -25,10 +27,12 @@ func (this *module) Bind(from interface{}) Builder {
 func (this *module) BindTagged(from interface{}, tag string) Builder {
 	fromReflectType := reflect.TypeOf(from)
 	if fromReflectType == nil {
-		return newPropogatedErrorBuilder(newErrorBuilder(InjectErrorTypeNil).build())
+		this.addBindingError(newErrorBuilder(InjectErrorTypeNil).build())
+		return newNoOpBuilder()
 	}
 	if tag == "" {
-		return newPropogatedErrorBuilder(newErrorBuilder(InjectErrorTypeTagEmpty).build())
+		this.addBindingError(newErrorBuilder(InjectErrorTypeTagEmpty).build())
+		return newNoOpBuilder()
 	}
 	return newBuilder(this, newTaggedBindingKey(fromReflectType, tag))
 }
@@ -55,19 +59,23 @@ func (this *module) keyValueStrings() []string {
 	return strings
 }
 
+func (this *module) addBindingError(err error) {
+	this.bindingErrors = append(this.bindingErrors, err)
+}
+
 func (this *module) binding(bindingKey bindingKey) (binding, bool) {
 	binding, ok := this.bindings[bindingKey]
 	return binding, ok
 }
 
-func (this *module) setBinding(bindingKey bindingKey, binding binding) error {
+func (this *module) setBinding(bindingKey bindingKey, binding binding) {
 	foundBinding, ok := this.bindings[bindingKey]
 	if ok {
 		eb := newErrorBuilder(InjectErrorTypeAlreadyBound)
 		eb.addTag("bindingKey", bindingKey)
 		eb.addTag("foundBinding", foundBinding)
-		return eb.build()
+		this.addBindingError(eb.build())
+		return
 	}
 	this.bindings[bindingKey] = binding
-	return nil
 }

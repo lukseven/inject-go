@@ -4,37 +4,23 @@ import (
 	"reflect"
 )
 
-type propogatedErrorBuilder struct {
-	err error
+type noOpBuilder struct{}
+
+func newNoOpBuilder() Builder {
+	return &noOpBuilder{}
 }
 
-func newPropogatedErrorBuilder(err error) Builder {
-	return &propogatedErrorBuilder{err}
-}
+func (this *noOpBuilder) To(to interface{}) {}
 
-func (this *propogatedErrorBuilder) To(to interface{}) error {
-	return this.err
-}
+func (this *noOpBuilder) ToSingleton(singleton interface{}) {}
 
-func (this *propogatedErrorBuilder) ToSingleton(singleton interface{}) error {
-	return this.err
-}
+func (this *noOpBuilder) ToConstructor(constructor interface{}) {}
 
-func (this *propogatedErrorBuilder) ToConstructor(constructor interface{}) error {
-	return this.err
-}
+func (this *noOpBuilder) ToSingletonConstructor(construtor interface{}) {}
 
-func (this *propogatedErrorBuilder) ToSingletonConstructor(construtor interface{}) error {
-	return this.err
-}
+func (this *noOpBuilder) ToTaggedConstructor(constructor interface{}) {}
 
-func (this *propogatedErrorBuilder) ToTaggedConstructor(constructor interface{}) error {
-	return this.err
-}
-
-func (this *propogatedErrorBuilder) ToTaggedSingletonConstructor(constructor interface{}) error {
-	return this.err
-}
+func (this *noOpBuilder) ToTaggedSingletonConstructor(constructor interface{}) {}
 
 type baseBuilder struct {
 	module     *module
@@ -45,37 +31,38 @@ func newBuilder(module *module, bindingKey bindingKey) Builder {
 	return &baseBuilder{module, bindingKey}
 }
 
-func (this *baseBuilder) To(to interface{}) error {
-	return this.to(to, this.verifyToReflectType, newIntermediateBinding)
+func (this *baseBuilder) To(to interface{}) {
+	this.to(to, this.verifyToReflectType, newIntermediateBinding)
 }
 
-func (this *baseBuilder) ToSingleton(singleton interface{}) error {
-	return this.to(singleton, this.verifyBindingReflectType, newSingletonBinding)
+func (this *baseBuilder) ToSingleton(singleton interface{}) {
+	this.to(singleton, this.verifyBindingReflectType, newSingletonBinding)
 }
 
-func (this *baseBuilder) ToConstructor(constructor interface{}) error {
-	return this.to(constructor, this.verifyConstructorReflectType, newConstructorBinding)
+func (this *baseBuilder) ToConstructor(constructor interface{}) {
+	this.to(constructor, this.verifyConstructorReflectType, newConstructorBinding)
 }
 
-func (this *baseBuilder) ToSingletonConstructor(constructor interface{}) error {
-	return this.to(constructor, this.verifyConstructorReflectType, newSingletonConstructorBinding)
+func (this *baseBuilder) ToSingletonConstructor(constructor interface{}) {
+	this.to(constructor, this.verifyConstructorReflectType, newSingletonConstructorBinding)
 }
 
-func (this *baseBuilder) ToTaggedConstructor(constructor interface{}) error {
-	return this.to(constructor, this.verifyTaggedConstructorReflectType, newTaggedConstructorBinding)
+func (this *baseBuilder) ToTaggedConstructor(constructor interface{}) {
+	this.to(constructor, this.verifyTaggedConstructorReflectType, newTaggedConstructorBinding)
 }
 
-func (this *baseBuilder) ToTaggedSingletonConstructor(constructor interface{}) error {
-	return this.to(constructor, this.verifyTaggedConstructorReflectType, newTaggedSingletonConstructorBinding)
+func (this *baseBuilder) ToTaggedSingletonConstructor(constructor interface{}) {
+	this.to(constructor, this.verifyTaggedConstructorReflectType, newTaggedSingletonConstructorBinding)
 }
 
-func (this *baseBuilder) to(object interface{}, verifyFunc func(reflect.Type) error, newBindingFunc func(interface{}) binding) error {
+func (this *baseBuilder) to(object interface{}, verifyFunc func(reflect.Type) error, newBindingFunc func(interface{}) binding) {
 	objectReflectType := reflect.TypeOf(object)
 	err := verifyFunc(objectReflectType)
 	if err != nil {
-		return err
+		this.module.addBindingError(err)
+		return
 	}
-	return this.setBinding(newBindingFunc(object))
+	this.setBinding(newBindingFunc(object))
 }
 
 func (this *baseBuilder) verifyToReflectType(toReflectType reflect.Type) error {
@@ -171,8 +158,8 @@ func (this *baseBuilder) verifyTaggedConstructorReflectType(constructorReflectTy
 	return nil
 }
 
-func (this *baseBuilder) setBinding(binding binding) error {
-	return this.module.setBinding(this.bindingKey, binding)
+func (this *baseBuilder) setBinding(binding binding) {
+	this.module.setBinding(this.bindingKey, binding)
 }
 
 func isInterfacePtr(reflectType reflect.Type) bool {

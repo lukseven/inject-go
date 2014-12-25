@@ -13,6 +13,8 @@ const (
 type InjectError struct {
 	errorType string
 	tags      map[string]interface{}
+	// TODO(pedge): there has to be a better way to do this
+	tagOrder []string
 }
 
 func (this *InjectError) Error() string {
@@ -39,7 +41,8 @@ func (this *InjectError) GetTag(key string) (interface{}, bool) {
 func (this *InjectError) tagStrings() []string {
 	strings := make([]string, len(this.tags))
 	i := 0
-	for key, value := range this.tags {
+	for _, key := range this.tagOrder {
+		value := this.tags[key]
 		var buffer bytes.Buffer
 		buffer.WriteString(key)
 		buffer.WriteString(":")
@@ -57,17 +60,19 @@ func (this *InjectError) tagStrings() []string {
 type injectErrorBuilder struct {
 	errorType string
 	tags      map[string]interface{}
+	tagOrder  []string
 }
 
 func newErrorBuilder(errorType string) *injectErrorBuilder {
-	return &injectErrorBuilder{errorType, make(map[string]interface{})}
+	return &injectErrorBuilder{errorType, make(map[string]interface{}), make([]string, 0)}
 }
 
 func (this *injectErrorBuilder) addTag(key string, value interface{}) *injectErrorBuilder {
 	this.tags[key] = value
+	this.tagOrder = append(this.tagOrder, key)
 	return this
 }
 
 func (this *injectErrorBuilder) build() *InjectError {
-	return &InjectError{this.errorType, this.tags}
+	return &InjectError{this.errorType, this.tags, this.tagOrder}
 }
