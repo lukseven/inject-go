@@ -19,7 +19,6 @@ func TestInjectErrorWithTags(t *testing.T) {
 	errorBuilder = errorBuilder.addTag("tagOne", 1)
 	errorBuilder = errorBuilder.addTag("tagTwo", "two")
 	injectError := errorBuilder.build()
-	require.Equal(t, "inject: foo tags{tagOne:1 tagTwo:two}", injectError.Error())
 	require.Contains(t, injectError.Error(), "inject: foo")
 	require.Contains(t, injectError.Error(), "tagOne:1")
 	require.Contains(t, injectError.Error(), "tagTwo:two")
