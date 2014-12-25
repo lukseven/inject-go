@@ -1,4 +1,4 @@
-.PHONY: all deps build test install clean
+.PHONY: all deps build test cov install clean
 
 all: test install
 
