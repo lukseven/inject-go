@@ -8,33 +8,33 @@ import (
 
 const (
 	injectErrorPrefix                                 = "inject: "
-	InjectErrorTypeNil                                = "Parameter is nil"
-	InjectErrorTypeReflectTypeNil                     = "reflect.TypeOf() returns nil"
-	InjectErrorTypeNotInterfacePtr                    = "Binding with Binder.ToType() and from is not an interface pointer"
-	InjectErrorTypeDoesNotImplement                   = "to binding does not implement from binding"
-	InjectErrorTypeNotSupportedYet                    = "Binding type not supported yet, feel free to help!"
-	InjectErrorTypeNotAssignable                      = "Binding not assignable"
-	InjectErrorTypeConstructorNotFunction             = "Constructor is not a function"
-	InjectErrorTypeConstructorReturnValuesInvalid     = "Constructor can only have two return values, the first providing the value, the second being an error"
-	InjectErrorTypeIntermediateBinding                = "Trying to get for an intermediate binding"
-	InjectErrorTypeFinalBinding                       = "Trying to get bindingKey for a final binding"
-	InjectErrorTypeCannotCastModule                   = "Cannot cast Module to internal module type"
-	InjectErrorTypeNoBinding                          = "No binding for binding key"
-	InjectErrorTypeNoFinalBinding                     = "No final binding for binding key"
-	InjectErrorTypeAlreadyBound                       = "Already found a binding for this binding key"
-	InjectErrorTypeTagEmpty                           = "Tag empty"
-	InjectErrorTypeTaggedConstructorParametersInvalid = "Tagged constructor must have one anonymous struct parameter"
-	InjectErrorTypeBindingErrors                      = "Errors with bindings"
+	injectErrorTypeNil                                = "Parameter is nil"
+	injectErrorTypeReflectTypeNil                     = "reflect.TypeOf() returns nil"
+	injectErrorTypeNotInterfacePtr                    = "Binding with Binder.ToType() and from is not an interface pointer"
+	injectErrorTypeDoesNotImplement                   = "to binding does not implement from binding"
+	injectErrorTypeNotSupportedYet                    = "Binding type not supported yet, feel free to help!"
+	injectErrorTypeNotAssignable                      = "Binding not assignable"
+	injectErrorTypeConstructorNotFunction             = "Constructor is not a function"
+	injectErrorTypeConstructorReturnValuesInvalid     = "Constructor can only have two return values, the first providing the value, the second being an error"
+	injectErrorTypeIntermediateBinding                = "Trying to get for an intermediate binding"
+	injectErrorTypeFinalBinding                       = "Trying to get bindingKey for a final binding"
+	injectErrorTypeCannotCastModule                   = "Cannot cast Module to internal module type"
+	injectErrorTypeNoBinding                          = "No binding for binding key"
+	injectErrorTypeNoFinalBinding                     = "No final binding for binding key"
+	injectErrorTypeAlreadyBound                       = "Already found a binding for this binding key"
+	injectErrorTypeTagEmpty                           = "Tag empty"
+	injectErrorTypeTaggedConstructorParametersInvalid = "Tagged constructor must have one anonymous struct parameter"
+	injectErrorTypeBindingErrors                      = "Errors with bindings"
 )
 
-type InjectError struct {
+type injectError struct {
 	errorType string
 	tags      map[string]interface{}
 	// TODO(pedge): there has to be a better way to do this
 	tagOrder []string
 }
 
-func (this *InjectError) Error() string {
+func (this *injectError) Error() string {
 	var buffer bytes.Buffer
 	buffer.WriteString(injectErrorPrefix)
 	buffer.WriteString(this.errorType)
@@ -46,16 +46,16 @@ func (this *InjectError) Error() string {
 	return buffer.String()
 }
 
-func (this *InjectError) Type() string {
+func (this *injectError) Type() string {
 	return this.errorType
 }
 
-func (this *InjectError) GetTag(key string) (interface{}, bool) {
+func (this *injectError) GetTag(key string) (interface{}, bool) {
 	value, ok := this.tags[key]
 	return value, ok
 }
 
-func (this *InjectError) tagStrings() []string {
+func (this *injectError) tagStrings() []string {
 	strings := make([]string, len(this.tags))
 	i := 0
 	for _, key := range this.tagOrder {
@@ -90,6 +90,6 @@ func (this *injectErrorBuilder) addTag(key string, value interface{}) *injectErr
 	return this
 }
 
-func (this *injectErrorBuilder) build() *InjectError {
-	return &InjectError{this.errorType, this.tags, this.tagOrder}
+func (this *injectErrorBuilder) build() *injectError {
+	return &injectError{this.errorType, this.tags, this.tagOrder}
 }

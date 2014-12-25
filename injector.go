@@ -16,7 +16,7 @@ func createInjector(modules []Module) (Injector, error) {
 	for _, m := range modules {
 		castModule, ok := m.(*module)
 		if !ok {
-			return nil, newErrorBuilder(InjectErrorTypeCannotCastModule).build()
+			return nil, newErrorBuilder(injectErrorTypeCannotCastModule).build()
 		}
 		err := installModuleToInjector(&injector, castModule)
 		if err != nil {
@@ -33,7 +33,7 @@ func createInjector(modules []Module) (Injector, error) {
 func installModuleToInjector(injector *injector, module *module) error {
 	numBindingErrors := len(module.bindingErrors)
 	if numBindingErrors > 0 {
-		eb := newErrorBuilder(InjectErrorTypeBindingErrors)
+		eb := newErrorBuilder(injectErrorTypeBindingErrors)
 		for i := 0; i < numBindingErrors; i++ {
 			eb.addTag(strconv.Itoa(i+1), module.bindingErrors[i].Error())
 		}
@@ -41,7 +41,7 @@ func installModuleToInjector(injector *injector, module *module) error {
 	}
 	for bindingKey, binding := range module.bindings {
 		if foundBinding, ok := injector.bindings[bindingKey]; ok {
-			eb := newErrorBuilder(InjectErrorTypeAlreadyBound)
+			eb := newErrorBuilder(injectErrorTypeAlreadyBound)
 			eb.addTag("bindingKey", bindingKey)
 			eb.addTag("foundBinding", foundBinding)
 			return eb.build()
@@ -106,7 +106,7 @@ func (this *injector) get(bindingKey bindingKey) (interface{}, error) {
 func (this *injector) getBinding(bindingKey bindingKey) (resolvedBinding, error) {
 	binding, ok := this.bindings[bindingKey]
 	if !ok {
-		eb := newErrorBuilder(InjectErrorTypeNoBinding)
+		eb := newErrorBuilder(injectErrorTypeNoBinding)
 		eb.addTag("bindingKey", bindingKey)
 		return nil, eb.build()
 	}

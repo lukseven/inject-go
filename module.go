@@ -18,7 +18,7 @@ func createModule() *module {
 func (this *module) Bind(from interface{}) Builder {
 	fromReflectType := reflect.TypeOf(from)
 	if fromReflectType == nil {
-		this.addBindingError(newErrorBuilder(InjectErrorTypeNil).build())
+		this.addBindingError(newErrorBuilder(injectErrorTypeNil).build())
 		return newNoOpBuilder()
 	}
 	return newBuilder(this, newBindingKey(fromReflectType))
@@ -27,11 +27,11 @@ func (this *module) Bind(from interface{}) Builder {
 func (this *module) BindTagged(from interface{}, tag string) Builder {
 	fromReflectType := reflect.TypeOf(from)
 	if fromReflectType == nil {
-		this.addBindingError(newErrorBuilder(InjectErrorTypeNil).build())
+		this.addBindingError(newErrorBuilder(injectErrorTypeNil).build())
 		return newNoOpBuilder()
 	}
 	if tag == "" {
-		this.addBindingError(newErrorBuilder(InjectErrorTypeTagEmpty).build())
+		this.addBindingError(newErrorBuilder(injectErrorTypeTagEmpty).build())
 		return newNoOpBuilder()
 	}
 	return newBuilder(this, newTaggedBindingKey(fromReflectType, tag))
@@ -71,7 +71,7 @@ func (this *module) binding(bindingKey bindingKey) (binding, bool) {
 func (this *module) setBinding(bindingKey bindingKey, binding binding) {
 	foundBinding, ok := this.bindings[bindingKey]
 	if ok {
-		eb := newErrorBuilder(InjectErrorTypeAlreadyBound)
+		eb := newErrorBuilder(injectErrorTypeAlreadyBound)
 		eb.addTag("bindingKey", bindingKey)
 		eb.addTag("foundBinding", foundBinding)
 		this.addBindingError(eb.build())

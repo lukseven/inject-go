@@ -69,12 +69,12 @@ func (this *baseBuilder) verifyToReflectType(toReflectType reflect.Type) error {
 	bindingKeyReflectType := this.bindingKey.reflectType()
 	// TODO(pedge): is this restriction necessary/warranted? how about structs with anonymous fields?
 	if !(bindingKeyReflectType.Kind() == reflect.Ptr && bindingKeyReflectType.Elem().Kind() == reflect.Interface) {
-		eb := newErrorBuilder(InjectErrorTypeNotInterfacePtr)
+		eb := newErrorBuilder(injectErrorTypeNotInterfacePtr)
 		eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
 		return eb.build()
 	}
 	if !toReflectType.Implements(bindingKeyReflectType.Elem()) {
-		eb := newErrorBuilder(InjectErrorTypeDoesNotImplement)
+		eb := newErrorBuilder(injectErrorTypeDoesNotImplement)
 		eb = eb.addTag("toReflectType", toReflectType)
 		eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
 		return eb.build()
@@ -87,7 +87,7 @@ func (this *baseBuilder) verifyBindingReflectType(bindingReflectType reflect.Typ
 	switch {
 	case isInterfacePtr(bindingKeyReflectType):
 		if !bindingReflectType.Implements(bindingKeyReflectType.Elem()) {
-			eb := newErrorBuilder(InjectErrorTypeDoesNotImplement)
+			eb := newErrorBuilder(injectErrorTypeDoesNotImplement)
 			eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
 			eb = eb.addTag("bindingReflectType", bindingReflectType)
 			return eb.build()
@@ -95,7 +95,7 @@ func (this *baseBuilder) verifyBindingReflectType(bindingReflectType reflect.Typ
 	case isStructPtr(bindingKeyReflectType), isStruct(bindingKeyReflectType):
 		// TODO(pedge): is this correct?
 		if !bindingReflectType.AssignableTo(bindingKeyReflectType) {
-			eb := newErrorBuilder(InjectErrorTypeNotAssignable)
+			eb := newErrorBuilder(injectErrorTypeNotAssignable)
 			eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
 			eb = eb.addTag("bindingReflectType", bindingReflectType)
 			return eb.build()
@@ -103,7 +103,7 @@ func (this *baseBuilder) verifyBindingReflectType(bindingReflectType reflect.Typ
 	// nothing else is supported for now
 	// TODO(pedge): at least support primitives with tags
 	default:
-		eb := newErrorBuilder(InjectErrorTypeNotSupportedYet)
+		eb := newErrorBuilder(injectErrorTypeNotSupportedYet)
 		eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
 		return eb.build()
 	}
@@ -112,12 +112,12 @@ func (this *baseBuilder) verifyBindingReflectType(bindingReflectType reflect.Typ
 
 func (this *baseBuilder) verifyConstructorReflectType(constructorReflectType reflect.Type) error {
 	if !isFunc(constructorReflectType) {
-		eb := newErrorBuilder(InjectErrorTypeConstructorNotFunction)
+		eb := newErrorBuilder(injectErrorTypeConstructorNotFunction)
 		eb = eb.addTag("constructorReflectType", constructorReflectType)
 		return eb.build()
 	}
 	if constructorReflectType.NumOut() != 2 {
-		eb := newErrorBuilder(InjectErrorTypeConstructorReturnValuesInvalid)
+		eb := newErrorBuilder(injectErrorTypeConstructorReturnValuesInvalid)
 		eb = eb.addTag("constructorReflectType", constructorReflectType)
 		return eb.build()
 	}
@@ -127,7 +127,7 @@ func (this *baseBuilder) verifyConstructorReflectType(constructorReflectType ref
 	}
 	// TODO(pedge): can this be simplified?
 	if !constructorReflectType.Out(1).AssignableTo(reflect.TypeOf((*error)(nil)).Elem()) {
-		eb := newErrorBuilder(InjectErrorTypeConstructorReturnValuesInvalid)
+		eb := newErrorBuilder(injectErrorTypeConstructorReturnValuesInvalid)
 		eb = eb.addTag("constructorReflectType", constructorReflectType)
 		return eb.build()
 	}
@@ -140,18 +140,18 @@ func (this *baseBuilder) verifyTaggedConstructorReflectType(constructorReflectTy
 		return err
 	}
 	if constructorReflectType.NumIn() != 1 {
-		eb := newErrorBuilder(InjectErrorTypeTaggedConstructorParametersInvalid)
+		eb := newErrorBuilder(injectErrorTypeTaggedConstructorParametersInvalid)
 		eb = eb.addTag("constructorReflectType", constructorReflectType)
 		return eb.build()
 	}
 	inReflectType := constructorReflectType.In(0)
 	if !isStruct(inReflectType) {
-		eb := newErrorBuilder(InjectErrorTypeTaggedConstructorParametersInvalid)
+		eb := newErrorBuilder(injectErrorTypeTaggedConstructorParametersInvalid)
 		eb = eb.addTag("constructorReflectType", constructorReflectType)
 		return eb.build()
 	}
 	if inReflectType.Name() != "" {
-		eb := newErrorBuilder(InjectErrorTypeTaggedConstructorParametersInvalid)
+		eb := newErrorBuilder(injectErrorTypeTaggedConstructorParametersInvalid)
 		eb = eb.addTag("constructorReflectType", constructorReflectType)
 		return eb.build()
 	}

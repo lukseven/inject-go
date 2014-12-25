@@ -38,7 +38,7 @@ func (this *intermediateBinding) String() string {
 func (this *intermediateBinding) resolvedBinding(module *module, injector *injector) (resolvedBinding, error) {
 	binding, ok := module.binding(this.bindingKey)
 	if !ok {
-		eb := newErrorBuilder(InjectErrorTypeNoFinalBinding)
+		eb := newErrorBuilder(injectErrorTypeNoFinalBinding)
 		eb.addTag("bindingKey", this.bindingKey)
 		return nil, eb.build()
 	}
