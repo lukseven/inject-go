@@ -3,6 +3,7 @@ package inject
 import (
 	"bytes"
 	"fmt"
+	"strings"
 )
 
 const (
@@ -19,17 +20,8 @@ func (this *InjectError) Error() string {
 	buffer.WriteString(injectErrorPrefix)
 	buffer.WriteString(this.errorType)
 	if len(this.tags) > 0 {
-		buffer.WriteString(" tags:{ ")
-		for key, value := range this.tags {
-			buffer.WriteString(key)
-			buffer.WriteString(":")
-			if stringer, ok := value.(fmt.Stringer); ok {
-				buffer.WriteString(fmt.Sprintf("%v", stringer.String()))
-			} else {
-				buffer.WriteString(fmt.Sprintf("%v", value))
-			}
-			buffer.WriteString(" ")
-		}
+		buffer.WriteString(" tags{")
+		buffer.WriteString(strings.Join(tagStrings(this.tags), " "))
 		buffer.WriteString("}")
 	}
 	return buffer.String()
@@ -42,6 +34,24 @@ func (this *InjectError) Type() string {
 func (this *InjectError) GetTag(key string) (interface{}, bool) {
 	value, ok := this.tags[key]
 	return value, ok
+}
+
+func tagStrings(tags map[string]interface{}) []string {
+	strings := make([]string, len(tags))
+	i := 0
+	for key, value := range tags {
+		var buffer bytes.Buffer
+		buffer.WriteString(key)
+		buffer.WriteString(":")
+		if stringer, ok := value.(fmt.Stringer); ok {
+			buffer.WriteString(fmt.Sprintf("%v", stringer.String()))
+		} else {
+			buffer.WriteString(fmt.Sprintf("%v", value))
+		}
+		strings[i] = buffer.String()
+		i++
+	}
+	return strings
 }
 
 type injectErrorBuilder struct {

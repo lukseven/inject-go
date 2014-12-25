@@ -26,8 +26,8 @@ type intermediateBinding struct {
 	bindingKey bindingKey
 }
 
-func newIntermediateBinding(bindingKey bindingKey) binding {
-	return &intermediateBinding{bindingKey}
+func newIntermediateBinding(to interface{}) binding {
+	return &intermediateBinding{newBindingKey(reflect.TypeOf(to))}
 }
 
 func (this *intermediateBinding) resolvedBinding(module *module, injector *injector) (resolvedBinding, error) {
@@ -100,15 +100,11 @@ func (this *constructorBinding) validate() error {
 }
 
 func (this *constructorBinding) get() (interface{}, error) {
-	parameterValues := make([]reflect.Value, this.cache.numIn)
-	for i := 0; i < this.cache.numIn; i++ {
-		parameter, err := this.injector.get(this.cache.bindingKeys[i])
-		if err != nil {
-			return nil, err
-		}
-		parameterValues[i] = reflect.ValueOf(parameter)
+	reflectValues, err := getReflectValues(this.injector, this.cache.bindingKeys)
+	if err != nil {
+		return nil, err
 	}
-	return callConstructor(this.constructor, parameterValues)
+	return callConstructor(this.constructor, reflectValues)
 }
 
 func (this *constructorBinding) resolvedBinding(module *module, injector *injector) (resolvedBinding, error) {
@@ -125,7 +121,7 @@ func newSingletonConstructorBinding(constructor interface{}) binding {
 }
 
 func (this *singletonConstructorBinding) get() (interface{}, error) {
-	return this.loader.load(func() (interface{}, error) { return this.constructorBinding.get() })
+	return this.loader.load(this.constructorBinding.get)
 }
 
 func (this *singletonConstructorBinding) resolvedBinding(module *module, injector *injector) (resolvedBinding, error) {
@@ -168,7 +164,6 @@ func newTaggedConstructorBindingCache(constructor interface{}) *taggedConstructo
 			bindingKeys[i] = newBindingKey(structFieldReflectType)
 		}
 	}
-
 	return &taggedConstructorBindingCache{
 		inReflectType,
 		numFields,
@@ -181,14 +176,14 @@ func (this *taggedConstructorBinding) validate() error {
 }
 
 func (this *taggedConstructorBinding) get() (interface{}, error) {
-	valuePtr := reflect.New(this.cache.inReflectType)
-	value := reflect.Indirect(valuePtr)
-	for i := 0; i < this.cache.numFields; i++ {
-		field, err := this.injector.get(this.cache.bindingKeys[i])
-		if err != nil {
-			return nil, err
-		}
-		value.Field(i).Set(reflect.ValueOf(field))
+	reflectValues, err := getReflectValues(this.injector, this.cache.bindingKeys)
+	if err != nil {
+		return nil, err
+	}
+	numReflectValues := len(reflectValues)
+	value := reflect.Indirect(reflect.New(this.cache.inReflectType))
+	for i := 0; i < numReflectValues; i++ {
+		value.Field(i).Set(reflectValues[i])
 	}
 	return callConstructor(this.constructor, []reflect.Value{value})
 }
@@ -207,11 +202,24 @@ func newTaggedSingletonConstructorBinding(constructor interface{}) binding {
 }
 
 func (this *taggedSingletonConstructorBinding) get() (interface{}, error) {
-	return this.loader.load(func() (interface{}, error) { return this.taggedConstructorBinding.get() })
+	return this.loader.load(this.taggedConstructorBinding.get)
 }
 
 func (this *taggedSingletonConstructorBinding) resolvedBinding(module *module, injector *injector) (resolvedBinding, error) {
 	return &taggedSingletonConstructorBinding{taggedConstructorBinding{this.taggedConstructorBinding.constructor, this.taggedConstructorBinding.cache, injector}, newLoader()}, nil
+}
+
+func getReflectValues(injector *injector, bindingKeys []bindingKey) ([]reflect.Value, error) {
+	numBindingKeys := len(bindingKeys)
+	reflectValues := make([]reflect.Value, numBindingKeys)
+	for i := 0; i < numBindingKeys; i++ {
+		value, err := injector.get(bindingKeys[i])
+		if err != nil {
+			return nil, err
+		}
+		reflectValues[i] = reflect.ValueOf(value)
+	}
+	return reflectValues, nil
 }
 
 func callConstructor(constructor interface{}, reflectValues []reflect.Value) (interface{}, error) {

@@ -50,57 +50,36 @@ func newTaggedBuilder(module *module, bindingType reflect.Type, tag string) Buil
 }
 
 func (this *baseBuilder) To(to interface{}) error {
-	toReflectType := reflect.TypeOf(to)
-	err := this.verifyToReflectType(toReflectType)
-	if err != nil {
-		return err
-	}
-	return this.setBinding(newIntermediateBinding(newBindingKey(toReflectType)))
+	return this.to(to, this.verifyToReflectType, newIntermediateBinding)
 }
 
 func (this *baseBuilder) ToSingleton(singleton interface{}) error {
-	singletonReflectType := reflect.TypeOf(singleton)
-	err := this.verifyBindingReflectType(singletonReflectType)
-	if err != nil {
-		return err
-	}
-	return this.setBinding(newSingletonBinding(singleton))
+	return this.to(singleton, this.verifyBindingReflectType, newSingletonBinding)
 }
 
 func (this *baseBuilder) ToConstructor(constructor interface{}) error {
-	constructorReflectType := reflect.TypeOf(constructor)
-	err := this.verifyConstructorReflectType(constructorReflectType)
-	if err != nil {
-		return err
-	}
-	return this.setBinding(newConstructorBinding(constructor))
+	return this.to(constructor, this.verifyConstructorReflectType, newConstructorBinding)
 }
 
 func (this *baseBuilder) ToSingletonConstructor(constructor interface{}) error {
-	constructorReflectType := reflect.TypeOf(constructor)
-	err := this.verifyConstructorReflectType(constructorReflectType)
-	if err != nil {
-		return err
-	}
-	return this.setBinding(newSingletonConstructorBinding(constructor))
+	return this.to(constructor, this.verifyConstructorReflectType, newSingletonConstructorBinding)
 }
 
 func (this *baseBuilder) ToTaggedConstructor(constructor interface{}) error {
-	constructorReflectType := reflect.TypeOf(constructor)
-	err := this.verifyTaggedConstructorReflectType(constructorReflectType)
-	if err != nil {
-		return err
-	}
-	return this.setBinding(newTaggedConstructorBinding(constructor))
+	return this.to(constructor, this.verifyTaggedConstructorReflectType, newTaggedConstructorBinding)
 }
 
 func (this *baseBuilder) ToTaggedSingletonConstructor(constructor interface{}) error {
-	constructorReflectType := reflect.TypeOf(constructor)
-	err := this.verifyTaggedConstructorReflectType(constructorReflectType)
+	return this.to(constructor, this.verifyTaggedConstructorReflectType, newTaggedSingletonConstructorBinding)
+}
+
+func (this *baseBuilder) to(object interface{}, verifyFunc func(reflect.Type) error, newBindingFunc func(interface{}) binding) error {
+	objectReflectType := reflect.TypeOf(object)
+	err := verifyFunc(objectReflectType)
 	if err != nil {
 		return err
 	}
-	return this.setBinding(newTaggedSingletonConstructorBinding(constructor))
+	return this.setBinding(newBindingFunc(object))
 }
 
 func (this *baseBuilder) verifyToReflectType(toReflectType reflect.Type) error {
