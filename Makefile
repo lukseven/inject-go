@@ -1,4 +1,4 @@
-.PHONY: all deps build test cov install clean
+.PHONY: all deps build test cov install doc clean
 
 all: test install
 
@@ -17,6 +17,11 @@ cov: deps
 
 install: deps
 	go install ./...
+
+doc:
+	go get -v github.com/robertkrimen/godocdown/godocdown
+	cp readme.header README.md
+	godocdown >> README.md
 
 clean:
 	go clean -i ./...
