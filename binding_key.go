@@ -25,7 +25,7 @@ func (this baseBindingKey) reflectType() reflect.Type {
 
 func (this baseBindingKey) String() string {
 	var buffer bytes.Buffer
-	buffer.WriteString("baseBindingKey{reflectType:")
+	buffer.WriteString("{type:")
 	buffer.WriteString(this.reflectType().String())
 	buffer.WriteString("}")
 	return buffer.String()
@@ -42,7 +42,7 @@ func newTaggedBindingKey(reflectType reflect.Type, tag string) bindingKey {
 
 func (this taggedBindingKey) String() string {
 	var buffer bytes.Buffer
-	buffer.WriteString("baseBindingKey{reflectType:")
+	buffer.WriteString("{type:")
 	buffer.WriteString(this.reflectType().String())
 	buffer.WriteString(" tag:")
 	buffer.WriteString(this.tag)

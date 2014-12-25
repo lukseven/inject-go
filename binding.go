@@ -1,6 +1,7 @@
 package inject
 
 import (
+	"fmt"
 	"reflect"
 )
 
@@ -16,6 +17,7 @@ type binding interface {
 }
 
 type resolvedBinding interface {
+	fmt.Stringer
 	validate() error
 	get() (interface{}, error)
 }
@@ -45,6 +47,10 @@ type singletonBinding struct {
 
 func newSingletonBinding(singleton interface{}) binding {
 	return &singletonBinding{singleton, nil}
+}
+
+func (this *singletonBinding) String() string {
+	return fmt.Sprintf("%v", this.singleton)
 }
 
 func (this *singletonBinding) validate() error {
@@ -93,6 +99,10 @@ func newConstructorBindingCache(constructor interface{}) *constructorBindingCach
 	}
 }
 
+func (this *constructorBinding) String() string {
+	return fmt.Sprintf("%v", this.constructor)
+}
+
 func (this *constructorBinding) validate() error {
 	return validateBindingKeys(this.cache.bindingKeys, this.injector)
 }
@@ -107,6 +117,10 @@ func (this *constructorBinding) get() (interface{}, error) {
 
 func (this *constructorBinding) resolvedBinding(module *module, injector *injector) (resolvedBinding, error) {
 	return &constructorBinding{this.constructor, this.cache, injector}, nil
+}
+
+func (this *singletonConstructorBinding) String() string {
+	return fmt.Sprintf("%v", this.constructor)
 }
 
 type singletonConstructorBinding struct {
@@ -169,6 +183,10 @@ func newTaggedConstructorBindingCache(constructor interface{}) *taggedConstructo
 	}
 }
 
+func (this *taggedConstructorBinding) String() string {
+	return fmt.Sprintf("%v", this.constructor)
+}
+
 func (this *taggedConstructorBinding) validate() error {
 	return validateBindingKeys(this.cache.bindingKeys, this.injector)
 }
@@ -197,6 +215,10 @@ type taggedSingletonConstructorBinding struct {
 
 func newTaggedSingletonConstructorBinding(constructor interface{}) binding {
 	return &taggedSingletonConstructorBinding{taggedConstructorBinding{constructor, newTaggedConstructorBindingCache(constructor), nil}, nil}
+}
+
+func (this *taggedSingletonConstructorBinding) String() string {
+	return fmt.Sprintf("%v", this.constructor)
 }
 
 func (this *taggedSingletonConstructorBinding) get() (interface{}, error) {

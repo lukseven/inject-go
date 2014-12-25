@@ -1,7 +1,9 @@
 package inject
 
 import (
+	"bytes"
 	"reflect"
+	"strings"
 )
 
 type injector struct {
@@ -52,6 +54,28 @@ func validate(injector *injector) error {
 		}
 	}
 	return nil
+}
+
+func (this *injector) String() string {
+	var buffer bytes.Buffer
+	buffer.WriteString("injector{")
+	buffer.WriteString(strings.Join(this.keyValueStrings(), " "))
+	buffer.WriteString("}")
+	return buffer.String()
+}
+
+func (this *injector) keyValueStrings() []string {
+	strings := make([]string, len(this.bindings))
+	i := 0
+	for bindingKey, binding := range this.bindings {
+		var buffer bytes.Buffer
+		buffer.WriteString(bindingKey.String())
+		buffer.WriteString(":")
+		buffer.WriteString(binding.String())
+		strings[i] = buffer.String()
+		i++
+	}
+	return strings
 }
 
 func (this *injector) Get(from interface{}) (interface{}, error) {

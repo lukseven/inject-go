@@ -1,5 +1,9 @@
 package inject
 
+import (
+	"fmt"
+)
+
 const (
 	InjectErrorTypeNil                                = "Parameter is nil"
 	InjectErrorTypeReflectTypeNil                     = "reflect.TypeOf() returns nil"
@@ -36,6 +40,7 @@ type Builder interface {
 }
 
 type Injector interface {
+	fmt.Stringer
 	Get(from interface{}) (interface{}, error)
 	GetTagged(from interface{}, tag string) (interface{}, error)
 }
