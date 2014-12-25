@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"gopkg.in/peter-edge/inject.v1"
 	"gopkg.in/peter-edge/inject.v1/example/api"
 	"gopkg.in/peter-edge/inject.v1/example/cloud"
@@ -23,8 +24,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	api := obj.(api.Api)
-	response, err := api.Do(api.Request{os.Args[1], "this is fun"})
+	apiObj := obj.(api.Api)
+	response, err := apiObj.Do(api.Request{os.Args[1], "this is fun"})
 	if err != nil {
 		panic(err)
 	}
