@@ -21,7 +21,7 @@ func (this *InjectError) Error() string {
 	buffer.WriteString(this.errorType)
 	if len(this.tags) > 0 {
 		buffer.WriteString(" tags{")
-		buffer.WriteString(strings.Join(tagStrings(this.tags), " "))
+		buffer.WriteString(strings.Join(this.tagStrings(), " "))
 		buffer.WriteString("}")
 	}
 	return buffer.String()
@@ -36,10 +36,10 @@ func (this *InjectError) GetTag(key string) (interface{}, bool) {
 	return value, ok
 }
 
-func tagStrings(tags map[string]interface{}) []string {
-	strings := make([]string, len(tags))
+func (this *InjectError) tagStrings() []string {
+	strings := make([]string, len(this.tags))
 	i := 0
-	for key, value := range tags {
+	for key, value := range this.tags {
 		var buffer bytes.Buffer
 		buffer.WriteString(key)
 		buffer.WriteString(":")

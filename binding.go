@@ -10,6 +10,7 @@ const (
 )
 
 type binding interface {
+	fmt.Stringer
 	// has to be a copy constructor
 	// https://github.com/peter-edge/inject/commit/e525825afc80f0de819f35a6afc26a4bf3d3a192
 	// this could be designed better
@@ -28,6 +29,10 @@ type intermediateBinding struct {
 
 func newIntermediateBinding(to interface{}) binding {
 	return &intermediateBinding{newBindingKey(reflect.TypeOf(to))}
+}
+
+func (this *intermediateBinding) String() string {
+	return this.bindingKey.String()
 }
 
 func (this *intermediateBinding) resolvedBinding(module *module, injector *injector) (resolvedBinding, error) {

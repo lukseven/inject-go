@@ -24,6 +24,7 @@ const (
 )
 
 type Module interface {
+	fmt.Stringer
 	Bind(from interface{}) Builder
 	BindTagged(from interface{}, tag string) Builder
 }
