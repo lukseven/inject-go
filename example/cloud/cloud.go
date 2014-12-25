@@ -13,12 +13,12 @@ func CreateModule() inject.Module {
 }
 
 type Command struct {
-	path string
+	Path string
 }
 
 type Result struct {
-	message  string
-	exitCode int
+	Message  string
+	ExitCode int
 }
 
 type Instance interface {
@@ -39,7 +39,7 @@ func (this *instance) RunCommand(command Command) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	if command.path == "ls" {
+	if command.Path == "ls" {
 		return &Result{this.data, i}, nil
 	} else {
 		return &Result{this.data, 1}, nil

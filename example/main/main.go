@@ -28,5 +28,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("%v %v\n", response.bar, response.baz)
+	fmt.Printf("%v %v\n", response.Bar, response.Baz)
 }

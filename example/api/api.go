@@ -14,13 +14,13 @@ func CreateModule() inject.Module {
 }
 
 type Request struct {
-	provider string
-	foo      string
+	Provider string
+	Foo      string
 }
 
 type Response struct {
-	bar string
-	baz int
+	Bar string
+	Baz int
 }
 
 type Api interface {
@@ -38,11 +38,11 @@ func createApi(s struct {
 	digitalOceanProvider cloud.Provider `inject:"digitalOcean"`
 	moreThings           more.MoreThings
 }) (Api, error) {
-	return &api{s.awsProvider, s.digitalOceanProvider, s.moreThings}
+	return &api{s.awsProvider, s.digitalOceanProvider, s.moreThings}, nil
 }
 
 func (this *api) Do(request Request) (*Response, error) {
-	provider, err := this.getProvider(request.provider)
+	provider, err := this.getProvider(request.Provider)
 	if err != nil {
 		return nil, err
 	}
@@ -59,12 +59,12 @@ func (this *api) Do(request Request) (*Response, error) {
 		return nil, err
 	}
 	var buffer bytes.Buffer
-	buffer.WriteString(request.foo)
+	buffer.WriteString(request.Foo)
 	buffer.WriteString(" ")
-	buffer.WriteString(result.message)
+	buffer.WriteString(result.Message)
 	buffer.WriteString(" ")
 	buffer.WriteString(s)
-	return &Response{buffer.String(), result.exitCode}
+	return &Response{buffer.String(), result.ExitCode}
 }
 
 func (this *api) getProvider(provider string) (cloud.Provider, error) {
