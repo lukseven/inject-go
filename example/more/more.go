@@ -18,5 +18,5 @@ type MoreThings interface {
 type moreThings struct{}
 
 func (this *moreThings) MoreStuffToDo(i int) (string, error) {
-	return fmt.Sprintf("But there's not much to do here %v", i), nil
+	return fmt.Sprintf("but there's not much to do here %v", i), nil
 }

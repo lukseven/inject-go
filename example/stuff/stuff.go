@@ -21,5 +21,9 @@ func createStuffService() (StuffService, error) {
 }
 
 func (this *stuffService) DoStuff(s string) (int, error) {
-	return 0, nil
+	if s == "pwd" {
+		return 0, nil
+	} else {
+		return -1, nil
+	}
 }

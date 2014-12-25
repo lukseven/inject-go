@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"gopkg.in/peter-edge/inject.v1"
 	"gopkg.in/peter-edge/inject.v1/example/cloud"
 	"gopkg.in/peter-edge/inject.v1/example/more"
@@ -13,15 +14,17 @@ func CreateModule() inject.Module {
 }
 
 type Request struct {
-	foo string
+	provider string
+	foo      string
 }
 
 type Response struct {
 	bar string
+	baz int
 }
 
 type Api interface {
-	DoStuff(Request) (*Response, error)
+	Do(Request) (*Response, error)
 }
 
 type api struct {
@@ -38,6 +41,39 @@ func createApi(s struct {
 	return &api{s.awsProvider, s.digitalOceanProvider, s.moreThings}
 }
 
-func (this *api) DoStuff(request Request) (*Response, error) {
-	return nil, nil
+func (this *api) Do(request Request) (*Response, error) {
+	provider, err := this.getProvider(request.provider)
+	if err != nil {
+		return nil, err
+	}
+	instance, err := provider.NewInstance()
+	if err != nil {
+		return nil, err
+	}
+	result, err := instance.RunCommand(cloud.Command{"ls"})
+	if err != nil {
+		return nil, err
+	}
+	s, err := moreThings.MoreStuffToDo(1)
+	if err != nil {
+		return nil, err
+	}
+	var buffer bytes.Buffer
+	buffer.WriteString(request.foo)
+	buffer.WriteString(" ")
+	buffer.WriteString(result.message)
+	buffer.WriteString(" ")
+	buffer.WriteString(s)
+	return &Response{buffer.String(), result.exitCode}
+}
+
+func (this *api) getProvider(provider string) (cloud.Provider, error) {
+	switch provider {
+	case "aws":
+		return this.awsProvider, nil
+	case "digitalOcean":
+		return digitalOceanProvider, nil
+	default:
+		return nil, fmt.Errorf("api: Unknown provider %v", provider)
+	}
 }

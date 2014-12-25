@@ -1,7 +1,6 @@
 package cloud
 
 import (
-	"errors"
 	"gopkg.in/peter-edge/inject.v1"
 	"gopkg.in/peter-edge/inject.v1/example/stuff"
 )
@@ -18,6 +17,7 @@ type Command struct {
 }
 
 type Result struct {
+	message  string
 	exitCode int
 }
 
@@ -29,16 +29,33 @@ type Provider interface {
 	NewInstance() (Instance, error)
 }
 
+type instance struct {
+	data         string
+	stuffService stuff.StuffService
+}
+
+func (this *instance) RunCommand(command Command) (*Result, error) {
+	i, err := this.stuffService.DoStuff("pwd")
+	if err != nil {
+		return nil, err
+	}
+	if command.path == "ls" {
+		return &Result{this.data, i}, nil
+	} else {
+		return &Result{this.data, 1}, nil
+	}
+}
+
 type awsProvider struct {
 	stuffService stuff.StuffService
 }
 
 func createAwsProvider(stuffService stuff.StuffService) (Provider, error) {
-	return &awsProvider{stuffService}
+	return &awsProvider{stuffService}, nil
 }
 
 func (this *awsProvider) NewInstance() (Instance, error) {
-	return nil, errors.New("Not implemented")
+	return &instance{"aws can do stuff", this.stuffService}, nil
 }
 
 type digitalOceanProvider struct {
@@ -46,9 +63,9 @@ type digitalOceanProvider struct {
 }
 
 func createDigitalOceanProvider(stuffService stuff.StuffService) (Provider, error) {
-	return &digitalPceanProvider{stuffService}
+	return &digitalOceanProvider{stuffService}, nil
 }
 
 func (this *digitalOceanProvider) NewInstance() (Instance, error) {
-	return nil, errors.New("Not implemented")
+	return &instance{"digitalOcean can also do stuff", this.stuffService}, nil
 }
