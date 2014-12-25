@@ -83,6 +83,7 @@ func (this *InjectError) Type() string
 
 ```go
 type Injector interface {
+	fmt.Stringer
 	Get(from interface{}) (interface{}, error)
 	GetTagged(from interface{}, tag string) (interface{}, error)
 }
