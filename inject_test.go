@@ -546,8 +546,15 @@ func createSecondInterfaceTaggedOne(str struct {
 	return &SecondPtrStruct{str.S, str.B}, nil
 }
 
-func createSecondInterfaceTaggedTwo(str struct {
+func createSecondInterfaceTaggedOneHasNoTag(str struct {
 	S SimpleInterface `inject:"tagOne"`
+	B BarInterface
+}) (SecondInterface, error) {
+	return &SecondPtrStruct{str.S, str.B}, nil
+}
+
+func createSecondInterfaceTaggedNoTags(str struct {
+	S SimpleInterface
 	B BarInterface
 }) (SecondInterface, error) {
 	return &SecondPtrStruct{str.S, str.B}, nil
@@ -576,7 +583,7 @@ func TestTaggedConstructorOneHasNoTag(t *testing.T) {
 	require.NoError(t, err)
 	err = module.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
 	require.NoError(t, err)
-	err = module.Bind((*SecondInterface)(nil)).ToTaggedConstructor(createSecondInterfaceTaggedTwo)
+	err = module.Bind((*SecondInterface)(nil)).ToTaggedConstructor(createSecondInterfaceTaggedOneHasNoTag)
 	require.NoError(t, err)
 	injector, err := CreateInjector(module)
 	require.NoError(t, err)
@@ -585,4 +592,48 @@ func TestTaggedConstructorOneHasNoTag(t *testing.T) {
 	secondInterface := object.(SecondInterface)
 	require.Equal(t, "hello", secondInterface.Foo().Foo())
 	require.Equal(t, 1, secondInterface.Bar().Bar())
+}
+
+func TestTaggedConstructorNoTags(t *testing.T) {
+	module := CreateModule()
+	err := module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+	require.NoError(t, err)
+	err = module.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
+	require.NoError(t, err)
+	err = module.Bind((*SecondInterface)(nil)).ToTaggedConstructor(createSecondInterfaceTaggedNoTags)
+	require.NoError(t, err)
+	injector, err := CreateInjector(module)
+	require.NoError(t, err)
+	object, err := injector.Get((*SecondInterface)(nil))
+	require.NoError(t, err)
+	secondInterface := object.(SecondInterface)
+	require.Equal(t, "hello", secondInterface.Foo().Foo())
+	require.Equal(t, 1, secondInterface.Bar().Bar())
+}
+
+func TestTaggedConstructorOneHasNoTagMultipleBindings(t *testing.T) {
+	module := CreateModule()
+	err := module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(&SimplePtrStruct{"hello"})
+	require.NoError(t, err)
+	err = module.BindTagged((*SimpleInterface)(nil), "tagTwo").ToSingleton(&SimplePtrStruct{"goodbye"})
+	require.NoError(t, err)
+	err = module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"another"})
+	require.NoError(t, err)
+	err = module.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
+	require.NoError(t, err)
+	err = module.Bind((*SecondInterface)(nil)).ToTaggedConstructor(createSecondInterfaceTaggedOneHasNoTag)
+	require.NoError(t, err)
+	injector, err := CreateInjector(module)
+	require.NoError(t, err)
+	object, err := injector.Get((*SecondInterface)(nil))
+	require.NoError(t, err)
+	secondInterface := object.(SecondInterface)
+	require.Equal(t, "hello", secondInterface.Foo().Foo())
+	require.Equal(t, 1, secondInterface.Bar().Bar())
+	object, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	require.NoError(t, err)
+	require.Equal(t, "goodbye", object.(SimpleInterface).Foo())
+	object, err = injector.Get((*SimpleInterface)(nil))
+	require.NoError(t, err)
+	require.Equal(t, "another", object.(SimpleInterface).Foo())
 }
