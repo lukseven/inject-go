@@ -2,21 +2,19 @@
 [![API Documentation](http://img.shields.io/badge/api-Godoc-blue.svg?style=flat-square)](https://godoc.org/github.com/peter-edge/inject)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/peter-edge/inject/blob/master/LICENSE)
 
-### Installation
+Dependency injection for Go
+
+## Installation
 ```bash
 go get -u gopkg.in/peter-edge/inject.v1
 ```
 
-### Import
+## Import
 ```go
 import (
     "gopkg.in/peter-edge/inject.v1"
 )
 ```
-
-# Godoc
-
-Dependency injection for Go
 
 ## Usage
 
