@@ -16,21 +16,7 @@ func createModule() *module {
 }
 
 func (this *module) Bind(from ...interface{}) Builder {
-	lenFrom := len(from)
-	if lenFrom == 0 {
-		this.addBindingError(newErrorBuilder(injectErrorTypeNil).build())
-		return newNoOpBuilder()
-	}
-	bindingKeys := make([]bindingKey, lenFrom)
-	for i := 0; i < lenFrom; i++ {
-		fromReflectType := reflect.TypeOf(from[i])
-		if fromReflectType == nil {
-			this.addBindingError(newErrorBuilder(injectErrorTypeNil).build())
-			return newNoOpBuilder()
-		}
-		bindingKeys[i] = newBindingKey(fromReflectType)
-	}
-	return newBuilder(this, bindingKeys)
+	return this.bind(newBindingKey, from)
 }
 
 func (this *module) BindTagged(tag string, from ...interface{}) Builder {
@@ -38,6 +24,10 @@ func (this *module) BindTagged(tag string, from ...interface{}) Builder {
 		this.addBindingError(newErrorBuilder(injectErrorTypeTagEmpty).build())
 		return newNoOpBuilder()
 	}
+	return this.bind(func(fromReflectType reflect.Type) bindingKey { return newTaggedBindingKey(fromReflectType, tag) }, from)
+}
+
+func (this *module) bind(newBindingKeyFunc func(reflect.Type) bindingKey, from []interface{}) Builder {
 	lenFrom := len(from)
 	if lenFrom == 0 {
 		this.addBindingError(newErrorBuilder(injectErrorTypeNil).build())
@@ -50,7 +40,7 @@ func (this *module) BindTagged(tag string, from ...interface{}) Builder {
 			this.addBindingError(newErrorBuilder(injectErrorTypeNil).build())
 			return newNoOpBuilder()
 		}
-		bindingKeys[i] = newTaggedBindingKey(fromReflectType, tag)
+		bindingKeys[i] = newBindingKeyFunc(fromReflectType)
 	}
 	return newBuilder(this, bindingKeys)
 }
