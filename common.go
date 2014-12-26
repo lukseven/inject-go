@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	taggedFuncStructFieldTag = "inject"
+	taggedFuncStructFieldTag = "injectTag"
 )
 
 func verifyIsFunc(funcReflectType reflect.Type) error {

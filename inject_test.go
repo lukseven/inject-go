@@ -559,14 +559,14 @@ func TestSingletonConstructorWithEvilCounterMultipleInjectors(t *testing.T) {
 // ***** tagged constructors
 
 func createSecondInterfaceTaggedOne(str struct {
-	S SimpleInterface `inject:"tagOne"`
-	B BarInterface    `inject:"tagTwo"`
+	S SimpleInterface `injectTag:"tagOne"`
+	B BarInterface    `injectTag:"tagTwo"`
 }) (SecondInterface, error) {
 	return &SecondPtrStruct{str.S, str.B}, nil
 }
 
 func createSecondInterfaceTaggedOneHasNoTag(str struct {
-	S SimpleInterface `inject:"tagOne"`
+	S SimpleInterface `injectTag:"tagOne"`
 	B BarInterface
 }) (SecondInterface, error) {
 	return &SecondPtrStruct{str.S, str.B}, nil
@@ -681,14 +681,14 @@ func getSecondInterfaceErrNoBinding(s SimpleInterface, b BarInterface, u Unbound
 }
 
 func getSecondInterfaceTaggedOne(str struct {
-	S SimpleInterface `inject:"tagOne"`
-	B BarInterface    `inject:"tagTwo"`
+	S SimpleInterface `injectTag:"tagOne"`
+	B BarInterface    `injectTag:"tagTwo"`
 }) (SecondInterface, string, error) {
 	return &SecondPtrStruct{str.S, str.B}, "hello", nil
 }
 
 func getSecondInterfaceTaggedOneHasNoTag(str struct {
-	S SimpleInterface `inject:"tagOne"`
+	S SimpleInterface `injectTag:"tagOne"`
 	B BarInterface
 }) (SecondInterface, string, error) {
 	return &SecondPtrStruct{str.S, str.B}, "hello", nil
