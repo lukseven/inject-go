@@ -22,7 +22,6 @@ import (
 
 ```go
 type Builder interface {
-	To(to interface{})
 	ToSingleton(singleton interface{})
 	ToConstructor(constructor interface{})
 	ToSingletonConstructor(constructor interface{})
@@ -52,6 +51,16 @@ type Injector interface {
 func CreateInjector(modules ...Module) (Injector, error)
 ```
 
+#### type InterfaceBuilder
+
+```go
+type InterfaceBuilder interface {
+	Builder
+	To(to interface{})
+}
+```
+
+
 #### type Module
 
 ```go
@@ -59,6 +68,8 @@ type Module interface {
 	fmt.Stringer
 	Bind(from ...interface{}) Builder
 	BindTagged(tag string, from ...interface{}) Builder
+	BindInterface(fromInterface ...interface{}) InterfaceBuilder
+	BindTaggedInterface(tag string, fromInterface ...interface{}) InterfaceBuilder
 }
 ```
 
