@@ -24,7 +24,7 @@ func (this *module) Bind(from interface{}) Builder {
 	return newBuilder(this, newBindingKey(fromReflectType))
 }
 
-func (this *module) BindTagged(from interface{}, tag string) Builder {
+func (this *module) BindTagged(tag string, from interface{}) Builder {
 	fromReflectType := reflect.TypeOf(from)
 	if fromReflectType == nil {
 		this.addBindingError(newErrorBuilder(injectErrorTypeNil).build())

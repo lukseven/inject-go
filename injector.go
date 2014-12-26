@@ -91,7 +91,7 @@ func (this *injector) Get(from interface{}) (interface{}, error) {
 	return this.get(newBindingKey(reflect.TypeOf(from)))
 }
 
-func (this *injector) GetTagged(from interface{}, tag string) (interface{}, error) {
+func (this *injector) GetTagged(tag string, from interface{}) (interface{}, error) {
 	return this.get(newTaggedBindingKey(reflect.TypeOf(from), tag))
 }
 

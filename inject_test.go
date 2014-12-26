@@ -161,7 +161,7 @@ func TestSimplePtrStructIndirectFailsWhenNoFinalBinding(t *testing.T) {
 
 func TestTaggedTagEmpty(t *testing.T) {
 	module := CreateModule()
-	module.BindTagged((*SimpleInterface)(nil), "").ToSingleton(SimpleStruct{"hello"})
+	module.BindTagged("", (*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"hello"})
 	_, err := CreateInjector(module)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeTagEmpty)
@@ -169,58 +169,58 @@ func TestTaggedTagEmpty(t *testing.T) {
 
 func TestTaggedSimpleStructSingletonDirect(t *testing.T) {
 	module := CreateModule()
-	module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(SimpleStruct{"hello"})
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"hello"})
 	injector, err := CreateInjector(module)
 	require.NoError(t, err)
-	object, err := injector.GetTagged((*SimpleInterface)(nil), "tagOne")
+	object, err := injector.GetTagged("tagOne", (*SimpleInterface)(nil))
 	require.NoError(t, err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 	_, err = injector.Get((*SimpleInterface)(nil))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeNoBinding)
-	_, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	_, err = injector.GetTagged("tagTwo", (*SimpleInterface)(nil))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeNoBinding)
 }
 
 func TestTaggedSimpleStructSingletonDirectSucceedsWhenPtr(t *testing.T) {
 	module := CreateModule()
-	module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(&SimpleStruct{"hello"})
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).ToSingleton(&SimpleStruct{"hello"})
 	injector, err := CreateInjector(module)
 	require.NoError(t, err)
-	object, err := injector.GetTagged((*SimpleInterface)(nil), "tagOne")
+	object, err := injector.GetTagged("tagOne", (*SimpleInterface)(nil))
 	require.NoError(t, err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 	_, err = injector.Get((*SimpleInterface)(nil))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeNoBinding)
-	_, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	_, err = injector.GetTagged("tagTwo", (*SimpleInterface)(nil))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeNoBinding)
 }
 
 func TestTaggedSimplePtrStructSingletonDirect(t *testing.T) {
 	module := CreateModule()
-	module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(&SimplePtrStruct{"hello"})
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
 	injector, err := CreateInjector(module)
 	require.NoError(t, err)
-	object, err := injector.GetTagged((*SimpleInterface)(nil), "tagOne")
+	object, err := injector.GetTagged("tagOne", (*SimpleInterface)(nil))
 	require.NoError(t, err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 	_, err = injector.Get((*SimpleInterface)(nil))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeNoBinding)
-	_, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	_, err = injector.GetTagged("tagTwo", (*SimpleInterface)(nil))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeNoBinding)
 }
 
 func TestTaggedSimplePtrStructSingletonDirectFailsWhenNotPtr(t *testing.T) {
 	module := CreateModule()
-	module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(SimplePtrStruct{"hello"})
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).ToSingleton(SimplePtrStruct{"hello"})
 	_, err := CreateInjector(module)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeDoesNotImplement)
@@ -228,61 +228,61 @@ func TestTaggedSimplePtrStructSingletonDirectFailsWhenNotPtr(t *testing.T) {
 
 func TestTaggedSimpleStructSingletonIndirect(t *testing.T) {
 	module := CreateModule()
-	module.BindTagged((*SimpleInterface)(nil), "tagOne").To(SimpleStruct{})
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).To(SimpleStruct{})
 	module.Bind(SimpleStruct{}).ToSingleton(SimpleStruct{"hello"})
 	injector, err := CreateInjector(module)
 	require.NoError(t, err)
-	object, err := injector.GetTagged((*SimpleInterface)(nil), "tagOne")
+	object, err := injector.GetTagged("tagOne", (*SimpleInterface)(nil))
 	require.NoError(t, err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 	_, err = injector.Get((*SimpleInterface)(nil))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeNoBinding)
-	_, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	_, err = injector.GetTagged("tagTwo", (*SimpleInterface)(nil))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeNoBinding)
 }
 
 func TestTaggedSimpleStructSingletonIndirectSucceedsWhenPtr(t *testing.T) {
 	module := CreateModule()
-	module.BindTagged((*SimpleInterface)(nil), "tagOne").To(&SimpleStruct{})
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).To(&SimpleStruct{})
 	module.Bind(&SimpleStruct{}).ToSingleton(&SimpleStruct{"hello"})
 	injector, err := CreateInjector(module)
 	require.NoError(t, err)
-	object, err := injector.GetTagged((*SimpleInterface)(nil), "tagOne")
+	object, err := injector.GetTagged("tagOne", (*SimpleInterface)(nil))
 	require.NoError(t, err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 	_, err = injector.Get((*SimpleInterface)(nil))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeNoBinding)
-	_, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	_, err = injector.GetTagged("tagTwo", (*SimpleInterface)(nil))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeNoBinding)
 }
 
 func TestTaggedSimplePtrStructSingletonIndirect(t *testing.T) {
 	module := CreateModule()
-	module.BindTagged((*SimpleInterface)(nil), "tagOne").To(&SimplePtrStruct{})
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).To(&SimplePtrStruct{})
 	module.Bind(&SimplePtrStruct{}).ToSingleton(&SimplePtrStruct{"hello"})
 	injector, err := CreateInjector(module)
 	require.NoError(t, err)
-	object, err := injector.GetTagged((*SimpleInterface)(nil), "tagOne")
+	object, err := injector.GetTagged("tagOne", (*SimpleInterface)(nil))
 	require.NoError(t, err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
 	_, err = injector.Get((*SimpleInterface)(nil))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeNoBinding)
-	_, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	_, err = injector.GetTagged("tagTwo", (*SimpleInterface)(nil))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeNoBinding)
 }
 
 func TestTaggedSimplePtrStructSingletonIndirectFailsWhenNotPtr(t *testing.T) {
 	module := CreateModule()
-	module.BindTagged((*SimpleInterface)(nil), "tagOne").To(SimplePtrStruct{})
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).To(SimplePtrStruct{})
 	_, err := CreateInjector(module)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeDoesNotImplement)
@@ -290,7 +290,7 @@ func TestTaggedSimplePtrStructSingletonIndirectFailsWhenNotPtr(t *testing.T) {
 
 func TestTaggedSimplePtrStructIndirectFailsWhenNoFinalBinding(t *testing.T) {
 	module := CreateModule()
-	module.BindTagged((*SimpleInterface)(nil), "tagOne").To(&SimplePtrStruct{})
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).To(&SimplePtrStruct{})
 	_, err := CreateInjector(module)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeNoFinalBinding)
@@ -300,15 +300,15 @@ func TestTaggedSimplePtrStructIndirectFailsWhenNoFinalBinding(t *testing.T) {
 
 func TestTaggedSimpleStructSingletonDirectTwoBindings(t *testing.T) {
 	module := CreateModule()
-	module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(SimpleStruct{"hello"})
-	module.BindTagged((*SimpleInterface)(nil), "tagTwo").ToSingleton(SimpleStruct{"good day"})
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"hello"})
+	module.BindTagged("tagTwo", (*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"good day"})
 	injector, err := CreateInjector(module)
 	require.NoError(t, err)
-	object, err := injector.GetTagged((*SimpleInterface)(nil), "tagOne")
+	object, err := injector.GetTagged("tagOne", (*SimpleInterface)(nil))
 	require.NoError(t, err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
-	object, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	object, err = injector.GetTagged("tagTwo", (*SimpleInterface)(nil))
 	require.NoError(t, err)
 	simpleInterface = object.(SimpleInterface)
 	require.Equal(t, "good day", simpleInterface.Foo())
@@ -581,8 +581,8 @@ func createSecondInterfaceTaggedNoTags(str struct {
 
 func TestTaggedConstructorSimple(t *testing.T) {
 	module := CreateModule()
-	module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(&SimplePtrStruct{"hello"})
-	module.BindTagged((*BarInterface)(nil), "tagTwo").ToSingleton(&BarPtrStruct{1})
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+	module.BindTagged("tagTwo", (*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
 	module.Bind((*SecondInterface)(nil)).ToTaggedConstructor(createSecondInterfaceTaggedOne)
 	injector, err := CreateInjector(module)
 	require.NoError(t, err)
@@ -595,7 +595,7 @@ func TestTaggedConstructorSimple(t *testing.T) {
 
 func TestTaggedConstructorOneHasNoTag(t *testing.T) {
 	module := CreateModule()
-	module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(&SimplePtrStruct{"hello"})
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
 	module.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
 	module.Bind((*SecondInterface)(nil)).ToTaggedConstructor(createSecondInterfaceTaggedOneHasNoTag)
 	injector, err := CreateInjector(module)
@@ -623,8 +623,8 @@ func TestTaggedConstructorNoTags(t *testing.T) {
 
 func TestTaggedConstructorOneHasNoTagMultipleBindings(t *testing.T) {
 	module := CreateModule()
-	module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(&SimplePtrStruct{"hello"})
-	module.BindTagged((*SimpleInterface)(nil), "tagTwo").ToSingleton(&SimplePtrStruct{"goodbye"})
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+	module.BindTagged("tagTwo", (*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"goodbye"})
 	module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"another"})
 	module.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
 	module.Bind((*SecondInterface)(nil)).ToTaggedConstructor(createSecondInterfaceTaggedOneHasNoTag)
@@ -635,7 +635,7 @@ func TestTaggedConstructorOneHasNoTagMultipleBindings(t *testing.T) {
 	secondInterface := object.(SecondInterface)
 	require.Equal(t, "hello", secondInterface.Foo().Foo())
 	require.Equal(t, 1, secondInterface.Bar().Bar())
-	object, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	object, err = injector.GetTagged("tagTwo", (*SimpleInterface)(nil))
 	require.NoError(t, err)
 	require.Equal(t, "goodbye", object.(SimpleInterface).Foo())
 	object, err = injector.Get((*SimpleInterface)(nil))
@@ -645,8 +645,8 @@ func TestTaggedConstructorOneHasNoTagMultipleBindings(t *testing.T) {
 
 func createModuleForTheTestBelow(t *testing.T) Module {
 	module := CreateModule()
-	module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(&SimplePtrStruct{"hello"})
-	module.BindTagged((*SimpleInterface)(nil), "tagTwo").ToSingleton(&SimplePtrStruct{"goodbye"})
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+	module.BindTagged("tagTwo", (*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"goodbye"})
 	module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"another"})
 	module.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
 	module.Bind((*SecondInterface)(nil)).ToTaggedConstructor(createSecondInterfaceTaggedOneHasNoTag)
@@ -662,7 +662,7 @@ func TestTaggedConstructorOneHasNoTagMultipleBindingsModuleFromFunction(t *testi
 	secondInterface := object.(SecondInterface)
 	require.Equal(t, "hello", secondInterface.Foo().Foo())
 	require.Equal(t, 1, secondInterface.Bar().Bar())
-	object, err = injector.GetTagged((*SimpleInterface)(nil), "tagTwo")
+	object, err = injector.GetTagged("tagTwo", (*SimpleInterface)(nil))
 	require.NoError(t, err)
 	require.Equal(t, "goodbye", object.(SimpleInterface).Foo())
 	object, err = injector.Get((*SimpleInterface)(nil))
@@ -703,9 +703,9 @@ func getSecondInterfaceTaggedNoTags(str struct {
 
 func TestCallAndCallTaggedSimple(t *testing.T) {
 	module := CreateModule()
-	module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(SimpleStruct{"hello"})
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"hello"})
 	module.Bind((*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"another"})
-	module.BindTagged((*BarInterface)(nil), "tagTwo").ToSingleton(BarStruct{1})
+	module.BindTagged("tagTwo", (*BarInterface)(nil)).ToSingleton(BarStruct{1})
 	module.Bind((*BarInterface)(nil)).ToSingleton(BarStruct{2})
 	injector, err := CreateInjector(module)
 	require.NoError(t, err)
