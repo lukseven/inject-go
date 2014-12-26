@@ -39,6 +39,8 @@ type Injector interface {
 	fmt.Stringer
 	Get(from interface{}) (interface{}, error)
 	GetTagged(from interface{}, tag string) (interface{}, error)
+	Call(function interface{}) ([]interface{}, error)
+	CallTagged(taggedFunction interface{}) ([]interface{}, error)
 }
 ```
 

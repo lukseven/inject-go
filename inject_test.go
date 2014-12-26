@@ -320,6 +320,14 @@ type BarInterface interface {
 	Bar() int
 }
 
+type BarStruct struct {
+	bar int
+}
+
+func (this BarStruct) Bar() int {
+	return this.bar
+}
+
 type BarPtrStruct struct {
 	bar int
 }
@@ -660,4 +668,81 @@ func TestTaggedConstructorOneHasNoTagMultipleBindingsModuleFromFunction(t *testi
 	object, err = injector.Get((*SimpleInterface)(nil))
 	require.NoError(t, err)
 	require.Equal(t, "another", object.(SimpleInterface).Foo())
+}
+
+// ***** Call, CallTagged tests *****
+
+func getSecondInterface(s SimpleInterface, b BarInterface) (SecondInterface, string, error) {
+	return &SecondPtrStruct{s, b}, "hello", nil
+}
+
+func getSecondInterfaceErrNoBinding(s SimpleInterface, b BarInterface, u UnboundInterface) (SecondInterface, string, error) {
+	return &SecondPtrStruct{s, b}, "hello", nil
+}
+
+func getSecondInterfaceTaggedOne(str struct {
+	S SimpleInterface `inject:"tagOne"`
+	B BarInterface    `inject:"tagTwo"`
+}) (SecondInterface, string, error) {
+	return &SecondPtrStruct{str.S, str.B}, "hello", nil
+}
+
+func getSecondInterfaceTaggedOneHasNoTag(str struct {
+	S SimpleInterface `inject:"tagOne"`
+	B BarInterface
+}) (SecondInterface, string, error) {
+	return &SecondPtrStruct{str.S, str.B}, "hello", nil
+}
+
+func getSecondInterfaceTaggedNoTags(str struct {
+	S SimpleInterface
+	B BarInterface
+}) (SecondInterface, string, error) {
+	return &SecondPtrStruct{str.S, str.B}, "hello", nil
+}
+
+func TestCallAndCallTaggedSimple(t *testing.T) {
+	module := CreateModule()
+	module.BindTagged((*SimpleInterface)(nil), "tagOne").ToSingleton(SimpleStruct{"hello"})
+	module.Bind((*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"another"})
+	module.BindTagged((*BarInterface)(nil), "tagTwo").ToSingleton(BarStruct{1})
+	module.Bind((*BarInterface)(nil)).ToSingleton(BarStruct{2})
+	injector, err := CreateInjector(module)
+	require.NoError(t, err)
+
+	values, err := injector.Call(getSecondInterface)
+	require.NoError(t, err)
+	secondPtrStruct := values[0].(*SecondPtrStruct)
+	str := values[1].(string)
+	require.Equal(t, SecondPtrStruct{SimpleStruct{"another"}, BarStruct{2}}, *secondPtrStruct)
+	require.Equal(t, "hello", str)
+	require.Nil(t, values[2])
+
+	values, err = injector.Call(getSecondInterfaceErrNoBinding)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), injectErrorTypeNoBinding)
+
+	values, err = injector.CallTagged(getSecondInterfaceTaggedOne)
+	require.NoError(t, err)
+	secondPtrStruct = values[0].(*SecondPtrStruct)
+	str = values[1].(string)
+	require.Equal(t, SecondPtrStruct{SimpleStruct{"hello"}, BarStruct{1}}, *secondPtrStruct)
+	require.Equal(t, "hello", str)
+	require.Nil(t, values[2])
+
+	values, err = injector.CallTagged(getSecondInterfaceTaggedOneHasNoTag)
+	require.NoError(t, err)
+	secondPtrStruct = values[0].(*SecondPtrStruct)
+	str = values[1].(string)
+	require.Equal(t, SecondPtrStruct{SimpleStruct{"hello"}, BarStruct{2}}, *secondPtrStruct)
+	require.Equal(t, "hello", str)
+	require.Nil(t, values[2])
+
+	values, err = injector.CallTagged(getSecondInterfaceTaggedNoTags)
+	require.NoError(t, err)
+	secondPtrStruct = values[0].(*SecondPtrStruct)
+	str = values[1].(string)
+	require.Equal(t, SecondPtrStruct{SimpleStruct{"another"}, BarStruct{2}}, *secondPtrStruct)
+	require.Equal(t, "hello", str)
+	require.Nil(t, values[2])
 }
