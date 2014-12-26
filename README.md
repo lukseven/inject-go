@@ -38,7 +38,7 @@ type Builder interface {
 type Injector interface {
 	fmt.Stringer
 	Get(from interface{}) (interface{}, error)
-	GetTagged(from interface{}, tag string) (interface{}, error)
+	GetTagged(tag string, from interface{}) (interface{}, error)
 	Call(function interface{}) ([]interface{}, error)
 	CallTagged(taggedFunction interface{}) ([]interface{}, error)
 }
@@ -57,7 +57,7 @@ func CreateInjector(modules ...Module) (Injector, error)
 type Module interface {
 	fmt.Stringer
 	Bind(from interface{}) Builder
-	BindTagged(from interface{}, tag string) Builder
+	BindTagged(tag string, from interface{}) Builder
 }
 ```
 
