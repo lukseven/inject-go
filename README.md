@@ -41,6 +41,7 @@ type Injector interface {
 	GetTagged(tag string, from interface{}) (interface{}, error)
 	Call(function interface{}) ([]interface{}, error)
 	CallTagged(taggedFunction interface{}) ([]interface{}, error)
+	Populate(populateStruct interface{}) error
 }
 ```
 

@@ -750,3 +750,56 @@ func TestCallAndCallTaggedSimple(t *testing.T) {
 	require.Equal(t, "hello", str)
 	require.Nil(t, values[2])
 }
+
+// ***** Populate tests *****
+
+type PopulateStructTwoTags struct {
+	S SimpleInterface `injectTag:"tagOne"`
+	B BarInterface    `injectTag:"tagTwo"`
+}
+
+type PopulateStructNoBinding struct {
+	S SimpleInterface `injectTag:"tagOne"`
+	B BarInterface    `injectTag:"tagTwo"`
+	U UnboundInterface
+}
+
+type PopulateStructOneTag struct {
+	S SimpleInterface `injectTag:"tagOne"`
+	B BarInterface
+}
+
+type PopulateStructNoTags struct {
+	S SimpleInterface
+	B BarInterface
+}
+
+func TestPopulateSimple(t *testing.T) {
+	module := CreateModule()
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"hello"})
+	module.Bind((*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"another"})
+	module.BindTagged("tagTwo", (*BarInterface)(nil)).ToSingleton(BarStruct{1})
+	module.Bind((*BarInterface)(nil)).ToSingleton(BarStruct{2})
+	injector, err := CreateInjector(module)
+	require.NoError(t, err)
+
+	populateStructTwoTags := PopulateStructTwoTags{}
+	err = injector.Populate(&populateStructTwoTags)
+	require.NoError(t, err)
+	require.Equal(t, PopulateStructTwoTags{SimpleStruct{"hello"}, BarStruct{1}}, populateStructTwoTags)
+
+	populateStructNoBinding := PopulateStructNoBinding{}
+	err = injector.Populate(&populateStructNoBinding)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), injectErrorTypeNoBinding)
+
+	populateStructOneTag := PopulateStructOneTag{}
+	err = injector.Populate(&populateStructOneTag)
+	require.NoError(t, err)
+	require.Equal(t, PopulateStructOneTag{SimpleStruct{"hello"}, BarStruct{2}}, populateStructOneTag)
+
+	populateStructNoTags := PopulateStructNoTags{}
+	err = injector.Populate(&populateStructNoTags)
+	require.NoError(t, err)
+	require.Equal(t, PopulateStructNoTags{SimpleStruct{"another"}, BarStruct{2}}, populateStructNoTags)
+}
