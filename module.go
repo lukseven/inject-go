@@ -16,32 +16,34 @@ func createModule() *module {
 }
 
 func (this *module) Bind(froms ...interface{}) Builder {
+	if !this.verifySupportedTypes(froms, isSupportedBindReflectType) {
+		return newNoOpBuilder()
+	}
 	return this.bind(newBindingKey, froms)
 }
 
 func (this *module) BindTagged(tag string, froms ...interface{}) Builder {
-	ok := this.verifyTag(tag)
-	if !ok {
+	if !this.verifyTag(tag) {
+		return newNoOpBuilder()
+	}
+	if !this.verifySupportedTypes(froms, isSupportedBindReflectType) {
 		return newNoOpBuilder()
 	}
 	return this.bind(func(fromReflectType reflect.Type) bindingKey { return newTaggedBindingKey(fromReflectType, tag) }, froms)
 }
 
 func (this *module) BindInterface(fromInterfaces ...interface{}) InterfaceBuilder {
-	ok := this.verifyAreInterfacePtrs(fromInterfaces)
-	if !ok {
+	if !this.verifySupportedTypes(fromInterfaces, isSupportedBindInterfaceReflectType) {
 		return newNoOpBuilder()
 	}
 	return this.bind(newBindingKey, fromInterfaces)
 }
 
 func (this *module) BindTaggedInterface(tag string, fromInterfaces ...interface{}) InterfaceBuilder {
-	ok := this.verifyTag(tag)
-	if !ok {
+	if !this.verifyTag(tag) {
 		return newNoOpBuilder()
 	}
-	ok = this.verifyAreInterfacePtrs(fromInterfaces)
-	if !ok {
+	if !this.verifySupportedTypes(fromInterfaces, isSupportedBindInterfaceReflectType) {
 		return newNoOpBuilder()
 	}
 	return this.bind(func(fromReflectType reflect.Type) bindingKey { return newTaggedBindingKey(fromReflectType, tag) }, fromInterfaces)
@@ -116,19 +118,19 @@ func (this *module) verifyTag(tag string) bool {
 	return true
 }
 
-func (this *module) verifyAreInterfacePtrs(fromInterfaces []interface{}) bool {
+func (this *module) verifySupportedTypes(froms []interface{}, isSupportedFunc func(reflect.Type) bool) bool {
 	var ok bool = true
-	for _, fromInterface := range fromInterfaces {
-		if !this.verifyIsInterfacePtr(reflect.TypeOf(fromInterface)) {
+	for _, from := range froms {
+		if !this.verifySupportedType(reflect.TypeOf(from), isSupportedFunc) {
 			ok = false
 		}
 	}
 	return ok
 }
 
-func (this *module) verifyIsInterfacePtr(reflectType reflect.Type) bool {
-	if !isInterfacePtr(reflectType) {
-		eb := newErrorBuilder(injectErrorTypeNotInterfacePtr)
+func (this *module) verifySupportedType(reflectType reflect.Type, isSupportedFunc func(reflect.Type) bool) bool {
+	if !isSupportedFunc(reflectType) {
+		eb := newErrorBuilder(injectErrorTypeNotSupportedBindType)
 		eb.addTag("reflectType", reflectType)
 		this.addBindingError(eb.build())
 		return false

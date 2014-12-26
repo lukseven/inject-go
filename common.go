@@ -8,6 +8,82 @@ const (
 	taggedFuncStructFieldTag = "injectTag"
 )
 
+// whitelisting types to make sure the framework works
+func isSupportedBindingKeyReflectType(reflectType reflect.Type) bool {
+	return isSupportedBindReflectType(reflectType) || isSupportedBindInterfaceReflectType(reflectType) || isSupportedBindConstantReflectType(reflectType)
+}
+
+func isSupportedBindReflectType(reflectType reflect.Type) bool {
+	switch reflectType.Kind() {
+	case reflect.Ptr:
+		switch reflectType.Elem().Kind() {
+		case reflect.Interface:
+			return true
+		case reflect.Struct:
+			return true
+		default:
+			return false
+		}
+	case reflect.Struct:
+		return true
+	default:
+		return false
+	}
+}
+
+func isSupportedBindInterfaceReflectType(reflectType reflect.Type) bool {
+	switch reflectType.Kind() {
+	case reflect.Ptr:
+		switch reflectType.Elem().Kind() {
+		case reflect.Interface:
+			return true
+		default:
+			return false
+		}
+	default:
+		return false
+	}
+}
+
+func isSupportedBindConstantReflectType(reflectType reflect.Type) bool {
+	switch reflectType.Kind() {
+	case reflect.Bool:
+		return true
+	case reflect.Int:
+		return true
+	case reflect.Int8:
+		return true
+	case reflect.Int16:
+		return true
+	case reflect.Int32:
+		return true
+	case reflect.Int64:
+		return true
+	case reflect.Uint:
+		return true
+	case reflect.Uint8:
+		return true
+	case reflect.Uint16:
+		return true
+	case reflect.Uint32:
+		return true
+	case reflect.Uint64:
+		return true
+	case reflect.Float32:
+		return true
+	case reflect.Float64:
+		return true
+	case reflect.Complex64:
+		return true
+	case reflect.Complex128:
+		return true
+	case reflect.String:
+		return true
+	default:
+		return false
+	}
+}
+
 func verifyIsFunc(funcReflectType reflect.Type) error {
 	if !isFunc(funcReflectType) {
 		eb := newErrorBuilder(injectErrorTypeNotFunction)
@@ -57,14 +133,15 @@ func verifyIsTaggedFunc(funcReflectType reflect.Type) error {
 }
 
 func verifyParameterCanBeInjected(parameterReflectType reflect.Type) error {
-	switch {
-	case isInterface(parameterReflectType), isStructPtr(parameterReflectType), isStruct(parameterReflectType):
-		return nil
-	default:
+	if isInterface(parameterReflectType) {
+		parameterReflectType = reflect.PtrTo(parameterReflectType)
+	}
+	if !isSupportedBindingKeyReflectType(parameterReflectType) {
 		eb := newErrorBuilder(injectErrorTypeNotSupportedYet)
 		eb.addTag("parameterReflectType", parameterReflectType)
 		return eb.build()
 	}
+	return nil
 }
 
 func getParameterBindingKeysForFunc(funcReflectType reflect.Type) []bindingKey {
@@ -72,8 +149,6 @@ func getParameterBindingKeysForFunc(funcReflectType reflect.Type) []bindingKey {
 	bindingKeys := make([]bindingKey, numIn)
 	for i := 0; i < numIn; i++ {
 		inReflectType := funcReflectType.In(i)
-		// TODO(pedge): this is really specific logic, and there wil need to be more
-		// of this if more types are allowed for binding - this should be abstracted
 		if inReflectType.Kind() == reflect.Interface {
 			inReflectType = reflect.PtrTo(inReflectType)
 		}
@@ -92,8 +167,6 @@ func getStructFieldBindingKeys(structReflectType reflect.Type) []bindingKey {
 	for i := 0; i < numFields; i++ {
 		structField := structReflectType.Field(i)
 		structFieldReflectType := structField.Type
-		// TODO(pedge): this is really specific logic, and there wil need to be more
-		// of this if more types are allowed for binding - this should be abstracted
 		if structFieldReflectType.Kind() == reflect.Interface {
 			structFieldReflectType = reflect.PtrTo(structFieldReflectType)
 		}

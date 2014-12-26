@@ -4,6 +4,10 @@ import (
 	"reflect"
 )
 
+var (
+	errorReflectType = reflect.TypeOf((*error)(nil)).Elem()
+)
+
 type noOpBuilder struct{}
 
 func newNoOpBuilder() InterfaceBuilder {
@@ -75,7 +79,7 @@ func (this *baseBuilder) setBinding(bindingKey bindingKey, binding binding) {
 }
 
 func verifyBindingReflectType(bindingKeyReflectType reflect.Type, bindingReflectType reflect.Type) error {
-	if !verifySupportedBindingKeyReflectType(bindingKeyReflectType) {
+	if !isSupportedBindingKeyReflectType(bindingKeyReflectType) {
 		eb := newErrorBuilder(injectErrorTypeNotSupportedYet)
 		eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
 		return eb.build()
@@ -126,28 +130,10 @@ func verifyConstructorReturnValues(bindingKeyReflectType reflect.Type, construct
 	if err != nil {
 		return err
 	}
-	// TODO(pedge): can this be simplified?
-	if !constructorReflectType.Out(1).AssignableTo(reflect.TypeOf((*error)(nil)).Elem()) {
+	if !constructorReflectType.Out(1).AssignableTo(errorReflectType) {
 		eb := newErrorBuilder(injectErrorTypeConstructorReturnValuesInvalid)
 		eb = eb.addTag("constructorReflectType", constructorReflectType)
 		return eb.build()
 	}
 	return nil
-}
-
-// whitelisting types to make sure the framework works
-func verifySupportedBindingKeyReflectType(bindingKeyReflectType reflect.Type) bool {
-	switch bindingKeyReflectType.Kind() {
-	case reflect.Ptr:
-		switch bindingKeyReflectType.Elem().Kind() {
-		case reflect.Interface, reflect.Struct:
-			return true
-		default:
-			return false
-		}
-	case reflect.Struct:
-		return true
-	default:
-		return false
-	}
 }

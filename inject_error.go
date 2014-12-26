@@ -24,6 +24,7 @@ const (
 	injectErrorTypeNotFunction                    = "Argument is not a function"
 	injectErrorTypeNotInterfacePtr                = "Value is not an interface pointer"
 	injectErrorTypeNotStructPtr                   = "Value is not a struct pointer"
+	injectErrorTypeNotSupportedBindType           = "Type is not supported for this binding method"
 	injectErrorTypeBindingErrors                  = "Errors with bindings"
 )
 
