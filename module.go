@@ -49,6 +49,10 @@ func (this *module) BindTaggedInterface(tag string, fromInterfaces ...interface{
 	return this.bind(func(fromReflectType reflect.Type) bindingKey { return newTaggedBindingKey(fromReflectType, tag) }, fromInterfaces)
 }
 
+func (this *module) BindTaggedConstant(tag string, constandKind ConstantKind) Builder {
+	return nil
+}
+
 func (this *module) bind(newBindingKeyFunc func(reflect.Type) bindingKey, from []interface{}) InterfaceBuilder {
 	lenFrom := len(from)
 	if lenFrom == 0 {
