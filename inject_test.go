@@ -66,13 +66,17 @@ func (this *SimplePtrStruct) Foo() string {
 
 func TestSimpleStructSingletonDirect(t *testing.T) {
 	module := CreateModule()
-	module.Bind((*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"hello"})
+	module.Bind((*SimpleInterface)(nil), SimpleStruct{}).ToSingleton(SimpleStruct{"hello"})
 	injector, err := CreateInjector(module)
 	require.NoError(t, err)
 	object, err := injector.Get((*SimpleInterface)(nil))
 	require.NoError(t, err)
 	simpleInterface := object.(SimpleInterface)
 	require.Equal(t, "hello", simpleInterface.Foo())
+	object, err = injector.Get(SimpleStruct{})
+	require.NoError(t, err)
+	simpleStruct := object.(SimpleStruct)
+	require.Equal(t, "hello", simpleStruct.Foo())
 }
 
 func TestSimpleStructSingletonDirectSucceedsWhenPtr(t *testing.T) {

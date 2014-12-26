@@ -6,8 +6,8 @@ import (
 
 type Module interface {
 	fmt.Stringer
-	Bind(from interface{}) Builder
-	BindTagged(tag string, from interface{}) Builder
+	Bind(from ...interface{}) Builder
+	BindTagged(tag string, from ...interface{}) Builder
 }
 
 func CreateModule() Module { return createModule() }
