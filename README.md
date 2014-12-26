@@ -31,6 +31,41 @@ type Builder interface {
 ```
 
 
+#### type ConstantKind
+
+```go
+type ConstantKind uint
+```
+
+
+```go
+const (
+	Bool ConstantKind = iota
+	Int
+	Int8
+	Int16
+	Int32
+	Int64
+	Uint
+	Uint8
+	Uint16
+	Uint32
+	Uint64
+	Uintptr
+	Float32
+	Float64
+	Complex64
+	Complex128
+	String
+)
+```
+
+#### func (ConstantKind) ReflectKind
+
+```go
+func (this ConstantKind) ReflectKind() reflect.Kind
+```
+
 #### type Injector
 
 ```go
