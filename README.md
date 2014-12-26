@@ -56,8 +56,8 @@ func CreateInjector(modules ...Module) (Injector, error)
 ```go
 type Module interface {
 	fmt.Stringer
-	Bind(from interface{}) Builder
-	BindTagged(tag string, from interface{}) Builder
+	Bind(from ...interface{}) Builder
+	BindTagged(tag string, from ...interface{}) Builder
 }
 ```
 
