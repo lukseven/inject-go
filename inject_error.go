@@ -24,6 +24,7 @@ const (
 	injectErrorTypeTagEmpty                       = "Tag empty"
 	injectErrorTypeTaggedParametersInvalid        = "Tagged function must have one anonymous struct parameter"
 	injectErrorTypeNotFunction                    = "Argument is not a function"
+	injectErrorTypeNotStructPtr                   = "Value is not a struct pointer"
 	injectErrorTypeBindingErrors                  = "Errors with bindings"
 )
 

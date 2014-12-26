@@ -162,7 +162,9 @@ func (this *taggedConstructorBinding) get() (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return callConstructor(this.constructor, []reflect.Value{*populateTaggedFuncStruct(this.cache.inReflectType, reflectValues)})
+	structReflectValue := newStructReflectValue(this.cache.inReflectType)
+	populateStructReflectValue(&structReflectValue, reflectValues)
+	return callConstructor(this.constructor, []reflect.Value{structReflectValue})
 }
 
 func (this *taggedConstructorBinding) resolvedBinding(module *module, injector *injector) (resolvedBinding, error) {

@@ -129,8 +129,30 @@ func (this *injector) CallTagged(taggedFunction interface{}) ([]interface{}, err
 	if err != nil {
 		return nil, err
 	}
-	returnValues := reflect.ValueOf(taggedFunction).Call([]reflect.Value{*populateTaggedFuncStruct(taggedFuncReflectType.In(0), reflectValues)})
+	structReflectValue := newStructReflectValue(taggedFuncReflectType.In(0))
+	populateStructReflectValue(&structReflectValue, reflectValues)
+	returnValues := reflect.ValueOf(taggedFunction).Call([]reflect.Value{structReflectValue})
 	return reflectValuesToValues(returnValues), nil
+}
+
+func (this *injector) Populate(populateStructPtr interface{}) error {
+	populateStructPtrReflectType := reflect.TypeOf(populateStructPtr)
+	err := verifyIsStructPtr(populateStructPtrReflectType)
+	if err != nil {
+		return err
+	}
+	populateStructValue := reflect.Indirect(reflect.ValueOf(populateStructPtr))
+	bindingKeys := getStructFieldBindingKeys(populateStructValue.Type())
+	err = this.validateBindingKeys(bindingKeys)
+	if err != nil {
+		return err
+	}
+	reflectValues, err := this.getReflectValues(bindingKeys)
+	if err != nil {
+		return err
+	}
+	populateStructReflectValue(&populateStructValue, reflectValues)
+	return nil
 }
 
 func (this *injector) get(bindingKey bindingKey) (interface{}, error) {

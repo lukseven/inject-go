@@ -67,6 +67,15 @@ func verifyParameterCanBeInjected(parameterReflectType reflect.Type) error {
 	}
 }
 
+func verifyIsStructPtr(reflectType reflect.Type) error {
+	if !isStructPtr(reflectType) {
+		eb := newErrorBuilder(injectErrorTypeNotStructPtr)
+		eb.addTag("reflectType", reflectType)
+		return eb.build()
+	}
+	return nil
+}
+
 func getParameterBindingKeysForFunc(funcReflectType reflect.Type) []bindingKey {
 	numIn := funcReflectType.NumIn()
 	bindingKeys := make([]bindingKey, numIn)
@@ -83,11 +92,14 @@ func getParameterBindingKeysForFunc(funcReflectType reflect.Type) []bindingKey {
 }
 
 func getParameterBindingKeysForTaggedFunc(funcReflectType reflect.Type) []bindingKey {
-	inReflectType := funcReflectType.In(0)
-	numFields := inReflectType.NumField()
+	return getStructFieldBindingKeys(funcReflectType.In(0))
+}
+
+func getStructFieldBindingKeys(structReflectType reflect.Type) []bindingKey {
+	numFields := structReflectType.NumField()
 	bindingKeys := make([]bindingKey, numFields)
 	for i := 0; i < numFields; i++ {
-		structField := inReflectType.Field(i)
+		structField := structReflectType.Field(i)
 		structFieldReflectType := structField.Type
 		// TODO(pedge): this is really specific logic, and there wil need to be more
 		// of this if more types are allowed for binding - this should be abstracted
@@ -104,13 +116,21 @@ func getParameterBindingKeysForTaggedFunc(funcReflectType reflect.Type) []bindin
 	return bindingKeys
 }
 
-func populateTaggedFuncStruct(structReflectType reflect.Type, reflectValues []reflect.Value) *reflect.Value {
+func getTaggedFuncStructReflectValue(structReflectType reflect.Type, reflectValues []reflect.Value) *reflect.Value {
+	structReflectValue := reflect.Indirect(reflect.New(structReflectType))
+	populateStructReflectValue(&structReflectValue, reflectValues)
+	return &structReflectValue
+}
+
+func newStructReflectValue(structReflectType reflect.Type) reflect.Value {
+	return reflect.Indirect(reflect.New(structReflectType))
+}
+
+func populateStructReflectValue(structReflectValue *reflect.Value, reflectValues []reflect.Value) {
 	numReflectValues := len(reflectValues)
-	value := reflect.Indirect(reflect.New(structReflectType))
 	for i := 0; i < numReflectValues; i++ {
-		value.Field(i).Set(reflectValues[i])
+		structReflectValue.Field(i).Set(reflectValues[i])
 	}
-	return &value
 }
 
 func isInterfacePtr(reflectType reflect.Type) bool {
