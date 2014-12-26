@@ -119,11 +119,19 @@ func (this *module) verifyTag(tag string) bool {
 func (this *module) verifyAreInterfacePtrs(fromInterfaces []interface{}) bool {
 	var ok bool = true
 	for _, fromInterface := range fromInterfaces {
-		err := verifyIsInterfacePtr(reflect.TypeOf(fromInterface))
-		if err != nil {
-			this.addBindingError(err)
+		if !this.verifyIsInterfacePtr(reflect.TypeOf(fromInterface)) {
 			ok = false
 		}
 	}
 	return ok
+}
+
+func (this *module) verifyIsInterfacePtr(reflectType reflect.Type) bool {
+	if !isInterfacePtr(reflectType) {
+		eb := newErrorBuilder(injectErrorTypeNotInterfacePtr)
+		eb.addTag("reflectType", reflectType)
+		this.addBindingError(eb.build())
+		return false
+	}
+	return true
 }

@@ -67,24 +67,6 @@ func verifyParameterCanBeInjected(parameterReflectType reflect.Type) error {
 	}
 }
 
-func verifyIsInterfacePtr(reflectType reflect.Type) error {
-	if !isInterfacePtr(reflectType) {
-		eb := newErrorBuilder(injectErrorTypeNotInterfacePtr)
-		eb.addTag("reflectType", reflectType)
-		return eb.build()
-	}
-	return nil
-}
-
-func verifyIsStructPtr(reflectType reflect.Type) error {
-	if !isStructPtr(reflectType) {
-		eb := newErrorBuilder(injectErrorTypeNotStructPtr)
-		eb.addTag("reflectType", reflectType)
-		return eb.build()
-	}
-	return nil
-}
-
 func getParameterBindingKeysForFunc(funcReflectType reflect.Type) []bindingKey {
 	numIn := funcReflectType.NumIn()
 	bindingKeys := make([]bindingKey, numIn)

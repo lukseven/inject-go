@@ -196,6 +196,15 @@ func (this *injector) validateBindingKeys(bindingKeys []bindingKey) error {
 	return nil
 }
 
+func verifyIsStructPtr(reflectType reflect.Type) error {
+	if !isStructPtr(reflectType) {
+		eb := newErrorBuilder(injectErrorTypeNotStructPtr)
+		eb.addTag("reflectType", reflectType)
+		return eb.build()
+	}
+	return nil
+}
+
 func reflectValuesToValues(reflectValues []reflect.Value) []interface{} {
 	lenReflectValues := len(reflectValues)
 	values := make([]interface{}, lenReflectValues)
