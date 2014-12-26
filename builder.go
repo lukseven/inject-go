@@ -111,11 +111,30 @@ func (this *baseBuilder) verifyBindingReflectType(bindingReflectType reflect.Typ
 }
 
 func (this *baseBuilder) verifyConstructorReflectType(constructorReflectType reflect.Type) error {
-	if !isFunc(constructorReflectType) {
-		eb := newErrorBuilder(injectErrorTypeConstructorNotFunction)
-		eb = eb.addTag("constructorReflectType", constructorReflectType)
-		return eb.build()
+	err := verifyIsFunc(constructorReflectType)
+	if err != nil {
+		return err
 	}
+	err = this.verifyConstructorReturnValues(constructorReflectType)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (this *baseBuilder) verifyTaggedConstructorReflectType(constructorReflectType reflect.Type) error {
+	err := verifyIsTaggedFunc(constructorReflectType)
+	if err != nil {
+		return err
+	}
+	err = this.verifyConstructorReturnValues(constructorReflectType)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (this *baseBuilder) verifyConstructorReturnValues(constructorReflectType reflect.Type) error {
 	if constructorReflectType.NumOut() != 2 {
 		eb := newErrorBuilder(injectErrorTypeConstructorReturnValuesInvalid)
 		eb = eb.addTag("constructorReflectType", constructorReflectType)
@@ -134,54 +153,6 @@ func (this *baseBuilder) verifyConstructorReflectType(constructorReflectType ref
 	return nil
 }
 
-func (this *baseBuilder) verifyTaggedConstructorReflectType(constructorReflectType reflect.Type) error {
-	err := this.verifyConstructorReflectType(constructorReflectType)
-	if err != nil {
-		return err
-	}
-	if constructorReflectType.NumIn() != 1 {
-		eb := newErrorBuilder(injectErrorTypeTaggedConstructorParametersInvalid)
-		eb = eb.addTag("constructorReflectType", constructorReflectType)
-		return eb.build()
-	}
-	inReflectType := constructorReflectType.In(0)
-	if !isStruct(inReflectType) {
-		eb := newErrorBuilder(injectErrorTypeTaggedConstructorParametersInvalid)
-		eb = eb.addTag("constructorReflectType", constructorReflectType)
-		return eb.build()
-	}
-	if inReflectType.Name() != "" {
-		eb := newErrorBuilder(injectErrorTypeTaggedConstructorParametersInvalid)
-		eb = eb.addTag("constructorReflectType", constructorReflectType)
-		return eb.build()
-	}
-	return nil
-}
-
 func (this *baseBuilder) setBinding(binding binding) {
 	this.module.setBinding(this.bindingKey, binding)
-}
-
-func isInterfacePtr(reflectType reflect.Type) bool {
-	return isPtr(reflectType) && isInterface(reflectType.Elem())
-}
-
-func isStructPtr(reflectType reflect.Type) bool {
-	return isPtr(reflectType) && isStruct(reflectType.Elem())
-}
-
-func isInterface(reflectType reflect.Type) bool {
-	return reflectType.Kind() == reflect.Interface
-}
-
-func isStruct(reflectType reflect.Type) bool {
-	return reflectType.Kind() == reflect.Struct
-}
-
-func isPtr(reflectType reflect.Type) bool {
-	return reflectType.Kind() == reflect.Ptr
-}
-
-func isFunc(reflectType reflect.Type) bool {
-	return reflectType.Kind() == reflect.Func
 }

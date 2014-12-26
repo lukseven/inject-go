@@ -95,6 +95,44 @@ func (this *injector) GetTagged(from interface{}, tag string) (interface{}, erro
 	return this.get(newTaggedBindingKey(reflect.TypeOf(from), tag))
 }
 
+func (this *injector) Call(function interface{}) ([]interface{}, error) {
+	funcReflectType := reflect.TypeOf(function)
+	err := verifyIsFunc(funcReflectType)
+	if err != nil {
+		return nil, err
+	}
+	bindingKeys := getParameterBindingKeysForFunc(funcReflectType)
+	err = this.validateBindingKeys(bindingKeys)
+	if err != nil {
+		return nil, err
+	}
+	reflectValues, err := this.getReflectValues(bindingKeys)
+	if err != nil {
+		return nil, err
+	}
+	returnValues := reflect.ValueOf(function).Call(reflectValues)
+	return reflectValuesToValues(returnValues), nil
+}
+
+func (this *injector) CallTagged(taggedFunction interface{}) ([]interface{}, error) {
+	taggedFuncReflectType := reflect.TypeOf(taggedFunction)
+	err := verifyIsTaggedFunc(taggedFuncReflectType)
+	if err != nil {
+		return nil, err
+	}
+	bindingKeys := getParameterBindingKeysForTaggedFunc(taggedFuncReflectType)
+	err = this.validateBindingKeys(bindingKeys)
+	if err != nil {
+		return nil, err
+	}
+	reflectValues, err := this.getReflectValues(bindingKeys)
+	if err != nil {
+		return nil, err
+	}
+	returnValues := reflect.ValueOf(taggedFunction).Call([]reflect.Value{*populateTaggedFuncStruct(taggedFuncReflectType.In(0), reflectValues)})
+	return reflectValuesToValues(returnValues), nil
+}
+
 func (this *injector) get(bindingKey bindingKey) (interface{}, error) {
 	binding, err := this.getBinding(bindingKey)
 	if err != nil {
@@ -111,4 +149,36 @@ func (this *injector) getBinding(bindingKey bindingKey) (resolvedBinding, error)
 		return nil, eb.build()
 	}
 	return binding, nil
+}
+
+func (this *injector) getReflectValues(bindingKeys []bindingKey) ([]reflect.Value, error) {
+	numBindingKeys := len(bindingKeys)
+	reflectValues := make([]reflect.Value, numBindingKeys)
+	for i := 0; i < numBindingKeys; i++ {
+		value, err := this.get(bindingKeys[i])
+		if err != nil {
+			return nil, err
+		}
+		reflectValues[i] = reflect.ValueOf(value)
+	}
+	return reflectValues, nil
+}
+
+func (this *injector) validateBindingKeys(bindingKeys []bindingKey) error {
+	for _, bindingKey := range bindingKeys {
+		_, err := this.getBinding(bindingKey)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func reflectValuesToValues(reflectValues []reflect.Value) []interface{} {
+	lenReflectValues := len(reflectValues)
+	values := make([]interface{}, lenReflectValues)
+	for i := 0; i < lenReflectValues; i++ {
+		values[i] = reflectValues[i].Interface()
+	}
+	return values
 }
