@@ -7,8 +7,8 @@ import (
 
 func CreateModule() inject.Module {
 	module := inject.CreateModule()
-	module.BindTagged((*Provider)(nil), "aws").ToSingletonConstructor(createAwsProvider)
-	module.BindTagged((*Provider)(nil), "digitalOcean").ToSingletonConstructor(createDigitalOceanProvider)
+	module.BindTagged("aws", (*Provider)(nil)).ToSingletonConstructor(createAwsProvider)
+	module.BindTagged("digitalOcean", (*Provider)(nil)).ToSingletonConstructor(createDigitalOceanProvider)
 	return module
 }
 
