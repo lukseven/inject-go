@@ -76,7 +76,7 @@ func (this *baseBuilder) setBinding(bindingKey bindingKey, binding binding) {
 
 func verifyToReflectType(bindingKeyReflectType reflect.Type, toReflectType reflect.Type) error {
 	// TODO(pedge): is this restriction necessary/warranted? how about structs with anonymous fields?
-	if !(bindingKeyReflectType.Kind() == reflect.Ptr && bindingKeyReflectType.Elem().Kind() == reflect.Interface) {
+	if !isInterfacePtr(bindingKeyReflectType) {
 		eb := newErrorBuilder(injectErrorTypeNotInterfacePtr)
 		eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
 		return eb.build()
