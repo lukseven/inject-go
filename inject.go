@@ -8,17 +8,23 @@ type Module interface {
 	fmt.Stringer
 	Bind(from ...interface{}) Builder
 	BindTagged(tag string, from ...interface{}) Builder
+	BindInterface(fromInterface ...interface{}) InterfaceBuilder
+	BindTaggedInterface(tag string, fromInterface ...interface{}) InterfaceBuilder
 }
 
 func CreateModule() Module { return createModule() }
 
 type Builder interface {
-	To(to interface{})
 	ToSingleton(singleton interface{})
 	ToConstructor(constructor interface{})
 	ToSingletonConstructor(constructor interface{})
 	ToTaggedConstructor(constructor interface{})
 	ToTaggedSingletonConstructor(constructor interface{})
+}
+
+type InterfaceBuilder interface {
+	Builder
+	To(to interface{})
 }
 
 type Injector interface {

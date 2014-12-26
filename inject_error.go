@@ -10,8 +10,6 @@ const (
 	injectErrorPrefix                             = "inject: "
 	injectErrorTypeNil                            = "Parameter is nil"
 	injectErrorTypeReflectTypeNil                 = "reflect.TypeOf() returns nil"
-	injectErrorTypeNotInterfacePtr                = "Binding with Binder.ToType() and from is not an interface pointer"
-	injectErrorTypeDoesNotImplement               = "to binding does not implement from binding"
 	injectErrorTypeNotSupportedYet                = "Binding type not supported yet, feel free to help!"
 	injectErrorTypeNotAssignable                  = "Binding not assignable"
 	injectErrorTypeConstructorReturnValuesInvalid = "Constructor can only have two return values, the first providing the value, the second being an error"
@@ -24,6 +22,7 @@ const (
 	injectErrorTypeTagEmpty                       = "Tag empty"
 	injectErrorTypeTaggedParametersInvalid        = "Tagged function must have one anonymous struct parameter"
 	injectErrorTypeNotFunction                    = "Argument is not a function"
+	injectErrorTypeNotInterfacePtr                = "Value is not an interface pointer"
 	injectErrorTypeNotStructPtr                   = "Value is not a struct pointer"
 	injectErrorTypeBindingErrors                  = "Errors with bindings"
 )

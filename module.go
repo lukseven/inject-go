@@ -15,19 +15,39 @@ func createModule() *module {
 	return &module{make(map[bindingKey]binding), make([]error, 0)}
 }
 
-func (this *module) Bind(from ...interface{}) Builder {
-	return this.bind(newBindingKey, from)
+func (this *module) Bind(froms ...interface{}) Builder {
+	return this.bind(newBindingKey, froms)
 }
 
-func (this *module) BindTagged(tag string, from ...interface{}) Builder {
-	if tag == "" {
-		this.addBindingError(newErrorBuilder(injectErrorTypeTagEmpty).build())
+func (this *module) BindTagged(tag string, froms ...interface{}) Builder {
+	ok := this.verifyTag(tag)
+	if !ok {
 		return newNoOpBuilder()
 	}
-	return this.bind(func(fromReflectType reflect.Type) bindingKey { return newTaggedBindingKey(fromReflectType, tag) }, from)
+	return this.bind(func(fromReflectType reflect.Type) bindingKey { return newTaggedBindingKey(fromReflectType, tag) }, froms)
 }
 
-func (this *module) bind(newBindingKeyFunc func(reflect.Type) bindingKey, from []interface{}) Builder {
+func (this *module) BindInterface(fromInterfaces ...interface{}) InterfaceBuilder {
+	ok := this.verifyAreInterfacePtrs(fromInterfaces)
+	if !ok {
+		return newNoOpBuilder()
+	}
+	return this.bind(newBindingKey, fromInterfaces)
+}
+
+func (this *module) BindTaggedInterface(tag string, fromInterfaces ...interface{}) InterfaceBuilder {
+	ok := this.verifyTag(tag)
+	if !ok {
+		return newNoOpBuilder()
+	}
+	ok = this.verifyAreInterfacePtrs(fromInterfaces)
+	if !ok {
+		return newNoOpBuilder()
+	}
+	return this.bind(func(fromReflectType reflect.Type) bindingKey { return newTaggedBindingKey(fromReflectType, tag) }, fromInterfaces)
+}
+
+func (this *module) bind(newBindingKeyFunc func(reflect.Type) bindingKey, from []interface{}) InterfaceBuilder {
 	lenFrom := len(from)
 	if lenFrom == 0 {
 		this.addBindingError(newErrorBuilder(injectErrorTypeNil).build())
@@ -86,4 +106,24 @@ func (this *module) setBinding(bindingKey bindingKey, binding binding) {
 		return
 	}
 	this.bindings[bindingKey] = binding
+}
+
+func (this *module) verifyTag(tag string) bool {
+	if tag == "" {
+		this.addBindingError(newErrorBuilder(injectErrorTypeTagEmpty).build())
+		return false
+	}
+	return true
+}
+
+func (this *module) verifyAreInterfacePtrs(fromInterfaces []interface{}) bool {
+	var ok bool = true
+	for _, fromInterface := range fromInterfaces {
+		err := verifyIsInterfacePtr(reflect.TypeOf(fromInterface))
+		if err != nil {
+			this.addBindingError(err)
+			ok = false
+		}
+	}
+	return ok
 }

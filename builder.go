@@ -6,7 +6,7 @@ import (
 
 type noOpBuilder struct{}
 
-func newNoOpBuilder() Builder {
+func newNoOpBuilder() InterfaceBuilder {
 	return &noOpBuilder{}
 }
 
@@ -27,12 +27,12 @@ type baseBuilder struct {
 	bindingKeys []bindingKey
 }
 
-func newBuilder(module *module, bindingKeys []bindingKey) Builder {
+func newBuilder(module *module, bindingKeys []bindingKey) InterfaceBuilder {
 	return &baseBuilder{module, bindingKeys}
 }
 
 func (this *baseBuilder) To(to interface{}) {
-	this.to(to, verifyToReflectType, newIntermediateBinding)
+	this.to(to, verifyBindingReflectType, newIntermediateBinding)
 }
 
 func (this *baseBuilder) ToSingleton(singleton interface{}) {
@@ -74,44 +74,19 @@ func (this *baseBuilder) setBinding(bindingKey bindingKey, binding binding) {
 	this.module.setBinding(bindingKey, binding)
 }
 
-func verifyToReflectType(bindingKeyReflectType reflect.Type, toReflectType reflect.Type) error {
-	// TODO(pedge): is this restriction necessary/warranted? how about structs with anonymous fields?
-	if !isInterfacePtr(bindingKeyReflectType) {
-		eb := newErrorBuilder(injectErrorTypeNotInterfacePtr)
-		eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
-		return eb.build()
-	}
-	if !toReflectType.Implements(bindingKeyReflectType.Elem()) {
-		eb := newErrorBuilder(injectErrorTypeDoesNotImplement)
-		eb = eb.addTag("toReflectType", toReflectType)
-		eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
-		return eb.build()
-	}
-	return nil
-}
-
 func verifyBindingReflectType(bindingKeyReflectType reflect.Type, bindingReflectType reflect.Type) error {
-	switch {
-	case isInterfacePtr(bindingKeyReflectType):
-		if !bindingReflectType.Implements(bindingKeyReflectType.Elem()) {
-			eb := newErrorBuilder(injectErrorTypeDoesNotImplement)
-			eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
-			eb = eb.addTag("bindingReflectType", bindingReflectType)
-			return eb.build()
-		}
-	case isStructPtr(bindingKeyReflectType), isStruct(bindingKeyReflectType):
-		// TODO(pedge): is this correct?
-		if !bindingReflectType.AssignableTo(bindingKeyReflectType) {
-			eb := newErrorBuilder(injectErrorTypeNotAssignable)
-			eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
-			eb = eb.addTag("bindingReflectType", bindingReflectType)
-			return eb.build()
-		}
-	// nothing else is supported for now
-	// TODO(pedge): at least support primitives with tags
-	default:
+	if !verifySupportedBindingKeyReflectType(bindingKeyReflectType) {
 		eb := newErrorBuilder(injectErrorTypeNotSupportedYet)
 		eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
+		return eb.build()
+	}
+	if isInterfacePtr(bindingKeyReflectType) {
+		bindingKeyReflectType = bindingKeyReflectType.Elem()
+	}
+	if !bindingReflectType.AssignableTo(bindingKeyReflectType) {
+		eb := newErrorBuilder(injectErrorTypeNotAssignable)
+		eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
+		eb = eb.addTag("bindingReflectType", bindingReflectType)
 		return eb.build()
 	}
 	return nil
@@ -158,4 +133,21 @@ func verifyConstructorReturnValues(bindingKeyReflectType reflect.Type, construct
 		return eb.build()
 	}
 	return nil
+}
+
+// whitelisting types to make sure the framework works
+func verifySupportedBindingKeyReflectType(bindingKeyReflectType reflect.Type) bool {
+	switch bindingKeyReflectType.Kind() {
+	case reflect.Ptr:
+		switch bindingKeyReflectType.Elem().Kind() {
+		case reflect.Interface, reflect.Struct:
+			return true
+		default:
+			return false
+		}
+	case reflect.Struct:
+		return true
+	default:
+		return false
+	}
 }
