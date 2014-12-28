@@ -25,6 +25,25 @@ const (
 )
 
 var (
+	reflectKindToConstantKind = map[reflect.Kind]ConstantKind{
+		reflect.Bool:       Bool,
+		reflect.Int:        Int,
+		reflect.Int8:       Int8,
+		reflect.Int16:      Int16,
+		reflect.Int32:      Int32,
+		reflect.Int64:      Int64,
+		reflect.Uint:       Uint,
+		reflect.Uint8:      Uint8,
+		reflect.Uint16:     Uint16,
+		reflect.Uint32:     Uint32,
+		reflect.Uint64:     Uint64,
+		reflect.Uintptr:    Uintptr,
+		reflect.Float32:    Float32,
+		reflect.Float64:    Float64,
+		reflect.Complex64:  Complex64,
+		reflect.Complex128: Complex128,
+		reflect.String:     String,
+	}
 	constantKindToReflectKind = map[ConstantKind]reflect.Kind{
 		Bool:       reflect.Bool,
 		Int:        reflect.Int,
@@ -48,6 +67,14 @@ var (
 )
 
 type ConstantKind uint
+
+func ConstantKindOf(reflectKind reflect.Kind) ConstantKind {
+	constantKind, ok := reflectKindToConstantKind[reflectKind]
+	if !ok {
+		panic("inject: No ConstantKind for reflect.Kind")
+	}
+	return constantKind
+}
 
 func (this ConstantKind) ReflectKind() reflect.Kind {
 	if int(this) < lenConstantKindToReflectKind {
