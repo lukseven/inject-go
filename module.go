@@ -49,7 +49,7 @@ func (this *module) BindTaggedInterface(tag string, fromInterfaces ...interface{
 	return this.bind(func(fromReflectType reflect.Type) bindingKey { return newTaggedBindingKey(fromReflectType, tag) }, fromInterfaces)
 }
 
-func (this *module) BindTaggedConstant(tag string, constandKind ConstantKind) Builder {
+func (this *module) BindTaggedConstant(tag string, constantKind ConstantKind) Builder {
 	return nil
 }
 

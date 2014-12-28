@@ -60,6 +60,12 @@ const (
 )
 ```
 
+#### func  ConstantKindOf
+
+```go
+func ConstantKindOf(reflectKind reflect.Kind) ConstantKind
+```
+
 #### func (ConstantKind) ReflectKind
 
 ```go
