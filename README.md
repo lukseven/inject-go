@@ -110,6 +110,7 @@ type Module interface {
 	BindTagged(tag string, from ...interface{}) Builder
 	BindInterface(fromInterface ...interface{}) InterfaceBuilder
 	BindTaggedInterface(tag string, fromInterface ...interface{}) InterfaceBuilder
+	BindTaggedConstant(tag string, constantKind ConstantKind) Builder
 }
 ```
 
