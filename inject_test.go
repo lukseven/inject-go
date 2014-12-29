@@ -821,3 +821,11 @@ func TestBindTaggedConstantSimple(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, false, boolFalse)
 }
+
+func TestBindTaggedConstantWrongType(t *testing.T) {
+	module := CreateModule()
+	module.BindTaggedInt8("tagOne").ToSingleton(1)
+	_, err := CreateInjector(module)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), injectErrorTypeNotAssignable)
+}
