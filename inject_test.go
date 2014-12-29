@@ -803,3 +803,14 @@ func TestPopulateSimple(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, PopulateStructNoTags{SimpleStruct{"another"}, BarStruct{2}}, populateStructNoTags)
 }
+
+// ***** BindTaggedConstant tests *****
+
+func TestBindTaggedConstantSimple(t *testing.T) {
+	module := CreateModule()
+	module.BindTaggedConstant("boolTrue", Bool).ToSingleton(true)
+	module.BindTaggedConstant("boolFalse", Bool).ToSingleton(false)
+	module.BindTaggedConstant("int10", Int).ToConstructor(func() (int, error) { return 10, nil })
+	_, err := CreateInjector(module)
+	require.NoError(t, err)
+}
