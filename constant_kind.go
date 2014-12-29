@@ -22,25 +22,42 @@ const (
 	Complex64
 	Complex128
 	String
+
+	boolConstant       = false
+	intConstant        = int(0)
+	int8Constant       = int8(0)
+	int16Constant      = int16(0)
+	int32Constant      = int32(0)
+	int64Constant      = int64(0)
+	uintConstant       = uint(0)
+	uint8Constant      = uint8(0)
+	uint16Constant     = uint16(0)
+	uint32Constant     = uint32(0)
+	uint64Constant     = uint64(0)
+	float32Constant    = float32(0)
+	float64Constant    = float64(0)
+	complex64Constant  = complex64(0i)
+	complex128Constant = complex128(0i)
+	stringConstant     = ""
 )
 
 var (
-	boolReflectType       = reflect.TypeOf(false)
-	intReflectType        = reflect.TypeOf(int(0))
-	int8ReflectType       = reflect.TypeOf(int8(0))
-	int16ReflectType      = reflect.TypeOf(int16(0))
-	int32ReflectType      = reflect.TypeOf(int32(0))
-	int64ReflectType      = reflect.TypeOf(int64(0))
-	uintReflectType       = reflect.TypeOf(uint(0))
-	uint8ReflectType      = reflect.TypeOf(uint8(0))
-	uint16ReflectType     = reflect.TypeOf(uint16(0))
-	uint32ReflectType     = reflect.TypeOf(uint32(0))
-	uint64ReflectType     = reflect.TypeOf(uint64(0))
-	float32ReflectType    = reflect.TypeOf(float32(0))
-	float64ReflectType    = reflect.TypeOf(float64(0))
-	complex64ReflectType  = reflect.TypeOf(complex64(0i))
-	complex128ReflectType = reflect.TypeOf(complex128(0i))
-	stringReflectType     = reflect.TypeOf("")
+	boolReflectType       = reflect.TypeOf(boolConstant)
+	intReflectType        = reflect.TypeOf(intConstant)
+	int8ReflectType       = reflect.TypeOf(int8Constant)
+	int16ReflectType      = reflect.TypeOf(int16Constant)
+	int32ReflectType      = reflect.TypeOf(int32Constant)
+	int64ReflectType      = reflect.TypeOf(int64Constant)
+	uintReflectType       = reflect.TypeOf(uintConstant)
+	uint8ReflectType      = reflect.TypeOf(uint8Constant)
+	uint16ReflectType     = reflect.TypeOf(uint16Constant)
+	uint32ReflectType     = reflect.TypeOf(uint32Constant)
+	uint64ReflectType     = reflect.TypeOf(uint64Constant)
+	float32ReflectType    = reflect.TypeOf(float32Constant)
+	float64ReflectType    = reflect.TypeOf(float64Constant)
+	complex64ReflectType  = reflect.TypeOf(complex64Constant)
+	complex128ReflectType = reflect.TypeOf(complex128Constant)
+	stringReflectType     = reflect.TypeOf(stringConstant)
 
 	constantKindToReflectKind = map[ConstantKind]reflect.Kind{
 		Bool:       reflect.Bool,
@@ -119,6 +136,26 @@ var (
 		complex128ReflectType: Complex128,
 		stringReflectType:     String,
 	}
+
+	constantKindToConstant = map[ConstantKind]interface{}{
+		Bool:       boolConstant,
+		Int:        intConstant,
+		Int8:       int8Constant,
+		Int16:      int16Constant,
+		Int32:      int32Constant,
+		Int64:      int64Constant,
+		Uint:       uintConstant,
+		Uint8:      uint8Constant,
+		Uint16:     uint16Constant,
+		Uint32:     uint32Constant,
+		Uint64:     uint64Constant,
+		Float32:    float32Constant,
+		Float64:    float64Constant,
+		Complex64:  complex64Constant,
+		Complex128: complex128Constant,
+		String:     stringConstant,
+	}
+	lenConstantKindToConstant = len(constantKindToConstant)
 )
 
 type ConstantKind uint
@@ -133,6 +170,13 @@ func (this ConstantKind) ReflectKind() reflect.Kind {
 func (this ConstantKind) ReflectType() reflect.Type {
 	if int(this) < lenConstantKindToReflectType {
 		return constantKindToReflectType[this]
+	}
+	panic(fmt.Sprintf("inject: Unknown ConstantKind: %v", this))
+}
+
+func (this ConstantKind) constant() interface{} {
+	if int(this) < lenConstantKindToConstant {
+		return constantKindToConstant[this]
 	}
 	panic(fmt.Sprintf("inject: Unknown ConstantKind: %v", this))
 }

@@ -50,7 +50,13 @@ func (this *module) BindTaggedInterface(tag string, fromInterfaces ...interface{
 }
 
 func (this *module) BindTaggedConstant(tag string, constantKind ConstantKind) Builder {
-	return nil
+	if !this.verifyTag(tag) {
+		return newNoOpBuilder()
+	}
+	if !this.verifySupportedTypes([]interface{}{constantKind.constant()}, isSupportedBindConstantReflectType) {
+		return newNoOpBuilder()
+	}
+	return this.bind(func(fromReflectType reflect.Type) bindingKey { return newTaggedBindingKey(fromReflectType, tag) }, []interface{}{constantKind.constant()})
 }
 
 func (this *module) bind(newBindingKeyFunc func(reflect.Type) bindingKey, from []interface{}) InterfaceBuilder {
@@ -134,10 +140,14 @@ func (this *module) verifySupportedTypes(froms []interface{}, isSupportedFunc fu
 
 func (this *module) verifySupportedType(reflectType reflect.Type, isSupportedFunc func(reflect.Type) bool) bool {
 	if !isSupportedFunc(reflectType) {
-		eb := newErrorBuilder(injectErrorTypeNotSupportedBindType)
-		eb.addTag("reflectType", reflectType)
-		this.addBindingError(eb.build())
+		this.addNotSupportedBindTypeError(reflectType)
 		return false
 	}
 	return true
+}
+
+func (this *module) addNotSupportedBindTypeError(reflectType reflect.Type) {
+	eb := newErrorBuilder(injectErrorTypeNotSupportedBindType)
+	eb.addTag("reflectType", reflectType)
+	this.addBindingError(eb.build())
 }
