@@ -46,42 +46,8 @@ func isSupportedBindInterfaceReflectType(reflectType reflect.Type) bool {
 }
 
 func isSupportedBindConstantReflectType(reflectType reflect.Type) bool {
-	switch reflectType.Kind() {
-	case reflect.Bool:
-		return true
-	case reflect.Int:
-		return true
-	case reflect.Int8:
-		return true
-	case reflect.Int16:
-		return true
-	case reflect.Int32:
-		return true
-	case reflect.Int64:
-		return true
-	case reflect.Uint:
-		return true
-	case reflect.Uint8:
-		return true
-	case reflect.Uint16:
-		return true
-	case reflect.Uint32:
-		return true
-	case reflect.Uint64:
-		return true
-	case reflect.Float32:
-		return true
-	case reflect.Float64:
-		return true
-	case reflect.Complex64:
-		return true
-	case reflect.Complex128:
-		return true
-	case reflect.String:
-		return true
-	default:
-		return false
-	}
+	_, ok := constantKindForReflectType(reflectType)
+	return ok
 }
 
 func verifyIsFunc(funcReflectType reflect.Type) error {
