@@ -13,6 +13,10 @@ func isSupportedBindingKeyReflectType(reflectType reflect.Type) bool {
 	return isSupportedBindReflectType(reflectType) || isSupportedBindInterfaceReflectType(reflectType) || isSupportedBindConstantReflectType(reflectType)
 }
 
+func isSupportedNoTagParameterReflectType(reflectType reflect.Type) bool {
+	return isSupportedBindReflectType(reflectType) || isSupportedBindInterfaceReflectType(reflectType)
+}
+
 func isSupportedBindReflectType(reflectType reflect.Type) bool {
 	switch reflectType.Kind() {
 	case reflect.Ptr:
@@ -58,7 +62,11 @@ func verifyIsFunc(funcReflectType reflect.Type) error {
 	}
 	numIn := funcReflectType.NumIn()
 	for i := 0; i < numIn; i++ {
-		err := verifyParameterCanBeInjected(funcReflectType.In(i))
+		parameterReflectType := funcReflectType.In(i)
+		if isInterface(parameterReflectType) {
+			parameterReflectType = reflect.PtrTo(parameterReflectType)
+		}
+		err := verifyParameterCanBeInjected(parameterReflectType, "")
 		if err != nil {
 			return err
 		}
@@ -90,7 +98,8 @@ func verifyIsTaggedFunc(funcReflectType reflect.Type) error {
 	}
 	numFields := inReflectType.NumField()
 	for i := 0; i < numFields; i++ {
-		err := verifyParameterCanBeInjected(inReflectType.Field(i).Type)
+		structFieldReflectType, tag := getStructFieldReflectTypeAndTag(inReflectType.Field(i))
+		err := verifyParameterCanBeInjected(structFieldReflectType, tag)
 		if err != nil {
 			return err
 		}
@@ -98,11 +107,13 @@ func verifyIsTaggedFunc(funcReflectType reflect.Type) error {
 	return nil
 }
 
-func verifyParameterCanBeInjected(parameterReflectType reflect.Type) error {
-	if isInterface(parameterReflectType) {
-		parameterReflectType = reflect.PtrTo(parameterReflectType)
+func verifyParameterCanBeInjected(parameterReflectType reflect.Type, tag string) error {
+	if tag == "" && !isSupportedNoTagParameterReflectType(parameterReflectType) {
+		eb := newErrorBuilder(injectErrorTypeNotSupportedYet)
+		eb.addTag("parameterReflectType", parameterReflectType)
+		return eb.build()
 	}
-	if !isSupportedBindingKeyReflectType(parameterReflectType) {
+	if tag != "" && !isSupportedBindingKeyReflectType(parameterReflectType) {
 		eb := newErrorBuilder(injectErrorTypeNotSupportedYet)
 		eb.addTag("parameterReflectType", parameterReflectType)
 		return eb.build()
@@ -131,12 +142,7 @@ func getStructFieldBindingKeys(structReflectType reflect.Type) []bindingKey {
 	numFields := structReflectType.NumField()
 	bindingKeys := make([]bindingKey, numFields)
 	for i := 0; i < numFields; i++ {
-		structField := structReflectType.Field(i)
-		structFieldReflectType := structField.Type
-		if structFieldReflectType.Kind() == reflect.Interface {
-			structFieldReflectType = reflect.PtrTo(structFieldReflectType)
-		}
-		tag := structField.Tag.Get(taggedFuncStructFieldTag)
+		structFieldReflectType, tag := getStructFieldReflectTypeAndTag(structReflectType.Field(i))
 		if tag != "" {
 			bindingKeys[i] = newTaggedBindingKey(structFieldReflectType, tag)
 		} else {
@@ -144,6 +150,14 @@ func getStructFieldBindingKeys(structReflectType reflect.Type) []bindingKey {
 		}
 	}
 	return bindingKeys
+}
+
+func getStructFieldReflectTypeAndTag(structField reflect.StructField) (reflect.Type, string) {
+	structFieldReflectType := structField.Type
+	if structFieldReflectType.Kind() == reflect.Interface {
+		structFieldReflectType = reflect.PtrTo(structFieldReflectType)
+	}
+	return structFieldReflectType, structField.Tag.Get(taggedFuncStructFieldTag)
 }
 
 func getTaggedFuncStructReflectValue(structReflectType reflect.Type, reflectValues []reflect.Value) *reflect.Value {
