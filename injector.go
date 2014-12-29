@@ -95,6 +95,138 @@ func (this *injector) GetTagged(tag string, from interface{}) (interface{}, erro
 	return this.get(newTaggedBindingKey(reflect.TypeOf(from), tag))
 }
 
+func (this *injector) GetTaggedBool(tag string) (bool, error) {
+	obj, err := this.getTaggedConstant(tag, boolConstantKind)
+	if err != nil {
+		return boolConstant, err
+	}
+	return obj.(bool), nil
+}
+
+func (this *injector) GetTaggedInt(tag string) (int, error) {
+	obj, err := this.getTaggedConstant(tag, intConstantKind)
+	if err != nil {
+		return intConstant, err
+	}
+	return obj.(int), nil
+}
+
+func (this *injector) GetTaggedInt8(tag string) (int8, error) {
+	obj, err := this.getTaggedConstant(tag, int8ConstantKind)
+	if err != nil {
+		return int8Constant, err
+	}
+	return obj.(int8), nil
+}
+
+func (this *injector) GetTaggedInt16(tag string) (int16, error) {
+	obj, err := this.getTaggedConstant(tag, int16ConstantKind)
+	if err != nil {
+		return int16Constant, err
+	}
+	return obj.(int16), nil
+}
+
+func (this *injector) GetTaggedInt32(tag string) (int32, error) {
+	obj, err := this.getTaggedConstant(tag, int32ConstantKind)
+	if err != nil {
+		return int32Constant, err
+	}
+	return obj.(int32), nil
+}
+
+func (this *injector) GetTaggedInt64(tag string) (int64, error) {
+	obj, err := this.getTaggedConstant(tag, int64ConstantKind)
+	if err != nil {
+		return int64Constant, err
+	}
+	return obj.(int64), nil
+}
+
+func (this *injector) GetTaggedUint(tag string) (uint, error) {
+	obj, err := this.getTaggedConstant(tag, uintConstantKind)
+	if err != nil {
+		return uintConstant, err
+	}
+	return obj.(uint), nil
+}
+
+func (this *injector) GetTaggedUint8(tag string) (uint8, error) {
+	obj, err := this.getTaggedConstant(tag, uint8ConstantKind)
+	if err != nil {
+		return uint8Constant, err
+	}
+	return obj.(uint8), nil
+}
+
+func (this *injector) GetTaggedUint16(tag string) (uint16, error) {
+	obj, err := this.getTaggedConstant(tag, uint16ConstantKind)
+	if err != nil {
+		return uint16Constant, err
+	}
+	return obj.(uint16), nil
+}
+
+func (this *injector) GetTaggedUint32(tag string) (uint32, error) {
+	obj, err := this.getTaggedConstant(tag, uint32ConstantKind)
+	if err != nil {
+		return uint32Constant, err
+	}
+	return obj.(uint32), nil
+}
+
+func (this *injector) GetTaggedUint64(tag string) (uint64, error) {
+	obj, err := this.getTaggedConstant(tag, uint64ConstantKind)
+	if err != nil {
+		return uint64Constant, err
+	}
+	return obj.(uint64), nil
+}
+
+func (this *injector) GetTaggedFloat32(tag string) (float32, error) {
+	obj, err := this.getTaggedConstant(tag, float32ConstantKind)
+	if err != nil {
+		return float32Constant, err
+	}
+	return obj.(float32), nil
+}
+
+func (this *injector) GetTaggedFloat64(tag string) (float64, error) {
+	obj, err := this.getTaggedConstant(tag, float64ConstantKind)
+	if err != nil {
+		return float64Constant, err
+	}
+	return obj.(float64), nil
+}
+
+func (this *injector) GetTaggedComplex64(tag string) (complex64, error) {
+	obj, err := this.getTaggedConstant(tag, complex64ConstantKind)
+	if err != nil {
+		return complex64Constant, err
+	}
+	return obj.(complex64), nil
+}
+
+func (this *injector) GetTaggedComplex128(tag string) (complex128, error) {
+	obj, err := this.getTaggedConstant(tag, complex128ConstantKind)
+	if err != nil {
+		return complex128Constant, err
+	}
+	return obj.(complex128), nil
+}
+
+func (this *injector) GetTaggedString(tag string) (string, error) {
+	obj, err := this.getTaggedConstant(tag, stringConstantKind)
+	if err != nil {
+		return stringConstant, err
+	}
+	return obj.(string), nil
+}
+
+func (this *injector) getTaggedConstant(tag string, constantKind constantKind) (interface{}, error) {
+	return this.get(newTaggedBindingKey(constantKind.reflectType(), tag))
+}
+
 func (this *injector) Call(function interface{}) ([]interface{}, error) {
 	funcReflectType := reflect.TypeOf(function)
 	err := verifyIsFunc(funcReflectType)

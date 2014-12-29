@@ -6,22 +6,22 @@ import (
 )
 
 const (
-	Bool ConstantKind = iota
-	Int
-	Int8
-	Int16
-	Int32
-	Int64
-	Uint
-	Uint8
-	Uint16
-	Uint32
-	Uint64
-	Float32
-	Float64
-	Complex64
-	Complex128
-	String
+	boolConstantKind constantKind = iota
+	intConstantKind
+	int8ConstantKind
+	int16ConstantKind
+	int32ConstantKind
+	int64ConstantKind
+	uintConstantKind
+	uint8ConstantKind
+	uint16ConstantKind
+	uint32ConstantKind
+	uint64ConstantKind
+	float32ConstantKind
+	float64ConstantKind
+	complex64ConstantKind
+	complex128ConstantKind
+	stringConstantKind
 
 	boolConstant       = false
 	intConstant        = int(0)
@@ -59,134 +59,134 @@ var (
 	complex128ReflectType = reflect.TypeOf(complex128Constant)
 	stringReflectType     = reflect.TypeOf(stringConstant)
 
-	constantKindToReflectKind = map[ConstantKind]reflect.Kind{
-		Bool:       reflect.Bool,
-		Int:        reflect.Int,
-		Int8:       reflect.Int8,
-		Int16:      reflect.Int16,
-		Int32:      reflect.Int32,
-		Int64:      reflect.Int64,
-		Uint:       reflect.Uint,
-		Uint8:      reflect.Uint8,
-		Uint16:     reflect.Uint16,
-		Uint32:     reflect.Uint32,
-		Uint64:     reflect.Uint64,
-		Float32:    reflect.Float32,
-		Float64:    reflect.Float64,
-		Complex64:  reflect.Complex64,
-		Complex128: reflect.Complex128,
-		String:     reflect.String,
+	constantKindToReflectKind = map[constantKind]reflect.Kind{
+		boolConstantKind:       reflect.Bool,
+		intConstantKind:        reflect.Int,
+		int8ConstantKind:       reflect.Int8,
+		int16ConstantKind:      reflect.Int16,
+		int32ConstantKind:      reflect.Int32,
+		int64ConstantKind:      reflect.Int64,
+		uintConstantKind:       reflect.Uint,
+		uint8ConstantKind:      reflect.Uint8,
+		uint16ConstantKind:     reflect.Uint16,
+		uint32ConstantKind:     reflect.Uint32,
+		uint64ConstantKind:     reflect.Uint64,
+		float32ConstantKind:    reflect.Float32,
+		float64ConstantKind:    reflect.Float64,
+		complex64ConstantKind:  reflect.Complex64,
+		complex128ConstantKind: reflect.Complex128,
+		stringConstantKind:     reflect.String,
 	}
 	lenConstantKindToReflectKind = len(constantKindToReflectKind)
 
-	constantKindToReflectType = map[ConstantKind]reflect.Type{
-		Bool:       boolReflectType,
-		Int:        intReflectType,
-		Int8:       int8ReflectType,
-		Int16:      int16ReflectType,
-		Int32:      int32ReflectType,
-		Int64:      int64ReflectType,
-		Uint:       uintReflectType,
-		Uint8:      uint8ReflectType,
-		Uint16:     uint16ReflectType,
-		Uint32:     uint32ReflectType,
-		Uint64:     uint64ReflectType,
-		Float32:    float32ReflectType,
-		Float64:    float64ReflectType,
-		Complex64:  complex64ReflectType,
-		Complex128: complex128ReflectType,
-		String:     stringReflectType,
+	constantKindToReflectType = map[constantKind]reflect.Type{
+		boolConstantKind:       boolReflectType,
+		intConstantKind:        intReflectType,
+		int8ConstantKind:       int8ReflectType,
+		int16ConstantKind:      int16ReflectType,
+		int32ConstantKind:      int32ReflectType,
+		int64ConstantKind:      int64ReflectType,
+		uintConstantKind:       uintReflectType,
+		uint8ConstantKind:      uint8ReflectType,
+		uint16ConstantKind:     uint16ReflectType,
+		uint32ConstantKind:     uint32ReflectType,
+		uint64ConstantKind:     uint64ReflectType,
+		float32ConstantKind:    float32ReflectType,
+		float64ConstantKind:    float64ReflectType,
+		complex64ConstantKind:  complex64ReflectType,
+		complex128ConstantKind: complex128ReflectType,
+		stringConstantKind:     stringReflectType,
 	}
 	lenConstantKindToReflectType = len(constantKindToReflectType)
 
-	reflectKindToConstantKind = map[reflect.Kind]ConstantKind{
-		reflect.Bool:       Bool,
-		reflect.Int:        Int,
-		reflect.Int8:       Int8,
-		reflect.Int16:      Int16,
-		reflect.Int32:      Int32,
-		reflect.Int64:      Int64,
-		reflect.Uint:       Uint,
-		reflect.Uint8:      Uint8,
-		reflect.Uint16:     Uint16,
-		reflect.Uint32:     Uint32,
-		reflect.Uint64:     Uint64,
-		reflect.Float32:    Float32,
-		reflect.Float64:    Float64,
-		reflect.Complex64:  Complex64,
-		reflect.Complex128: Complex128,
-		reflect.String:     String,
+	reflectKindToConstantKind = map[reflect.Kind]constantKind{
+		reflect.Bool:       boolConstantKind,
+		reflect.Int:        intConstantKind,
+		reflect.Int8:       int8ConstantKind,
+		reflect.Int16:      int16ConstantKind,
+		reflect.Int32:      int32ConstantKind,
+		reflect.Int64:      int64ConstantKind,
+		reflect.Uint:       uintConstantKind,
+		reflect.Uint8:      uint8ConstantKind,
+		reflect.Uint16:     uint16ConstantKind,
+		reflect.Uint32:     uint32ConstantKind,
+		reflect.Uint64:     uint64ConstantKind,
+		reflect.Float32:    float32ConstantKind,
+		reflect.Float64:    float64ConstantKind,
+		reflect.Complex64:  complex64ConstantKind,
+		reflect.Complex128: complex128ConstantKind,
+		reflect.String:     stringConstantKind,
 	}
 
-	reflectTypeToConstantKind = map[reflect.Type]ConstantKind{
-		boolReflectType:       Bool,
-		intReflectType:        Int,
-		int8ReflectType:       Int8,
-		int16ReflectType:      Int16,
-		int32ReflectType:      Int32,
-		int64ReflectType:      Int64,
-		uintReflectType:       Uint,
-		uint8ReflectType:      Uint8,
-		uint16ReflectType:     Uint16,
-		uint32ReflectType:     Uint32,
-		uint64ReflectType:     Uint64,
-		float32ReflectType:    Float32,
-		float64ReflectType:    Float64,
-		complex64ReflectType:  Complex64,
-		complex128ReflectType: Complex128,
-		stringReflectType:     String,
+	reflectTypeToConstantKind = map[reflect.Type]constantKind{
+		boolReflectType:       boolConstantKind,
+		intReflectType:        intConstantKind,
+		int8ReflectType:       int8ConstantKind,
+		int16ReflectType:      int16ConstantKind,
+		int32ReflectType:      int32ConstantKind,
+		int64ReflectType:      int64ConstantKind,
+		uintReflectType:       uintConstantKind,
+		uint8ReflectType:      uint8ConstantKind,
+		uint16ReflectType:     uint16ConstantKind,
+		uint32ReflectType:     uint32ConstantKind,
+		uint64ReflectType:     uint64ConstantKind,
+		float32ReflectType:    float32ConstantKind,
+		float64ReflectType:    float64ConstantKind,
+		complex64ReflectType:  complex64ConstantKind,
+		complex128ReflectType: complex128ConstantKind,
+		stringReflectType:     stringConstantKind,
 	}
 
-	constantKindToConstant = map[ConstantKind]interface{}{
-		Bool:       boolConstant,
-		Int:        intConstant,
-		Int8:       int8Constant,
-		Int16:      int16Constant,
-		Int32:      int32Constant,
-		Int64:      int64Constant,
-		Uint:       uintConstant,
-		Uint8:      uint8Constant,
-		Uint16:     uint16Constant,
-		Uint32:     uint32Constant,
-		Uint64:     uint64Constant,
-		Float32:    float32Constant,
-		Float64:    float64Constant,
-		Complex64:  complex64Constant,
-		Complex128: complex128Constant,
-		String:     stringConstant,
+	constantKindToConstant = map[constantKind]interface{}{
+		boolConstantKind:       boolConstant,
+		intConstantKind:        intConstant,
+		int8ConstantKind:       int8Constant,
+		int16ConstantKind:      int16Constant,
+		int32ConstantKind:      int32Constant,
+		int64ConstantKind:      int64Constant,
+		uintConstantKind:       uintConstant,
+		uint8ConstantKind:      uint8Constant,
+		uint16ConstantKind:     uint16Constant,
+		uint32ConstantKind:     uint32Constant,
+		uint64ConstantKind:     uint64Constant,
+		float32ConstantKind:    float32Constant,
+		float64ConstantKind:    float64Constant,
+		complex64ConstantKind:  complex64Constant,
+		complex128ConstantKind: complex128Constant,
+		stringConstantKind:     stringConstant,
 	}
 	lenConstantKindToConstant = len(constantKindToConstant)
 )
 
-type ConstantKind uint
+type constantKind uint
 
-func (this ConstantKind) ReflectKind() reflect.Kind {
+func (this constantKind) reflectKind() reflect.Kind {
 	if int(this) < lenConstantKindToReflectKind {
 		return constantKindToReflectKind[this]
 	}
-	panic(fmt.Sprintf("inject: Unknown ConstantKind: %v", this))
+	panic(fmt.Sprintf("inject: Unknown constantKind: %v", this))
 }
 
-func (this ConstantKind) ReflectType() reflect.Type {
+func (this constantKind) reflectType() reflect.Type {
 	if int(this) < lenConstantKindToReflectType {
 		return constantKindToReflectType[this]
 	}
-	panic(fmt.Sprintf("inject: Unknown ConstantKind: %v", this))
+	panic(fmt.Sprintf("inject: Unknown constantKind: %v", this))
 }
 
-func (this ConstantKind) constant() interface{} {
+func (this constantKind) constant() interface{} {
 	if int(this) < lenConstantKindToConstant {
 		return constantKindToConstant[this]
 	}
-	panic(fmt.Sprintf("inject: Unknown ConstantKind: %v", this))
+	panic(fmt.Sprintf("inject: Unknown constantKind: %v", this))
 }
 
-func constantKindForReflectKind(reflectKind reflect.Kind) (ConstantKind, bool) {
-	constantKind, ok := reflectKindToConstantKind[reflectKind]
-	return constantKind, ok
+func constantKindForReflectKind(reflectKind reflect.Kind) (constantKind, bool) {
+	value, ok := reflectKindToConstantKind[reflectKind]
+	return value, ok
 }
 
-func constantKindForReflectType(reflectType reflect.Type) (ConstantKind, bool) {
-	constantKind, ok := reflectTypeToConstantKind[reflectType]
-	return constantKind, ok
+func constantKindForReflectType(reflectType reflect.Type) (constantKind, bool) {
+	value, ok := reflectTypeToConstantKind[reflectType]
+	return value, ok
 }

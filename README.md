@@ -31,46 +31,6 @@ type Builder interface {
 ```
 
 
-#### type ConstantKind
-
-```go
-type ConstantKind uint
-```
-
-
-```go
-const (
-	Bool ConstantKind = iota
-	Int
-	Int8
-	Int16
-	Int32
-	Int64
-	Uint
-	Uint8
-	Uint16
-	Uint32
-	Uint64
-	Float32
-	Float64
-	Complex64
-	Complex128
-	String
-)
-```
-
-#### func (ConstantKind) ReflectKind
-
-```go
-func (this ConstantKind) ReflectKind() reflect.Kind
-```
-
-#### func (ConstantKind) ReflectType
-
-```go
-func (this ConstantKind) ReflectType() reflect.Type
-```
-
 #### type Injector
 
 ```go
@@ -78,6 +38,22 @@ type Injector interface {
 	fmt.Stringer
 	Get(from interface{}) (interface{}, error)
 	GetTagged(tag string, from interface{}) (interface{}, error)
+	GetTaggedBool(tag string) (bool, error)
+	GetTaggedInt(tag string) (int, error)
+	GetTaggedInt8(tag string) (int8, error)
+	GetTaggedInt16(tag string) (int16, error)
+	GetTaggedInt32(tag string) (int32, error)
+	GetTaggedInt64(tag string) (int64, error)
+	GetTaggedUint(tag string) (uint, error)
+	GetTaggedUint8(tag string) (uint8, error)
+	GetTaggedUint16(tag string) (uint16, error)
+	GetTaggedUint32(tag string) (uint32, error)
+	GetTaggedUint64(tag string) (uint64, error)
+	GetTaggedFloat32(tag string) (float32, error)
+	GetTaggedFloat64(tag string) (float64, error)
+	GetTaggedComplex64(tag string) (complex64, error)
+	GetTaggedComplex128(tag string) (complex128, error)
+	GetTaggedString(tag string) (string, error)
 	Call(function interface{}) ([]interface{}, error)
 	CallTagged(taggedFunction interface{}) ([]interface{}, error)
 	Populate(populateStruct interface{}) error
@@ -110,7 +86,22 @@ type Module interface {
 	BindTagged(tag string, from ...interface{}) Builder
 	BindInterface(fromInterface ...interface{}) InterfaceBuilder
 	BindTaggedInterface(tag string, fromInterface ...interface{}) InterfaceBuilder
-	BindTaggedConstant(tag string, constantKind ConstantKind) Builder
+	BindTaggedBool(tag string) Builder
+	BindTaggedInt(tag string) Builder
+	BindTaggedInt8(tag string) Builder
+	BindTaggedInt16(tag string) Builder
+	BindTaggedInt32(tag string) Builder
+	BindTaggedInt64(tag string) Builder
+	BindTaggedUint(tag string) Builder
+	BindTaggedUint8(tag string) Builder
+	BindTaggedUint16(tag string) Builder
+	BindTaggedUint32(tag string) Builder
+	BindTaggedUint64(tag string) Builder
+	BindTaggedFloat32(tag string) Builder
+	BindTaggedFloat64(tag string) Builder
+	BindTaggedComplex64(tag string) Builder
+	BindTaggedComplex128(tag string) Builder
+	BindTaggedString(tag string) Builder
 }
 ```
 

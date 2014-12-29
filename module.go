@@ -49,7 +49,71 @@ func (this *module) BindTaggedInterface(tag string, fromInterfaces ...interface{
 	return this.bind(func(fromReflectType reflect.Type) bindingKey { return newTaggedBindingKey(fromReflectType, tag) }, fromInterfaces)
 }
 
-func (this *module) BindTaggedConstant(tag string, constantKind ConstantKind) Builder {
+func (this *module) BindTaggedBool(tag string) Builder {
+	return this.bindTaggedConstant(tag, boolConstantKind)
+}
+
+func (this *module) BindTaggedInt(tag string) Builder {
+	return this.bindTaggedConstant(tag, intConstantKind)
+}
+
+func (this *module) BindTaggedInt8(tag string) Builder {
+	return this.bindTaggedConstant(tag, int8ConstantKind)
+}
+
+func (this *module) BindTaggedInt16(tag string) Builder {
+	return this.bindTaggedConstant(tag, int16ConstantKind)
+}
+
+func (this *module) BindTaggedInt32(tag string) Builder {
+	return this.bindTaggedConstant(tag, int32ConstantKind)
+}
+
+func (this *module) BindTaggedInt64(tag string) Builder {
+	return this.bindTaggedConstant(tag, int64ConstantKind)
+}
+
+func (this *module) BindTaggedUint(tag string) Builder {
+	return this.bindTaggedConstant(tag, uintConstantKind)
+}
+
+func (this *module) BindTaggedUint8(tag string) Builder {
+	return this.bindTaggedConstant(tag, uint8ConstantKind)
+}
+
+func (this *module) BindTaggedUint16(tag string) Builder {
+	return this.bindTaggedConstant(tag, uint16ConstantKind)
+}
+
+func (this *module) BindTaggedUint32(tag string) Builder {
+	return this.bindTaggedConstant(tag, uint32ConstantKind)
+}
+
+func (this *module) BindTaggedUint64(tag string) Builder {
+	return this.bindTaggedConstant(tag, uint64ConstantKind)
+}
+
+func (this *module) BindTaggedFloat32(tag string) Builder {
+	return this.bindTaggedConstant(tag, float32ConstantKind)
+}
+
+func (this *module) BindTaggedFloat64(tag string) Builder {
+	return this.bindTaggedConstant(tag, float64ConstantKind)
+}
+
+func (this *module) BindTaggedComplex64(tag string) Builder {
+	return this.bindTaggedConstant(tag, complex64ConstantKind)
+}
+
+func (this *module) BindTaggedComplex128(tag string) Builder {
+	return this.bindTaggedConstant(tag, complex128ConstantKind)
+}
+
+func (this *module) BindTaggedString(tag string) Builder {
+	return this.bindTaggedConstant(tag, stringConstantKind)
+}
+
+func (this *module) bindTaggedConstant(tag string, constantKind constantKind) Builder {
 	if !this.verifyTag(tag) {
 		return newNoOpBuilder()
 	}

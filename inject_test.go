@@ -808,9 +808,16 @@ func TestPopulateSimple(t *testing.T) {
 
 func TestBindTaggedConstantSimple(t *testing.T) {
 	module := CreateModule()
-	module.BindTaggedConstant("boolTrue", Bool).ToSingleton(true)
-	module.BindTaggedConstant("boolFalse", Bool).ToSingleton(false)
-	module.BindTaggedConstant("int10", Int).ToConstructor(func() (int, error) { return 10, nil })
-	_, err := CreateInjector(module)
+	module.BindTaggedBool("boolTrue").ToSingleton(true)
+	module.BindTaggedBool("boolFalse").ToSingleton(false)
+	module.BindTaggedInt("int10").ToConstructor(func() (int, error) { return 10, nil })
+	injector, err := CreateInjector(module)
 	require.NoError(t, err)
+
+	boolTrue, err := injector.GetTaggedBool("boolTrue")
+	require.NoError(t, err)
+	require.Equal(t, true, boolTrue)
+	boolFalse, err := injector.GetTaggedBool("boolFalse")
+	require.NoError(t, err)
+	require.Equal(t, false, boolFalse)
 }
