@@ -1,21 +1,18 @@
-.PHONY: all deps build test cov install doc clean
+.PHONY: all build test cov install doc clean
 
 all: test install
 
-deps:
-	go get -d -v -t ./...
-
-build: deps
+build:
 	go build ./...
 
-test: deps
+test:
 	go test -test.v ./...
 
-cov: deps
+cov:
 	go get -v github.com/axw/gocov/gocov
 	gocov test | gocov report
 
-install: deps
+install:
 	go install ./...
 
 doc:
