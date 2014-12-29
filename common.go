@@ -96,9 +96,17 @@ func verifyIsTaggedFunc(funcReflectType reflect.Type) error {
 		eb = eb.addTag("funcReflectType", funcReflectType)
 		return eb.build()
 	}
-	numFields := inReflectType.NumField()
+	err := verifyStructCanBePopulated(inReflectType)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func verifyStructCanBePopulated(structReflectType reflect.Type) error {
+	numFields := structReflectType.NumField()
 	for i := 0; i < numFields; i++ {
-		structFieldReflectType, tag := getStructFieldReflectTypeAndTag(inReflectType.Field(i))
+		structFieldReflectType, tag := getStructFieldReflectTypeAndTag(structReflectType.Field(i))
 		err := verifyParameterCanBeInjected(structFieldReflectType, tag)
 		if err != nil {
 			return err

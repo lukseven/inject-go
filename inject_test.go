@@ -806,6 +806,18 @@ func TestPopulateSimple(t *testing.T) {
 
 // ***** BindTaggedConstant tests *****
 
+type PopulateStructOneTagWithInt struct {
+	S SimpleInterface `injectTag:"tagOne"`
+	B BarInterface
+	I int `injectTag:"intTag"`
+}
+
+type PopulateStructOneTagWithIntErr struct {
+	S SimpleInterface `injectTag:"tagOne"`
+	B BarInterface
+	I int
+}
+
 func TestBindTaggedConstantSimple(t *testing.T) {
 	module := CreateModule()
 	module.BindTaggedBool("boolTrue").ToSingleton(true)
@@ -828,4 +840,23 @@ func TestBindTaggedConstantWrongType(t *testing.T) {
 	_, err := CreateInjector(module)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeNotAssignable)
+}
+
+func TestBindTaggedConstantPopulate(t *testing.T) {
+	module := CreateModule()
+	module.BindTagged("tagOne", (*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"hello"})
+	module.Bind((*BarInterface)(nil)).ToSingleton(BarStruct{2})
+	module.BindTaggedInt("intTag").ToSingleton(10)
+	injector, err := CreateInjector(module)
+	require.NoError(t, err)
+
+	populateStructOneTagWithInt := PopulateStructOneTagWithInt{}
+	err = injector.Populate(&populateStructOneTagWithInt)
+	require.NoError(t, err)
+	require.Equal(t, PopulateStructOneTagWithInt{SimpleStruct{"hello"}, BarStruct{2}, 10}, populateStructOneTagWithInt)
+
+	populateStructOneTagWithIntErr := PopulateStructOneTagWithIntErr{}
+	err = injector.Populate(&populateStructOneTagWithIntErr)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), injectErrorTypeNotSupportedYet)
 }

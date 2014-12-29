@@ -274,6 +274,10 @@ func (this *injector) Populate(populateStructPtr interface{}) error {
 		return err
 	}
 	populateStructValue := reflect.Indirect(reflect.ValueOf(populateStructPtr))
+	err = verifyStructCanBePopulated(populateStructValue.Type())
+	if err != nil {
+		return err
+	}
 	bindingKeys := getStructFieldBindingKeys(populateStructValue.Type())
 	err = this.validateBindingKeys(bindingKeys)
 	if err != nil {
