@@ -51,7 +51,6 @@ const (
 	Uint16
 	Uint32
 	Uint64
-	Uintptr
 	Float32
 	Float64
 	Complex64
@@ -60,16 +59,16 @@ const (
 )
 ```
 
-#### func  ConstantKindOf
-
-```go
-func ConstantKindOf(reflectKind reflect.Kind) ConstantKind
-```
-
 #### func (ConstantKind) ReflectKind
 
 ```go
 func (this ConstantKind) ReflectKind() reflect.Kind
+```
+
+#### func (ConstantKind) ReflectType
+
+```go
+func (this ConstantKind) ReflectType() reflect.Type
 ```
 
 #### type Injector
