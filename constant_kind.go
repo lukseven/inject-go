@@ -164,21 +164,21 @@ func (this constantKind) reflectKind() reflect.Kind {
 	if int(this) < lenConstantKindToReflectKind {
 		return constantKindToReflectKind[this]
 	}
-	panic(fmt.Sprintf("inject: Unknown constantKind: %v", this))
+	panic(unknownConstantKindPanicString(this))
 }
 
 func (this constantKind) reflectType() reflect.Type {
 	if int(this) < lenConstantKindToReflectType {
 		return constantKindToReflectType[this]
 	}
-	panic(fmt.Sprintf("inject: Unknown constantKind: %v", this))
+	panic(unknownConstantKindPanicString(this))
 }
 
 func (this constantKind) constant() interface{} {
 	if int(this) < lenConstantKindToConstant {
 		return constantKindToConstant[this]
 	}
-	panic(fmt.Sprintf("inject: Unknown constantKind: %v", this))
+	panic(unknownConstantKindPanicString(this))
 }
 
 func constantKindForReflectKind(reflectKind reflect.Kind) (constantKind, bool) {
@@ -189,4 +189,8 @@ func constantKindForReflectKind(reflectKind reflect.Kind) (constantKind, bool) {
 func constantKindForReflectType(reflectType reflect.Type) (constantKind, bool) {
 	value, ok := reflectTypeToConstantKind[reflectType]
 	return value, ok
+}
+
+func unknownConstantKindPanicString(constantKind constantKind) string {
+	return fmt.Sprintf("inject: Unknown constantKind: %v", constantKind)
 }
