@@ -6,13 +6,13 @@ Guice-inspired dependency injection for Go
 
 ## Installation
 ```bash
-go get -u gopkg.in/peter-edge/inject.v1
+go get -u github.com/peter-edge/inject
 ```
 
 ## Import
 ```go
 import (
-    "gopkg.in/peter-edge/inject.v1"
+    "github.com/peter-edge/inject"
 )
 ```
 

@@ -3,9 +3,10 @@ package api
 import (
 	"bytes"
 	"fmt"
-	"gopkg.in/peter-edge/inject.v1"
-	"gopkg.in/peter-edge/inject.v1/example/cloud"
-	"gopkg.in/peter-edge/inject.v1/example/more"
+
+	"github.com/peter-edge/inject"
+	"github.com/peter-edge/inject/example/cloud"
+	"github.com/peter-edge/inject/example/more"
 )
 
 func CreateModule() inject.Module {

@@ -1,8 +1,8 @@
 package cloud
 
 import (
-	"gopkg.in/peter-edge/inject.v1"
-	"gopkg.in/peter-edge/inject.v1/example/stuff"
+	"github.com/peter-edge/inject"
+	"github.com/peter-edge/inject/example/stuff"
 )
 
 func CreateModule() inject.Module {

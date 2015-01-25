@@ -2,7 +2,8 @@ package more
 
 import (
 	"fmt"
-	"gopkg.in/peter-edge/inject.v1"
+
+	"github.com/peter-edge/inject"
 )
 
 func CreateModule() inject.Module {

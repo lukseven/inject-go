@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"gopkg.in/peter-edge/inject.v1"
-	"gopkg.in/peter-edge/inject.v1/example/api"
-	"gopkg.in/peter-edge/inject.v1/example/cloud"
-	"gopkg.in/peter-edge/inject.v1/example/more"
-	"gopkg.in/peter-edge/inject.v1/example/stuff"
 	"os"
+
+	"github.com/peter-edge/inject"
+	"github.com/peter-edge/inject/example/api"
+	"github.com/peter-edge/inject/example/cloud"
+	"github.com/peter-edge/inject/example/more"
+	"github.com/peter-edge/inject/example/stuff"
 )
 
 func main() {
