@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/peter-edge/inject"
-	"github.com/peter-edge/inject/example/api"
-	"github.com/peter-edge/inject/example/cloud"
-	"github.com/peter-edge/inject/example/more"
-	"github.com/peter-edge/inject/example/stuff"
+	"github.com/peter-edge/go-inject"
+	"github.com/peter-edge/go-inject/example/api"
+	"github.com/peter-edge/go-inject/example/cloud"
+	"github.com/peter-edge/go-inject/example/more"
+	"github.com/peter-edge/go-inject/example/stuff"
 )
 
 func main() {

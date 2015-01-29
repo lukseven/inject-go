@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/peter-edge/inject"
-	"github.com/peter-edge/inject/example/cloud"
-	"github.com/peter-edge/inject/example/more"
+	"github.com/peter-edge/go-inject"
+	"github.com/peter-edge/go-inject/example/cloud"
+	"github.com/peter-edge/go-inject/example/more"
 )
 
 func CreateModule() inject.Module {

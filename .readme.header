@@ -1,18 +1,18 @@
 [![Codeship Status](http://img.shields.io/codeship/34b974b0-6dfa-0132-51b4-66f2bf861e14/master.svg?style=flat-square)](https://codeship.com/projects/54288)
-[![API Documentation](http://img.shields.io/badge/api-Godoc-blue.svg?style=flat-square)](https://godoc.org/github.com/peter-edge/inject)
-[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/peter-edge/inject/blob/master/LICENSE)
+[![API Documentation](http://img.shields.io/badge/api-Godoc-blue.svg?style=flat-square)](https://godoc.org/github.com/peter-edge/go-inject)
+[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/peter-edge/go-inject/blob/master/LICENSE)
 
 Guice-inspired dependency injection for Go
 
 ## Installation
 ```bash
-go get -u github.com/peter-edge/inject
+go get -u github.com/peter-edge/go-inject
 ```
 
 ## Import
 ```go
 import (
-    "github.com/peter-edge/inject"
+    "github.com/peter-edge/go-inject"
 )
 ```
 

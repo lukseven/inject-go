@@ -1,7 +1,7 @@
 package stuff
 
 import (
-	"github.com/peter-edge/inject"
+	"github.com/peter-edge/go-inject"
 )
 
 func CreateModule() inject.Module {
