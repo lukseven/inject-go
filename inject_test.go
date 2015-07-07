@@ -3,9 +3,10 @@ package inject
 import (
 	"errors"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"sync/atomic"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -52,16 +53,16 @@ type SimpleStruct struct {
 	foo string
 }
 
-func (this SimpleStruct) Foo() string {
-	return this.foo
+func (s SimpleStruct) Foo() string {
+	return s.foo
 }
 
 type SimplePtrStruct struct {
 	foo string
 }
 
-func (this *SimplePtrStruct) Foo() string {
-	return this.foo
+func (s *SimplePtrStruct) Foo() string {
+	return s.foo
 }
 
 func TestSimpleStructSingletonDirect(t *testing.T) {
@@ -328,16 +329,16 @@ type BarStruct struct {
 	bar int
 }
 
-func (this BarStruct) Bar() int {
-	return this.bar
+func (b BarStruct) Bar() int {
+	return b.bar
 }
 
 type BarPtrStruct struct {
 	bar int
 }
 
-func (this *BarPtrStruct) Bar() int {
-	return this.bar
+func (b *BarPtrStruct) Bar() int {
+	return b.bar
 }
 
 type SecondInterface interface {
@@ -350,12 +351,12 @@ type SecondPtrStruct struct {
 	bar BarInterface
 }
 
-func (this *SecondPtrStruct) Foo() SimpleInterface {
-	return this.foo
+func (s *SecondPtrStruct) Foo() SimpleInterface {
+	return s.foo
 }
 
-func (this *SecondPtrStruct) Bar() BarInterface {
-	return this.bar
+func (s *SecondPtrStruct) Bar() BarInterface {
+	return s.bar
 }
 
 type UnboundInterface interface {
