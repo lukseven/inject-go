@@ -1,4 +1,4 @@
 /*
-Guice-inspired dependency injection for Go
+Guice-inspired dependency injection for Go.
 */
 package inject
