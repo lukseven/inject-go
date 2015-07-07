@@ -35,32 +35,32 @@ type injectError struct {
 	tagOrder []string
 }
 
-func (this *injectError) Error() string {
+func (i *injectError) Error() string {
 	var buffer bytes.Buffer
 	buffer.WriteString(injectErrorPrefix)
-	buffer.WriteString(this.errorType)
-	if len(this.tags) > 0 {
+	buffer.WriteString(i.errorType)
+	if len(i.tags) > 0 {
 		buffer.WriteString(" tags{")
-		buffer.WriteString(strings.Join(this.tagStrings(), " "))
+		buffer.WriteString(strings.Join(i.tagStrings(), " "))
 		buffer.WriteString("}")
 	}
 	return buffer.String()
 }
 
-func (this *injectError) Type() string {
-	return this.errorType
+func (i *injectError) Type() string {
+	return i.errorType
 }
 
-func (this *injectError) GetTag(key string) (interface{}, bool) {
-	value, ok := this.tags[key]
+func (i *injectError) GetTag(key string) (interface{}, bool) {
+	value, ok := i.tags[key]
 	return value, ok
 }
 
-func (this *injectError) tagStrings() []string {
-	strings := make([]string, len(this.tags))
-	i := 0
-	for _, key := range this.tagOrder {
-		value := this.tags[key]
+func (i *injectError) tagStrings() []string {
+	strings := make([]string, len(i.tags))
+	ii := 0
+	for _, key := range i.tagOrder {
+		value := i.tags[key]
 		var buffer bytes.Buffer
 		buffer.WriteString(key)
 		buffer.WriteString(":")
@@ -69,8 +69,8 @@ func (this *injectError) tagStrings() []string {
 		} else {
 			buffer.WriteString(fmt.Sprintf("%v", value))
 		}
-		strings[i] = buffer.String()
-		i++
+		strings[ii] = buffer.String()
+		ii++
 	}
 	return strings
 }
@@ -85,12 +85,12 @@ func newErrorBuilder(errorType string) *injectErrorBuilder {
 	return &injectErrorBuilder{errorType, make(map[string]interface{}), make([]string, 0)}
 }
 
-func (this *injectErrorBuilder) addTag(key string, value interface{}) *injectErrorBuilder {
-	this.tags[key] = value
-	this.tagOrder = append(this.tagOrder, key)
-	return this
+func (i *injectErrorBuilder) addTag(key string, value interface{}) *injectErrorBuilder {
+	i.tags[key] = value
+	i.tagOrder = append(i.tagOrder, key)
+	return i
 }
 
-func (this *injectErrorBuilder) build() *injectError {
-	return &injectError{this.errorType, this.tags, this.tagOrder}
+func (i *injectErrorBuilder) build() *injectError {
+	return &injectError{i.errorType, i.tags, i.tagOrder}
 }

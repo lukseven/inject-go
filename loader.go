@@ -14,12 +14,12 @@ func newLoader() *loader {
 	return &loader{sync.Once{}, atomic.Value{}}
 }
 
-func (this *loader) load(f func() (interface{}, error)) (interface{}, error) {
-	this.once.Do(func() {
+func (l *loader) load(f func() (interface{}, error)) (interface{}, error) {
+	l.once.Do(func() {
 		value, err := f()
-		this.value.Store(&valueErr{value, err})
+		l.value.Store(&valueErr{value, err})
 	})
-	valueErr := this.value.Load().(*valueErr)
+	valueErr := l.value.Load().(*valueErr)
 	return valueErr.value, valueErr.err
 }
 

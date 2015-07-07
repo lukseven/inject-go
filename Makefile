@@ -32,7 +32,7 @@ build: deps
 
 lint: testdeps
 	go get -v github.com/golang/lint/golint
-	golint ./...
+	golint ./.
 
 vet: testdeps
 	go get -v golang.org/x/tools/cmd/vet

@@ -160,25 +160,25 @@ var (
 
 type constantKind uint
 
-func (this constantKind) reflectKind() reflect.Kind {
-	if int(this) < lenConstantKindToReflectKind {
-		return constantKindToReflectKind[this]
+func (c constantKind) reflectKind() reflect.Kind {
+	if int(c) < lenConstantKindToReflectKind {
+		return constantKindToReflectKind[c]
 	}
-	panic(unknownConstantKindPanicString(this))
+	panic(unknownConstantKindPanicString(c))
 }
 
-func (this constantKind) reflectType() reflect.Type {
-	if int(this) < lenConstantKindToReflectType {
-		return constantKindToReflectType[this]
+func (c constantKind) reflectType() reflect.Type {
+	if int(c) < lenConstantKindToReflectType {
+		return constantKindToReflectType[c]
 	}
-	panic(unknownConstantKindPanicString(this))
+	panic(unknownConstantKindPanicString(c))
 }
 
-func (this constantKind) constant() interface{} {
-	if int(this) < lenConstantKindToConstant {
-		return constantKindToConstant[this]
+func (c constantKind) constant() interface{} {
+	if int(c) < lenConstantKindToConstant {
+		return constantKindToConstant[c]
 	}
-	panic(unknownConstantKindPanicString(this))
+	panic(unknownConstantKindPanicString(c))
 }
 
 func constantKindForReflectKind(reflectKind reflect.Kind) (constantKind, bool) {

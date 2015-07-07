@@ -65,180 +65,180 @@ func validate(injector *injector) error {
 	return nil
 }
 
-func (this *injector) String() string {
+func (i *injector) String() string {
 	var buffer bytes.Buffer
 	buffer.WriteString("injector{")
-	buffer.WriteString(strings.Join(this.keyValueStrings(), " "))
+	buffer.WriteString(strings.Join(i.keyValueStrings(), " "))
 	buffer.WriteString("}")
 	return buffer.String()
 }
 
-func (this *injector) keyValueStrings() []string {
-	strings := make([]string, len(this.bindings))
-	i := 0
-	for bindingKey, binding := range this.bindings {
+func (i *injector) keyValueStrings() []string {
+	strings := make([]string, len(i.bindings))
+	ii := 0
+	for bindingKey, binding := range i.bindings {
 		var buffer bytes.Buffer
 		buffer.WriteString(bindingKey.String())
 		buffer.WriteString(":")
 		buffer.WriteString(binding.String())
-		strings[i] = buffer.String()
-		i++
+		strings[ii] = buffer.String()
+		ii++
 	}
 	return strings
 }
 
-func (this *injector) Get(from interface{}) (interface{}, error) {
-	return this.get(newBindingKey(reflect.TypeOf(from)))
+func (i *injector) Get(from interface{}) (interface{}, error) {
+	return i.get(newBindingKey(reflect.TypeOf(from)))
 }
 
-func (this *injector) GetTagged(tag string, from interface{}) (interface{}, error) {
-	return this.get(newTaggedBindingKey(reflect.TypeOf(from), tag))
+func (i *injector) GetTagged(tag string, from interface{}) (interface{}, error) {
+	return i.get(newTaggedBindingKey(reflect.TypeOf(from), tag))
 }
 
-func (this *injector) GetTaggedBool(tag string) (bool, error) {
-	obj, err := this.getTaggedConstant(tag, boolConstantKind)
+func (i *injector) GetTaggedBool(tag string) (bool, error) {
+	obj, err := i.getTaggedConstant(tag, boolConstantKind)
 	if err != nil {
 		return boolConstant, err
 	}
 	return obj.(bool), nil
 }
 
-func (this *injector) GetTaggedInt(tag string) (int, error) {
-	obj, err := this.getTaggedConstant(tag, intConstantKind)
+func (i *injector) GetTaggedInt(tag string) (int, error) {
+	obj, err := i.getTaggedConstant(tag, intConstantKind)
 	if err != nil {
 		return intConstant, err
 	}
 	return obj.(int), nil
 }
 
-func (this *injector) GetTaggedInt8(tag string) (int8, error) {
-	obj, err := this.getTaggedConstant(tag, int8ConstantKind)
+func (i *injector) GetTaggedInt8(tag string) (int8, error) {
+	obj, err := i.getTaggedConstant(tag, int8ConstantKind)
 	if err != nil {
 		return int8Constant, err
 	}
 	return obj.(int8), nil
 }
 
-func (this *injector) GetTaggedInt16(tag string) (int16, error) {
-	obj, err := this.getTaggedConstant(tag, int16ConstantKind)
+func (i *injector) GetTaggedInt16(tag string) (int16, error) {
+	obj, err := i.getTaggedConstant(tag, int16ConstantKind)
 	if err != nil {
 		return int16Constant, err
 	}
 	return obj.(int16), nil
 }
 
-func (this *injector) GetTaggedInt32(tag string) (int32, error) {
-	obj, err := this.getTaggedConstant(tag, int32ConstantKind)
+func (i *injector) GetTaggedInt32(tag string) (int32, error) {
+	obj, err := i.getTaggedConstant(tag, int32ConstantKind)
 	if err != nil {
 		return int32Constant, err
 	}
 	return obj.(int32), nil
 }
 
-func (this *injector) GetTaggedInt64(tag string) (int64, error) {
-	obj, err := this.getTaggedConstant(tag, int64ConstantKind)
+func (i *injector) GetTaggedInt64(tag string) (int64, error) {
+	obj, err := i.getTaggedConstant(tag, int64ConstantKind)
 	if err != nil {
 		return int64Constant, err
 	}
 	return obj.(int64), nil
 }
 
-func (this *injector) GetTaggedUint(tag string) (uint, error) {
-	obj, err := this.getTaggedConstant(tag, uintConstantKind)
+func (i *injector) GetTaggedUint(tag string) (uint, error) {
+	obj, err := i.getTaggedConstant(tag, uintConstantKind)
 	if err != nil {
 		return uintConstant, err
 	}
 	return obj.(uint), nil
 }
 
-func (this *injector) GetTaggedUint8(tag string) (uint8, error) {
-	obj, err := this.getTaggedConstant(tag, uint8ConstantKind)
+func (i *injector) GetTaggedUint8(tag string) (uint8, error) {
+	obj, err := i.getTaggedConstant(tag, uint8ConstantKind)
 	if err != nil {
 		return uint8Constant, err
 	}
 	return obj.(uint8), nil
 }
 
-func (this *injector) GetTaggedUint16(tag string) (uint16, error) {
-	obj, err := this.getTaggedConstant(tag, uint16ConstantKind)
+func (i *injector) GetTaggedUint16(tag string) (uint16, error) {
+	obj, err := i.getTaggedConstant(tag, uint16ConstantKind)
 	if err != nil {
 		return uint16Constant, err
 	}
 	return obj.(uint16), nil
 }
 
-func (this *injector) GetTaggedUint32(tag string) (uint32, error) {
-	obj, err := this.getTaggedConstant(tag, uint32ConstantKind)
+func (i *injector) GetTaggedUint32(tag string) (uint32, error) {
+	obj, err := i.getTaggedConstant(tag, uint32ConstantKind)
 	if err != nil {
 		return uint32Constant, err
 	}
 	return obj.(uint32), nil
 }
 
-func (this *injector) GetTaggedUint64(tag string) (uint64, error) {
-	obj, err := this.getTaggedConstant(tag, uint64ConstantKind)
+func (i *injector) GetTaggedUint64(tag string) (uint64, error) {
+	obj, err := i.getTaggedConstant(tag, uint64ConstantKind)
 	if err != nil {
 		return uint64Constant, err
 	}
 	return obj.(uint64), nil
 }
 
-func (this *injector) GetTaggedFloat32(tag string) (float32, error) {
-	obj, err := this.getTaggedConstant(tag, float32ConstantKind)
+func (i *injector) GetTaggedFloat32(tag string) (float32, error) {
+	obj, err := i.getTaggedConstant(tag, float32ConstantKind)
 	if err != nil {
 		return float32Constant, err
 	}
 	return obj.(float32), nil
 }
 
-func (this *injector) GetTaggedFloat64(tag string) (float64, error) {
-	obj, err := this.getTaggedConstant(tag, float64ConstantKind)
+func (i *injector) GetTaggedFloat64(tag string) (float64, error) {
+	obj, err := i.getTaggedConstant(tag, float64ConstantKind)
 	if err != nil {
 		return float64Constant, err
 	}
 	return obj.(float64), nil
 }
 
-func (this *injector) GetTaggedComplex64(tag string) (complex64, error) {
-	obj, err := this.getTaggedConstant(tag, complex64ConstantKind)
+func (i *injector) GetTaggedComplex64(tag string) (complex64, error) {
+	obj, err := i.getTaggedConstant(tag, complex64ConstantKind)
 	if err != nil {
 		return complex64Constant, err
 	}
 	return obj.(complex64), nil
 }
 
-func (this *injector) GetTaggedComplex128(tag string) (complex128, error) {
-	obj, err := this.getTaggedConstant(tag, complex128ConstantKind)
+func (i *injector) GetTaggedComplex128(tag string) (complex128, error) {
+	obj, err := i.getTaggedConstant(tag, complex128ConstantKind)
 	if err != nil {
 		return complex128Constant, err
 	}
 	return obj.(complex128), nil
 }
 
-func (this *injector) GetTaggedString(tag string) (string, error) {
-	obj, err := this.getTaggedConstant(tag, stringConstantKind)
+func (i *injector) GetTaggedString(tag string) (string, error) {
+	obj, err := i.getTaggedConstant(tag, stringConstantKind)
 	if err != nil {
 		return stringConstant, err
 	}
 	return obj.(string), nil
 }
 
-func (this *injector) getTaggedConstant(tag string, constantKind constantKind) (interface{}, error) {
-	return this.get(newTaggedBindingKey(constantKind.reflectType(), tag))
+func (i *injector) getTaggedConstant(tag string, constantKind constantKind) (interface{}, error) {
+	return i.get(newTaggedBindingKey(constantKind.reflectType(), tag))
 }
 
-func (this *injector) Call(function interface{}) ([]interface{}, error) {
+func (i *injector) Call(function interface{}) ([]interface{}, error) {
 	funcReflectType := reflect.TypeOf(function)
 	err := verifyIsFunc(funcReflectType)
 	if err != nil {
 		return nil, err
 	}
 	bindingKeys := getParameterBindingKeysForFunc(funcReflectType)
-	err = this.validateBindingKeys(bindingKeys)
+	err = i.validateBindingKeys(bindingKeys)
 	if err != nil {
 		return nil, err
 	}
-	reflectValues, err := this.getReflectValues(bindingKeys)
+	reflectValues, err := i.getReflectValues(bindingKeys)
 	if err != nil {
 		return nil, err
 	}
@@ -246,18 +246,18 @@ func (this *injector) Call(function interface{}) ([]interface{}, error) {
 	return reflectValuesToValues(returnValues), nil
 }
 
-func (this *injector) CallTagged(taggedFunction interface{}) ([]interface{}, error) {
+func (i *injector) CallTagged(taggedFunction interface{}) ([]interface{}, error) {
 	taggedFuncReflectType := reflect.TypeOf(taggedFunction)
 	err := verifyIsTaggedFunc(taggedFuncReflectType)
 	if err != nil {
 		return nil, err
 	}
 	bindingKeys := getParameterBindingKeysForTaggedFunc(taggedFuncReflectType)
-	err = this.validateBindingKeys(bindingKeys)
+	err = i.validateBindingKeys(bindingKeys)
 	if err != nil {
 		return nil, err
 	}
-	reflectValues, err := this.getReflectValues(bindingKeys)
+	reflectValues, err := i.getReflectValues(bindingKeys)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +267,7 @@ func (this *injector) CallTagged(taggedFunction interface{}) ([]interface{}, err
 	return reflectValuesToValues(returnValues), nil
 }
 
-func (this *injector) Populate(populateStructPtr interface{}) error {
+func (i *injector) Populate(populateStructPtr interface{}) error {
 	populateStructPtrReflectType := reflect.TypeOf(populateStructPtr)
 	err := verifyIsStructPtr(populateStructPtrReflectType)
 	if err != nil {
@@ -279,11 +279,11 @@ func (this *injector) Populate(populateStructPtr interface{}) error {
 		return err
 	}
 	bindingKeys := getStructFieldBindingKeys(populateStructValue.Type())
-	err = this.validateBindingKeys(bindingKeys)
+	err = i.validateBindingKeys(bindingKeys)
 	if err != nil {
 		return err
 	}
-	reflectValues, err := this.getReflectValues(bindingKeys)
+	reflectValues, err := i.getReflectValues(bindingKeys)
 	if err != nil {
 		return err
 	}
@@ -291,16 +291,16 @@ func (this *injector) Populate(populateStructPtr interface{}) error {
 	return nil
 }
 
-func (this *injector) get(bindingKey bindingKey) (interface{}, error) {
-	binding, err := this.getBinding(bindingKey)
+func (i *injector) get(bindingKey bindingKey) (interface{}, error) {
+	binding, err := i.getBinding(bindingKey)
 	if err != nil {
 		return nil, err
 	}
 	return binding.get()
 }
 
-func (this *injector) getBinding(bindingKey bindingKey) (resolvedBinding, error) {
-	binding, ok := this.bindings[bindingKey]
+func (i *injector) getBinding(bindingKey bindingKey) (resolvedBinding, error) {
+	binding, ok := i.bindings[bindingKey]
 	if !ok {
 		eb := newErrorBuilder(injectErrorTypeNoBinding)
 		eb.addTag("bindingKey", bindingKey)
@@ -309,22 +309,22 @@ func (this *injector) getBinding(bindingKey bindingKey) (resolvedBinding, error)
 	return binding, nil
 }
 
-func (this *injector) getReflectValues(bindingKeys []bindingKey) ([]reflect.Value, error) {
+func (i *injector) getReflectValues(bindingKeys []bindingKey) ([]reflect.Value, error) {
 	numBindingKeys := len(bindingKeys)
 	reflectValues := make([]reflect.Value, numBindingKeys)
-	for i := 0; i < numBindingKeys; i++ {
-		value, err := this.get(bindingKeys[i])
+	for ii := 0; ii < numBindingKeys; ii++ {
+		value, err := i.get(bindingKeys[ii])
 		if err != nil {
 			return nil, err
 		}
-		reflectValues[i] = reflect.ValueOf(value)
+		reflectValues[ii] = reflect.ValueOf(value)
 	}
 	return reflectValues, nil
 }
 
-func (this *injector) validateBindingKeys(bindingKeys []bindingKey) error {
+func (i *injector) validateBindingKeys(bindingKeys []bindingKey) error {
 	for _, bindingKey := range bindingKeys {
-		_, err := this.getBinding(bindingKey)
+		_, err := i.getBinding(bindingKey)
 		if err != nil {
 			return err
 		}

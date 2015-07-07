@@ -19,14 +19,14 @@ func newBindingKey(reflectType reflect.Type) bindingKey {
 	return baseBindingKey{reflectType}
 }
 
-func (this baseBindingKey) reflectType() reflect.Type {
-	return this.rt
+func (b baseBindingKey) reflectType() reflect.Type {
+	return b.rt
 }
 
-func (this baseBindingKey) String() string {
+func (b baseBindingKey) String() string {
 	var buffer bytes.Buffer
 	buffer.WriteString("{type:")
-	buffer.WriteString(this.reflectType().String())
+	buffer.WriteString(b.reflectType().String())
 	buffer.WriteString("}")
 	return buffer.String()
 }
@@ -40,12 +40,12 @@ func newTaggedBindingKey(reflectType reflect.Type, tag string) bindingKey {
 	return taggedBindingKey{baseBindingKey{reflectType}, tag}
 }
 
-func (this taggedBindingKey) String() string {
+func (b taggedBindingKey) String() string {
 	var buffer bytes.Buffer
 	buffer.WriteString("{type:")
-	buffer.WriteString(this.reflectType().String())
+	buffer.WriteString(b.reflectType().String())
 	buffer.WriteString(" tag:")
-	buffer.WriteString(this.tag)
+	buffer.WriteString(b.tag)
 	buffer.WriteString("}")
 	return buffer.String()
 }
