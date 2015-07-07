@@ -12,6 +12,14 @@ import (
 )
 
 func main() {
+	if err := do(); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		os.Exit(1)
+	}
+	os.Exit(0)
+}
+
+func do() error {
 	injector, err := inject.CreateInjector(
 		api.CreateModule(),
 		cloud.CreateModule(),
@@ -19,16 +27,17 @@ func main() {
 		stuff.CreateModule(),
 	)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	obj, err := injector.Get((*api.Api)(nil))
 	if err != nil {
-		panic(err)
+		return err
 	}
 	apiObj := obj.(api.Api)
 	response, err := apiObj.Do(api.Request{os.Args[1], "this is fun"})
 	if err != nil {
-		panic(err)
+		return err
 	}
 	fmt.Printf("%v %v\n", response.Bar, response.Baz)
+	return nil
 }

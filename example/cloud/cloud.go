@@ -34,15 +34,15 @@ type instance struct {
 	stuffService stuff.StuffService
 }
 
-func (this *instance) RunCommand(command Command) (*Result, error) {
-	i, err := this.stuffService.DoStuff("pwd")
+func (i *instance) RunCommand(command Command) (*Result, error) {
+	ii, err := i.stuffService.DoStuff("pwd")
 	if err != nil {
 		return nil, err
 	}
 	if command.Path == "ls" {
-		return &Result{this.data, i}, nil
+		return &Result{i.data, ii}, nil
 	} else {
-		return &Result{this.data, 1}, nil
+		return &Result{i.data, 1}, nil
 	}
 }
 
@@ -54,8 +54,8 @@ func createAwsProvider(stuffService stuff.StuffService) (Provider, error) {
 	return &awsProvider{stuffService}, nil
 }
 
-func (this *awsProvider) NewInstance() (Instance, error) {
-	return &instance{"aws can do stuff", this.stuffService}, nil
+func (i *awsProvider) NewInstance() (Instance, error) {
+	return &instance{"aws can do stuff", i.stuffService}, nil
 }
 
 type digitalOceanProvider struct {
@@ -66,6 +66,6 @@ func createDigitalOceanProvider(stuffService stuff.StuffService) (Provider, erro
 	return &digitalOceanProvider{stuffService}, nil
 }
 
-func (this *digitalOceanProvider) NewInstance() (Instance, error) {
-	return &instance{"digitalOcean can also do stuff", this.stuffService}, nil
+func (i *digitalOceanProvider) NewInstance() (Instance, error) {
+	return &instance{"digitalOcean can also do stuff", i.stuffService}, nil
 }

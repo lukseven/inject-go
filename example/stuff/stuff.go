@@ -20,8 +20,8 @@ func createStuffService() (StuffService, error) {
 	return &stuffService{}, nil
 }
 
-func (this *stuffService) DoStuff(s string) (int, error) {
-	if s == "pwd" {
+func (s *stuffService) DoStuff(ss string) (int, error) {
+	if ss == "pwd" {
 		return 0, nil
 	} else {
 		return -1, nil

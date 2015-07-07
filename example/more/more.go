@@ -18,6 +18,6 @@ type MoreThings interface {
 
 type moreThings struct{}
 
-func (this *moreThings) MoreStuffToDo(i int) (string, error) {
+func (m *moreThings) MoreStuffToDo(i int) (string, error) {
 	return fmt.Sprintf("but there's not much to do here %v", i), nil
 }
