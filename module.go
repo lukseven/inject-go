@@ -185,7 +185,7 @@ func (m *module) verifyTag(tag string) bool {
 }
 
 func (m *module) verifySupportedTypes(froms []interface{}, isSupportedFunc func(reflect.Type) bool) bool {
-	var ok bool
+	ok := true
 	for _, from := range froms {
 		if !m.verifySupportedType(reflect.TypeOf(from), isSupportedFunc) {
 			ok = false
