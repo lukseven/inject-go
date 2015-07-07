@@ -35,7 +35,12 @@ type injectError struct {
 }
 
 func (i *injectError) Error() string {
-	return fmt.Sprintf("%s%s tags{%s}", injectErrorPrefix, i.errorType, strings.Join(i.tagStrings(), " "))
+	value := fmt.Sprintf("%s%s", injectErrorPrefix, i.errorType)
+	tagStrings := i.tagStrings()
+	if len(tagStrings) > 0 {
+		value = fmt.Sprintf("%s tags{%s}", value, strings.Join(tagStrings, " "))
+	}
+	return value
 }
 
 func (i *injectError) Type() string {
