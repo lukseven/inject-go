@@ -1,7 +1,7 @@
 package inject
 
 import (
-	"bytes"
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -142,22 +142,14 @@ func (m *module) bind(newBindingKeyFunc func(reflect.Type) bindingKey, from []in
 }
 
 func (m *module) String() string {
-	var buffer bytes.Buffer
-	buffer.WriteString("module{")
-	buffer.WriteString(strings.Join(m.keyValueStrings(), " "))
-	buffer.WriteString("}")
-	return buffer.String()
+	return fmt.Sprintf("module{%s}", strings.Join(m.keyValueStrings(), " "))
 }
 
 func (m *module) keyValueStrings() []string {
 	strings := make([]string, len(m.bindings))
 	i := 0
 	for bindingKey, binding := range m.bindings {
-		var buffer bytes.Buffer
-		buffer.WriteString(bindingKey.String())
-		buffer.WriteString(":")
-		buffer.WriteString(binding.String())
-		strings[i] = buffer.String()
+		strings[i] = fmt.Sprintf("%s:%s", bindingKey.String(), binding.String())
 		i++
 	}
 	return strings

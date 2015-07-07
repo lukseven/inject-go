@@ -1,7 +1,7 @@
 package inject
 
 import (
-	"bytes"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -66,22 +66,14 @@ func validate(injector *injector) error {
 }
 
 func (i *injector) String() string {
-	var buffer bytes.Buffer
-	buffer.WriteString("injector{")
-	buffer.WriteString(strings.Join(i.keyValueStrings(), " "))
-	buffer.WriteString("}")
-	return buffer.String()
+	return fmt.Sprintf("injector{%s}", strings.Join(i.keyValueStrings(), " "))
 }
 
 func (i *injector) keyValueStrings() []string {
 	strings := make([]string, len(i.bindings))
 	ii := 0
 	for bindingKey, binding := range i.bindings {
-		var buffer bytes.Buffer
-		buffer.WriteString(bindingKey.String())
-		buffer.WriteString(":")
-		buffer.WriteString(binding.String())
-		strings[ii] = buffer.String()
+		strings[ii] = fmt.Sprintf("%s:%s", bindingKey.String(), binding.String())
 		ii++
 	}
 	return strings

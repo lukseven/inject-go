@@ -1,7 +1,6 @@
 package inject
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
 )
@@ -24,11 +23,7 @@ func (b baseBindingKey) reflectType() reflect.Type {
 }
 
 func (b baseBindingKey) String() string {
-	var buffer bytes.Buffer
-	buffer.WriteString("{type:")
-	buffer.WriteString(b.reflectType().String())
-	buffer.WriteString("}")
-	return buffer.String()
+	return fmt.Sprintf("{type:%s}", b.reflectType().String())
 }
 
 type taggedBindingKey struct {
@@ -40,12 +35,6 @@ func newTaggedBindingKey(reflectType reflect.Type, tag string) bindingKey {
 	return taggedBindingKey{baseBindingKey{reflectType}, tag}
 }
 
-func (b taggedBindingKey) String() string {
-	var buffer bytes.Buffer
-	buffer.WriteString("{type:")
-	buffer.WriteString(b.reflectType().String())
-	buffer.WriteString(" tag:")
-	buffer.WriteString(b.tag)
-	buffer.WriteString("}")
-	return buffer.String()
+func (t taggedBindingKey) String() string {
+	return fmt.Sprintf("{type:%s tag:%s}", t.reflectType().String(), t.tag)
 }

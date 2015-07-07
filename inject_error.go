@@ -1,7 +1,6 @@
 package inject
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 )
@@ -36,15 +35,7 @@ type injectError struct {
 }
 
 func (i *injectError) Error() string {
-	var buffer bytes.Buffer
-	buffer.WriteString(injectErrorPrefix)
-	buffer.WriteString(i.errorType)
-	if len(i.tags) > 0 {
-		buffer.WriteString(" tags{")
-		buffer.WriteString(strings.Join(i.tagStrings(), " "))
-		buffer.WriteString("}")
-	}
-	return buffer.String()
+	return fmt.Sprintf("%s%s tags{%s}", injectErrorPrefix, i.errorType, strings.Join(i.tagStrings(), " "))
 }
 
 func (i *injectError) Type() string {
@@ -61,15 +52,13 @@ func (i *injectError) tagStrings() []string {
 	ii := 0
 	for _, key := range i.tagOrder {
 		value := i.tags[key]
-		var buffer bytes.Buffer
-		buffer.WriteString(key)
-		buffer.WriteString(":")
+		var valueString string
 		if stringer, ok := value.(fmt.Stringer); ok {
-			buffer.WriteString(fmt.Sprintf("%v", stringer.String()))
+			valueString = fmt.Sprintf("%v", stringer.String())
 		} else {
-			buffer.WriteString(fmt.Sprintf("%v", value))
+			valueString = fmt.Sprintf("%v", value)
 		}
-		strings[ii] = buffer.String()
+		strings[ii] = fmt.Sprintf("%s:%s", key, valueString)
 		ii++
 	}
 	return strings
