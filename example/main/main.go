@@ -34,7 +34,7 @@ func do() error {
 		return err
 	}
 	apiObj := obj.(api.Api)
-	response, err := apiObj.Do(api.Request{os.Args[1], "this is fun"})
+	response, err := apiObj.Do(api.Request{Provider: os.Args[1], Foo: "this is fun"})
 	if err != nil {
 		return err
 	}

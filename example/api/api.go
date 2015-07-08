@@ -51,7 +51,7 @@ func (a *api) Do(request Request) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	result, err := instance.RunCommand(cloud.Command{"ls"})
+	result, err := instance.RunCommand(cloud.Command{Path: "ls"})
 	if err != nil {
 		return nil, err
 	}
