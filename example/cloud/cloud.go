@@ -1,8 +1,8 @@
-package cloud
+package cloud // import "go.pedge.io/inject/example/cloud"
 
 import (
-	"github.com/peter-edge/go-inject"
-	"github.com/peter-edge/go-inject/example/stuff"
+	"go.pedge.io/inject"
+	"go.pedge.io/inject/example/stuff"
 )
 
 func CreateModule() inject.Module {

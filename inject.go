@@ -1,4 +1,4 @@
-package inject
+package inject // import "go.pedge.io/inject"
 
 import (
 	"fmt"

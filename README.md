@@ -1,18 +1,14 @@
-[![API Documentation](http://img.shields.io/badge/api-Godoc-blue.svg?style=flat-square)](https://godoc.org/github.com/peter-edge/go-inject)
+[![CircleCI](https://circleci.com/gh/peter-edge/go-inject/tree/master.png)](https://circleci.com/gh/peter-edge/go-inject/tree/master)
+[![API Documentation](http://img.shields.io/badge/api-Godoc-blue.svg?style=flat-square)](https://godoc.org/go.pedge.io/inject)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/peter-edge/go-inject/blob/master/LICENSE)
 
 Guice-inspired dependency injection for Go.
 
-## Installation
-
-```bash
-go get -u github.com/peter-edge/go-inject
-```
-
 ## Import
+
 ```go
 import (
-    "github.com/peter-edge/go-inject"
+    "go.pedge.io/inject"
 )
 ```
 

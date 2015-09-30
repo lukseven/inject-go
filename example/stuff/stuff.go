@@ -1,7 +1,7 @@
-package stuff
+package stuff // import "go.pedge.io/inject/example/stuff"
 
 import (
-	"github.com/peter-edge/go-inject"
+	"go.pedge.io/inject"
 )
 
 func CreateModule() inject.Module {
