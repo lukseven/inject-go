@@ -1,6 +1,6 @@
 [![CircleCI](https://circleci.com/gh/peter-edge/go-inject/tree/master.png)](https://circleci.com/gh/peter-edge/go-inject/tree/master)
-[![GoDoc](http://img.shields.io/badge/api-godoc-blue.svg)](https://godoc.org/go.pedge.io/inject)
-[![MIT License](http://img.shields.io/badge/license-mit-blue.svg)](https://github.com/peter-edge/go-inject/blob/master/LICENSE)
+[![GoDoc](http://img.shields.io/badge/GoDoc-Reference-blue.svg)](https://godoc.org/go.pedge.io/inject)
+[![MIT License](http://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/peter-edge/go-inject/blob/master/LICENSE)
 
 Guice-inspired dependency injection for Go.
 
