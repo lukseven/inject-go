@@ -138,7 +138,7 @@ A singleton constructor will be called exactly once for the entire application.
 
 	func newSayHelloToSomeone(sayHello SayHello) (SayHelloToSomeone, error) {
 		unsafeCounter++
-		return &SayHelloToSomeoneOne{sayHello, fmt.Sprintf("Alice$d", unsafeCounter)}, nil
+		return &SayHelloToSomeoneOne{sayHello, fmt.Sprintf("Alice%d", unsafeCounter)}, nil
 	}
 
 Functions be called from an injector using the Call function. These functions have the same parameter

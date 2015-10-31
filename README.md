@@ -227,7 +227,7 @@ func doStuff() error {
 
 func newSayHelloToSomeone(sayHello SayHello) (SayHelloToSomeone, error) {
   unsafeCounter++
-  return &SayHelloToSomeoneOne{sayHello, fmt.Sprintf("Alice$d", unsafeCounter)}, nil
+  return &SayHelloToSomeoneOne{sayHello, fmt.Sprintf("Alice%d", unsafeCounter)}, nil
 }
 ```
 
