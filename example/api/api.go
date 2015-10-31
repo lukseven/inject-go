@@ -36,7 +36,7 @@ type api struct {
 
 func createApi(s struct {
 	AwsProvider          cloud.Provider `inject:"aws"`
-	DigitalOceanProvider cloud.Provider `inject:"digitalOcean"`
+	DigitalOceanProvider cloud.Provider `inject:"digital_ocean"`
 	MoreThings           more.MoreThings
 }) (Api, error) {
 	return &api{s.AwsProvider, s.DigitalOceanProvider, s.MoreThings}, nil
@@ -66,7 +66,7 @@ func (a *api) getProvider(provider string) (cloud.Provider, error) {
 	switch provider {
 	case "aws":
 		return a.awsProvider, nil
-	case "digitalOcean":
+	case "digital_ocean":
 		return a.digitalOceanProvider, nil
 	default:
 		return nil, fmt.Errorf("api: Unknown provider %v", provider)

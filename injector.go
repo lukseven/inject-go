@@ -16,7 +16,7 @@ func createInjector(modules []Module) (Injector, error) {
 	for _, m := range modules {
 		castModule, ok := m.(*module)
 		if !ok {
-			return nil, newErrorBuilder(injectErrorTypeCannotCastModule).build()
+			return nil, errCannotCastModule
 		}
 		err := installModuleToInjector(&injector, castModule)
 		if err != nil {
@@ -33,18 +33,15 @@ func createInjector(modules []Module) (Injector, error) {
 func installModuleToInjector(injector *injector, module *module) error {
 	numBindingErrors := len(module.bindingErrors)
 	if numBindingErrors > 0 {
-		eb := newErrorBuilder(injectErrorTypeBindingErrors)
+		err := errBindingErrors
 		for i := 0; i < numBindingErrors; i++ {
-			eb.addTag(strconv.Itoa(i+1), module.bindingErrors[i].Error())
+			err = err.withTag(strconv.Itoa(i+1), module.bindingErrors[i].Error())
 		}
-		return eb.build()
+		return err
 	}
 	for bindingKey, binding := range module.bindings {
 		if foundBinding, ok := injector.bindings[bindingKey]; ok {
-			eb := newErrorBuilder(injectErrorTypeAlreadyBound)
-			eb.addTag("bindingKey", bindingKey)
-			eb.addTag("foundBinding", foundBinding)
-			return eb.build()
+			return errAlreadyBound.withTag("bindingKey", bindingKey).withTag("foundBinding", foundBinding)
 		}
 		resolvedBinding, err := binding.resolvedBinding(module, injector)
 		if err != nil {
@@ -294,9 +291,7 @@ func (i *injector) get(bindingKey bindingKey) (interface{}, error) {
 func (i *injector) getBinding(bindingKey bindingKey) (resolvedBinding, error) {
 	binding, ok := i.bindings[bindingKey]
 	if !ok {
-		eb := newErrorBuilder(injectErrorTypeNoBinding)
-		eb.addTag("bindingKey", bindingKey)
-		return nil, eb.build()
+		return nil, errNoBinding.withTag("bindingKey", bindingKey)
 	}
 	return binding, nil
 }
@@ -326,9 +321,7 @@ func (i *injector) validateBindingKeys(bindingKeys []bindingKey) error {
 
 func verifyIsStructPtr(reflectType reflect.Type) error {
 	if !isStructPtr(reflectType) {
-		eb := newErrorBuilder(injectErrorTypeNotStructPtr)
-		eb.addTag("reflectType", reflectType)
-		return eb.build()
+		return errNotStructPtr.withTag("reflectType", reflectType)
 	}
 	return nil
 }

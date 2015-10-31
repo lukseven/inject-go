@@ -80,18 +80,13 @@ func (b *baseBuilder) setBinding(bindingKey bindingKey, binding binding) {
 
 func verifyBindingReflectType(bindingKeyReflectType reflect.Type, bindingReflectType reflect.Type) error {
 	if !isSupportedBindingKeyReflectType(bindingKeyReflectType) {
-		eb := newErrorBuilder(injectErrorTypeNotSupportedYet)
-		eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
-		return eb.build()
+		return errNotSupportedYet.withTag("bindingKeyReflectType", bindingReflectType)
 	}
 	if isInterfacePtr(bindingKeyReflectType) {
 		bindingKeyReflectType = bindingKeyReflectType.Elem()
 	}
 	if !bindingReflectType.AssignableTo(bindingKeyReflectType) {
-		eb := newErrorBuilder(injectErrorTypeNotAssignable)
-		eb = eb.addTag("bindingKeyReflectType", bindingKeyReflectType)
-		eb = eb.addTag("bindingReflectType", bindingReflectType)
-		return eb.build()
+		return errNotAssignable.withTag("bindingKeyReflectType", bindingKeyReflectType).withTag("bindingReflectType", bindingReflectType)
 	}
 	return nil
 }
@@ -122,18 +117,14 @@ func verifyTaggedConstructorReflectType(bindingKeyReflectType reflect.Type, cons
 
 func verifyConstructorReturnValues(bindingKeyReflectType reflect.Type, constructorReflectType reflect.Type) error {
 	if constructorReflectType.NumOut() != 2 {
-		eb := newErrorBuilder(injectErrorTypeConstructorReturnValuesInvalid)
-		eb = eb.addTag("constructorReflectType", constructorReflectType)
-		return eb.build()
+		return errConstructorReturnValuesInvalid.withTag("constructorReflectType", constructorReflectType)
 	}
 	err := verifyBindingReflectType(bindingKeyReflectType, constructorReflectType.Out(0))
 	if err != nil {
 		return err
 	}
 	if !constructorReflectType.Out(1).AssignableTo(errorReflectType) {
-		eb := newErrorBuilder(injectErrorTypeConstructorReturnValuesInvalid)
-		eb = eb.addTag("constructorReflectType", constructorReflectType)
-		return eb.build()
+		return errConstructorReturnValuesInvalid.withTag("constructorReflectType", constructorReflectType)
 	}
 	return nil
 }

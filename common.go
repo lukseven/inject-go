@@ -56,9 +56,7 @@ func isSupportedBindConstantReflectType(reflectType reflect.Type) bool {
 
 func verifyIsFunc(funcReflectType reflect.Type) error {
 	if !isFunc(funcReflectType) {
-		eb := newErrorBuilder(injectErrorTypeNotFunction)
-		eb = eb.addTag("funcReflectType", funcReflectType)
-		return eb.build()
+		return errNotFunction.withTag("funcReflectType", funcReflectType)
 	}
 	numIn := funcReflectType.NumIn()
 	for i := 0; i < numIn; i++ {
@@ -76,25 +74,17 @@ func verifyIsFunc(funcReflectType reflect.Type) error {
 
 func verifyIsTaggedFunc(funcReflectType reflect.Type) error {
 	if !isFunc(funcReflectType) {
-		eb := newErrorBuilder(injectErrorTypeNotFunction)
-		eb = eb.addTag("funcReflectType", funcReflectType)
-		return eb.build()
+		return errNotFunction.withTag("funcReflectType", funcReflectType)
 	}
 	if funcReflectType.NumIn() != 1 {
-		eb := newErrorBuilder(injectErrorTypeTaggedParametersInvalid)
-		eb = eb.addTag("funcReflectType", funcReflectType)
-		return eb.build()
+		return errTaggedParametersInvalid.withTag("funcReflectType", funcReflectType)
 	}
 	inReflectType := funcReflectType.In(0)
 	if !isStruct(inReflectType) {
-		eb := newErrorBuilder(injectErrorTypeTaggedParametersInvalid)
-		eb = eb.addTag("funcReflectType", funcReflectType)
-		return eb.build()
+		return errTaggedParametersInvalid.withTag("funcReflectType", funcReflectType)
 	}
 	if inReflectType.Name() != "" {
-		eb := newErrorBuilder(injectErrorTypeTaggedParametersInvalid)
-		eb = eb.addTag("funcReflectType", funcReflectType)
-		return eb.build()
+		return errTaggedParametersInvalid.withTag("funcReflectType", funcReflectType)
 	}
 	err := verifyStructCanBePopulated(inReflectType)
 	if err != nil {
@@ -117,14 +107,10 @@ func verifyStructCanBePopulated(structReflectType reflect.Type) error {
 
 func verifyParameterCanBeInjected(parameterReflectType reflect.Type, tag string) error {
 	if tag == "" && !isSupportedNoTagParameterReflectType(parameterReflectType) {
-		eb := newErrorBuilder(injectErrorTypeNotSupportedYet)
-		eb.addTag("parameterReflectType", parameterReflectType)
-		return eb.build()
+		return errNotSupportedYet.withTag("parameterReflectType", parameterReflectType)
 	}
 	if tag != "" && !isSupportedBindingKeyReflectType(parameterReflectType) {
-		eb := newErrorBuilder(injectErrorTypeNotSupportedYet)
-		eb.addTag("parameterReflectType", parameterReflectType)
-		return eb.build()
+		return errNotSupportedYet.withTag("parameterReflectType", parameterReflectType)
 	}
 	return nil
 }

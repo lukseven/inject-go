@@ -6,7 +6,6 @@ import (
 )
 
 const (
-	injectErrorPrefix                             = "inject: "
 	injectErrorTypeNil                            = "Parameter is nil"
 	injectErrorTypeReflectTypeNil                 = "reflect.TypeOf() returns nil"
 	injectErrorTypeNotSupportedYet                = "Binding type not supported yet, feel free to help!"
@@ -27,64 +26,73 @@ const (
 	injectErrorTypeBindingErrors                  = "Errors with bindings"
 )
 
+var (
+	errNil                            = newInjectError(injectErrorTypeNil)
+	errReflectTypeNil                 = newInjectError(injectErrorTypeReflectTypeNil)
+	errNotSupportedYet                = newInjectError(injectErrorTypeNotSupportedYet)
+	errNotAssignable                  = newInjectError(injectErrorTypeNotAssignable)
+	errConstructorReturnValuesInvalid = newInjectError(injectErrorTypeConstructorReturnValuesInvalid)
+	errIntermediateBinding            = newInjectError(injectErrorTypeIntermediateBinding)
+	errFinalBinding                   = newInjectError(injectErrorTypeFinalBinding)
+	errCannotCastModule               = newInjectError(injectErrorTypeCannotCastModule)
+	errNoBinding                      = newInjectError(injectErrorTypeNoBinding)
+	errNoFinalBinding                 = newInjectError(injectErrorTypeNoFinalBinding)
+	errAlreadyBound                   = newInjectError(injectErrorTypeAlreadyBound)
+	errTagEmpty                       = newInjectError(injectErrorTypeTagEmpty)
+	errTaggedParametersInvalid        = newInjectError(injectErrorTypeTaggedParametersInvalid)
+	errNotFunction                    = newInjectError(injectErrorTypeNotFunction)
+	errNotInterfacePtr                = newInjectError(injectErrorTypeNotInterfacePtr)
+	errNotStructPtr                   = newInjectError(injectErrorTypeNotStructPtr)
+	errNotSupportedBindType           = newInjectError(injectErrorTypeNotSupportedBindType)
+	errBindingErrors                  = newInjectError(injectErrorTypeBindingErrors)
+)
+
 type injectError struct {
 	errorType string
-	tags      map[string]interface{}
-	// TODO(pedge): there has to be a better way to do this
-	tagOrder []string
+	tags      injectErrorTags
+}
+
+func newInjectError(errorType string) *injectError {
+	return &injectError{errorType, make([]*injectErrorTag, 0)}
 }
 
 func (i *injectError) Error() string {
-	value := fmt.Sprintf("%s%s", injectErrorPrefix, i.errorType)
-	tagStrings := i.tagStrings()
-	if len(tagStrings) > 0 {
-		value = fmt.Sprintf("%s tags{%s}", value, strings.Join(tagStrings, " "))
+	value := fmt.Sprintf("inject: %s", i.errorType)
+	if len(i.tags) == 0 {
+		return value
 	}
-	return value
+	return fmt.Sprintf("%s %s", value, i.tags.String())
 }
 
-func (i *injectError) Type() string {
-	return i.errorType
+func (i *injectError) withTag(key string, value interface{}) *injectError {
+	return &injectError{i.errorType, append(i.tags, newInjectErrorTag(key, value))}
 }
 
-func (i *injectError) GetTag(key string) (interface{}, bool) {
-	value, ok := i.tags[key]
-	return value, ok
+type injectErrorTag struct {
+	key   string
+	value interface{}
 }
 
-func (i *injectError) tagStrings() []string {
-	strings := make([]string, len(i.tags))
-	ii := 0
-	for _, key := range i.tagOrder {
-		value := i.tags[key]
-		var valueString string
-		if stringer, ok := value.(fmt.Stringer); ok {
-			valueString = fmt.Sprintf("%v", stringer.String())
-		} else {
-			valueString = fmt.Sprintf("%v", value)
-		}
-		strings[ii] = fmt.Sprintf("%s:%s", key, valueString)
-		ii++
+func newInjectErrorTag(key string, value interface{}) *injectErrorTag {
+	return &injectErrorTag{key, value}
+}
+
+func (t *injectErrorTag) String() string {
+	if stringer, ok := t.value.(fmt.Stringer); ok {
+		return fmt.Sprintf("%s:%s", t.key, stringer.String())
 	}
-	return strings
+	return fmt.Sprintf("%s:%s", t.key, t.value)
 }
 
-type injectErrorBuilder struct {
-	errorType string
-	tags      map[string]interface{}
-	tagOrder  []string
-}
+type injectErrorTags []*injectErrorTag
 
-func newErrorBuilder(errorType string) *injectErrorBuilder {
-	return &injectErrorBuilder{errorType, make(map[string]interface{}), make([]string, 0)}
-}
-
-func (i *injectErrorBuilder) addTag(key string, value interface{}) *injectErrorBuilder {
-	i.tags[key] = value
-	i.tagOrder = append(i.tagOrder, key)
-	return i
-}
-
-func (i *injectErrorBuilder) build() *injectError {
-	return &injectError{i.errorType, i.tags, i.tagOrder}
+func (ts injectErrorTags) String() string {
+	if len(ts) == 0 {
+		return ""
+	}
+	s := make([]string, len(ts))
+	for i, tag := range ts {
+		s[i] = tag.String()
+	}
+	return fmt.Sprintf("tags{%s}", strings.Join(s, " "))
 }

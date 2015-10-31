@@ -34,9 +34,7 @@ func (i *intermediateBinding) String() string {
 func (i *intermediateBinding) resolvedBinding(module *module, injector *injector) (resolvedBinding, error) {
 	binding, ok := module.binding(i.bindingKey)
 	if !ok {
-		eb := newErrorBuilder(injectErrorTypeNoFinalBinding)
-		eb.addTag("bindingKey", i.bindingKey)
-		return nil, eb.build()
+		return nil, errNoFinalBinding.withTag("bindingKey", i.bindingKey)
 	}
 	return binding.resolvedBinding(module, injector)
 }

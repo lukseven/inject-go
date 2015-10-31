@@ -126,14 +126,14 @@ func (m *module) bindTaggedConstant(tag string, constantKind constantKind) Build
 func (m *module) bind(newBindingKeyFunc func(reflect.Type) bindingKey, from []interface{}) InterfaceBuilder {
 	lenFrom := len(from)
 	if lenFrom == 0 {
-		m.addBindingError(newErrorBuilder(injectErrorTypeNil).build())
+		m.addBindingError(errNil)
 		return newNoOpBuilder()
 	}
 	bindingKeys := make([]bindingKey, lenFrom)
 	for i := 0; i < lenFrom; i++ {
 		fromReflectType := reflect.TypeOf(from[i])
 		if fromReflectType == nil {
-			m.addBindingError(newErrorBuilder(injectErrorTypeNil).build())
+			m.addBindingError(errNil)
 			return newNoOpBuilder()
 		}
 		bindingKeys[i] = newBindingKeyFunc(fromReflectType)
@@ -167,10 +167,7 @@ func (m *module) binding(bindingKey bindingKey) (binding, bool) {
 func (m *module) setBinding(bindingKey bindingKey, binding binding) {
 	foundBinding, ok := m.bindings[bindingKey]
 	if ok {
-		eb := newErrorBuilder(injectErrorTypeAlreadyBound)
-		eb.addTag("bindingKey", bindingKey)
-		eb.addTag("foundBinding", foundBinding)
-		m.addBindingError(eb.build())
+		m.addBindingError(errAlreadyBound.withTag("bindingKey", bindingKey).withTag("foundBinding", foundBinding))
 		return
 	}
 	m.bindings[bindingKey] = binding
@@ -178,7 +175,7 @@ func (m *module) setBinding(bindingKey bindingKey, binding binding) {
 
 func (m *module) verifyTag(tag string) bool {
 	if tag == "" {
-		m.addBindingError(newErrorBuilder(injectErrorTypeTagEmpty).build())
+		m.addBindingError(errTagEmpty)
 		return false
 	}
 	return true
@@ -203,7 +200,5 @@ func (m *module) verifySupportedType(reflectType reflect.Type, isSupportedFunc f
 }
 
 func (m *module) addNotSupportedBindTypeError(reflectType reflect.Type) {
-	eb := newErrorBuilder(injectErrorTypeNotSupportedBindType)
-	eb.addTag("reflectType", reflectType)
-	m.addBindingError(eb.build())
+	m.addBindingError(errNotSupportedBindType.withTag("reflectType", reflectType))
 }
