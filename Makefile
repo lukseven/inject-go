@@ -51,5 +51,5 @@ clean:
 	errcheck \
 	pretest \
 	test \
-	cov \
+	doc \
 	clean
