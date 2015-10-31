@@ -314,6 +314,9 @@ import (
 )
 
 // Module sets up your dependencies.
+//
+// Note that none of the calls to Module are thread-safe, it is your responsibility
+// to make sure multiple goroutines are not calling a single module.
 type Module interface {
 	fmt.Stringer
 	Bind(from ...interface{}) Builder
@@ -383,4 +386,7 @@ type Injector interface {
 }
 
 // NewInjector creates a new Injector for the specified Modules.
+//
+// Note that Modules are not thread-safe, it is your responsibility to make sure
+// all Modules have all bindings in place before passing them as parameters to NewInjector.
 func NewInjector(modules ...Module) (Injector, error) { return newInjector(modules) }
