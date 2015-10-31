@@ -4,8 +4,8 @@ import (
 	"go.pedge.io/inject"
 )
 
-func CreateModule() inject.Module {
-	module := inject.CreateModule()
+func NewModule() inject.Module {
+	module := inject.NewModule()
 	module.Bind((*StuffService)(nil)).ToConstructor(createStuffService)
 	return module
 }

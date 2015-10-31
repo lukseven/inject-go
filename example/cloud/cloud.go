@@ -5,8 +5,8 @@ import (
 	"go.pedge.io/inject/example/stuff"
 )
 
-func CreateModule() inject.Module {
-	module := inject.CreateModule()
+func NewModule() inject.Module {
+	module := inject.NewModule()
 	module.BindTagged("aws", (*Provider)(nil)).ToSingletonConstructor(createAwsProvider)
 	module.BindTagged("digital_ocean", (*Provider)(nil)).ToSingletonConstructor(createDigitalOceanProvider)
 	return module

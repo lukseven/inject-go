@@ -11,7 +11,7 @@ type injector struct {
 	bindings map[bindingKey]resolvedBinding
 }
 
-func createInjector(modules []Module) (Injector, error) {
+func newInjector(modules []Module) (Injector, error) {
 	injector := injector{make(map[bindingKey]resolvedBinding)}
 	for _, m := range modules {
 		castModule, ok := m.(*module)

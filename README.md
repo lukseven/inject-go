@@ -53,10 +53,10 @@ type Injector interface {
 ```
 
 
-#### func  CreateInjector
+#### func  NewInjector
 
 ```go
-func CreateInjector(modules ...Module) (Injector, error)
+func NewInjector(modules ...Module) (Injector, error)
 ```
 
 #### type InterfaceBuilder
@@ -98,8 +98,8 @@ type Module interface {
 ```
 
 
-#### func  CreateModule
+#### func  NewModule
 
 ```go
-func CreateModule() Module
+func NewModule() Module
 ```

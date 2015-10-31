@@ -6,8 +6,8 @@ import (
 	"go.pedge.io/inject"
 )
 
-func CreateModule() inject.Module {
-	module := inject.CreateModule()
+func NewModule() inject.Module {
+	module := inject.NewModule()
 	module.Bind((*MoreThings)(nil)).ToSingleton(&moreThings{})
 	return module
 }

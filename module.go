@@ -11,7 +11,7 @@ type module struct {
 	bindingErrors []error
 }
 
-func createModule() *module {
+func newModule() *module {
 	return &module{make(map[bindingKey]binding), make([]error, 0)}
 }
 

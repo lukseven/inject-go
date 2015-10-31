@@ -20,11 +20,11 @@ func main() {
 }
 
 func do() error {
-	injector, err := inject.CreateInjector(
-		api.CreateModule(),
-		cloud.CreateModule(),
-		more.CreateModule(),
-		stuff.CreateModule(),
+	injector, err := inject.NewInjector(
+		api.NewModule(),
+		cloud.NewModule(),
+		more.NewModule(),
+		stuff.NewModule(),
 	)
 	if err != nil {
 		return err

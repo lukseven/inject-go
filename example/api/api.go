@@ -8,8 +8,8 @@ import (
 	"go.pedge.io/inject/example/more"
 )
 
-func CreateModule() inject.Module {
-	module := inject.CreateModule()
+func NewModule() inject.Module {
+	module := inject.NewModule()
 	module.Bind((*Api)(nil)).ToTaggedSingletonConstructor(createApi)
 	return module
 }

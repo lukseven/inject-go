@@ -31,7 +31,7 @@ type Module interface {
 	BindTaggedString(tag string) Builder
 }
 
-func CreateModule() Module { return createModule() }
+func NewModule() Module { return newModule() }
 
 type Builder interface {
 	ToSingleton(singleton interface{})
@@ -71,4 +71,4 @@ type Injector interface {
 	Populate(populateStruct interface{}) error
 }
 
-func CreateInjector(modules ...Module) (Injector, error) { return createInjector(modules) }
+func NewInjector(modules ...Module) (Injector, error) { return newInjector(modules) }
