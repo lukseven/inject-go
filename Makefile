@@ -36,6 +36,11 @@ cov: testdeps
 	go get golang.org/x/tools/cmd/cover
 	gocov test | gocov report
 
+doc:
+	go get -v github.com/robertkrimen/godocdown/godocdown
+	rm -f README.md
+	godocdown go.pedge.io/inject > README.md
+
 clean:
 	go clean ./...
 

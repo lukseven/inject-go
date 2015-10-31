@@ -2,15 +2,11 @@
 [![GoDoc](http://img.shields.io/badge/GoDoc-Reference-blue.svg)](https://godoc.org/go.pedge.io/inject)
 [![MIT License](http://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/peter-edge/go-inject/blob/master/LICENSE)
 
-Guice-inspired dependency injection for Go.
-
-## Import
-
 ```go
-import (
-    "go.pedge.io/inject"
-)
+  import "go.pedge.io/inject"
 ```
+
+Package inject is guice-inspired dependency injection for Go.
 
 ## Usage
 
