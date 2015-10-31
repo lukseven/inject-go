@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	taggedFuncStructFieldTag = "injectTag"
+	taggedFuncStructFieldTag = "inject"
 )
 
 // whitelisting types to make sure the framework works

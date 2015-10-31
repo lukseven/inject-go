@@ -534,14 +534,14 @@ func TestSingletonConstructorWithEvilCounterMultipleInjectors(t *testing.T) {
 // ***** tagged constructors
 
 func createSecondInterfaceTaggedOne(str struct {
-	S SimpleInterface `injectTag:"tagOne"`
-	B BarInterface    `injectTag:"tagTwo"`
+	S SimpleInterface `inject:"tagOne"`
+	B BarInterface    `inject:"tagTwo"`
 }) (SecondInterface, error) {
 	return &SecondPtrStruct{str.S, str.B}, nil
 }
 
 func createSecondInterfaceTaggedOneHasNoTag(str struct {
-	S SimpleInterface `injectTag:"tagOne"`
+	S SimpleInterface `inject:"tagOne"`
 	B BarInterface
 }) (SecondInterface, error) {
 	return &SecondPtrStruct{str.S, str.B}, nil
@@ -656,14 +656,14 @@ func getSecondInterfaceErrNoBinding(s SimpleInterface, b BarInterface, u Unbound
 }
 
 func getSecondInterfaceTaggedOne(str struct {
-	S SimpleInterface `injectTag:"tagOne"`
-	B BarInterface    `injectTag:"tagTwo"`
+	S SimpleInterface `inject:"tagOne"`
+	B BarInterface    `inject:"tagTwo"`
 }) (SecondInterface, string, error) {
 	return &SecondPtrStruct{str.S, str.B}, "hello", nil
 }
 
 func getSecondInterfaceTaggedOneHasNoTag(str struct {
-	S SimpleInterface `injectTag:"tagOne"`
+	S SimpleInterface `inject:"tagOne"`
 	B BarInterface
 }) (SecondInterface, string, error) {
 	return &SecondPtrStruct{str.S, str.B}, "hello", nil
@@ -725,18 +725,18 @@ func TestCallAndCallTaggedSimple(t *testing.T) {
 // ***** Populate tests *****
 
 type PopulateStructTwoTags struct {
-	S SimpleInterface `injectTag:"tagOne"`
-	B BarInterface    `injectTag:"tagTwo"`
+	S SimpleInterface `inject:"tagOne"`
+	B BarInterface    `inject:"tagTwo"`
 }
 
 type PopulateStructNoBinding struct {
-	S SimpleInterface `injectTag:"tagOne"`
-	B BarInterface    `injectTag:"tagTwo"`
+	S SimpleInterface `inject:"tagOne"`
+	B BarInterface    `inject:"tagTwo"`
 	U UnboundInterface
 }
 
 type PopulateStructOneTag struct {
-	S SimpleInterface `injectTag:"tagOne"`
+	S SimpleInterface `inject:"tagOne"`
 	B BarInterface
 }
 
@@ -778,13 +778,13 @@ func TestPopulateSimple(t *testing.T) {
 // ***** BindTaggedConstant tests *****
 
 type PopulateStructOneTagWithInt struct {
-	S SimpleInterface `injectTag:"tagOne"`
+	S SimpleInterface `inject:"tagOne"`
 	B BarInterface
-	I int `injectTag:"intTag"`
+	I int `inject:"intTag"`
 }
 
 type PopulateStructOneTagWithIntErr struct {
-	S SimpleInterface `injectTag:"tagOne"`
+	S SimpleInterface `inject:"tagOne"`
 	B BarInterface
 	I int
 }
