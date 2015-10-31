@@ -13,9 +13,9 @@ https://github.com/google/guice/wiki/Motivation
 This project is in no way affiliated with the Guice, but I recommend reading
 their docs to get the concepts.
 
-## Concepts
+### Concepts
 
-#### Module
+###### Module
 
 ```go
 type Module interface {
@@ -92,7 +92,7 @@ module.Bind((*SayHello)(nil)).ToSingleton(&SayHelloOne{"Salutations"})
 A struct, struct pointer, or primitive must have a direct binding to a singleton
 or constructor.
 
-#### Injector
+###### Injector
 
 ```go
 type Injector interface {
@@ -150,7 +150,7 @@ func printHello(aboveModule inject.Module) error {
 
 See the Injector interface for other methods.
 
-#### Constructor
+###### Constructor
 
 A constructor is a function that takes injected values as parameters, and
 returns a value and an error.
@@ -257,7 +257,7 @@ func getStuff(sayHello SayHello) (string, int) {
 
 See the methods on Module and Constructor for more details.
 
-#### Tags
+###### Tags
 
 A tag allows named multiple bindings of one type. As an example, let's consider
 if we want to have multiple ways to say hello.
