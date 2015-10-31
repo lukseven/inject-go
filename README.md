@@ -10,7 +10,7 @@ Package inject is guice-inspired dependency injection for Go.
 
 https://github.com/google/guice/wiki/Motivation
 
-Concepts:
+### Concepts
 
     Module
 
@@ -21,25 +21,25 @@ primitives to singletons, constructors, with or withot tags.
 An interface can have a binding to another type, or to a singleton or
 constructor.
 
-    type IfaceAlpha interface {
+    type SayHello interface {
     	Hello() string
     }
 
-    type IfaceAlphaOne struct {
+    type SayHelloOne struct {
     	value string
     }
 
-    func (i *IfaceAlphaOne) Hello() string {
+    func (i *SayHelloOne) Hello() string {
     	return i.value
     }
 
     module := inject.NewModule()
-    module.BindInterface((*IfaceAlpha)(nil)).To(&IfaceAlphaOne{}) // valid, but must provide a binding to *IfaceAlphaOne.
-    module.Bind(&IfaceAlphaOne{}).ToSingleton(&IfaceAlphaOne{"Salutations"}) // there we go
+    module.BindInterface((*SayHello)(nil)).To(&SayHelloOne{}) // valid, but must provide a binding to *SayHelloOne.
+    module.Bind(&SayHelloOne{}).ToSingleton(&SayHelloOne{"Salutations"}) // there we go
 
 An interface can also be bound to a singleton or constructor.
 
-    module.Bind((*IfaceAlpha)(nil)).ToSingleton(&IfaceAlphaOne{"Salutations"})
+    module.Bind((*SayHello)(nil)).ToSingleton(&SayHelloOne{"Salutations"})
 
 A struct, struct pointer, or primitive must have a direct binding to a singleton
 or constructor.
@@ -50,20 +50,21 @@ An Injector is analogous to Guice's Injector, providing your dependencies.
 
 Given the binding:
 
-    module.Bind((*IfaceAlpha)(nil)).ToSingleton(&IfaceAlphaOne{"Salutations"})
+    module.Bind((*SayHello)(nil)).ToSingleton(&SayHelloOne{"Salutations"})
 
-We are able to get a value for IfaceAlpha:
+We are able to get a value for SayHello.
 
     func printHello(aboveModule inject.Module) error {
     	injector, err := inject.NewInjector(aboveModule)
     	if err != nil {
     		return err
     	}
-    	ifaceAlphaObj, err := injector.Get((*IfaceAlpha)(nil))
+    	sayHelloObj, err := injector.Get((*SayHello)(nil))
     	if err != nil {
     		return err
     	}
-    	fmt.Println(ifaceAlphaObj.(IfaceAlpha).Hello()) // will print "Salutations"
+    	fmt.Println(sayHelloObj.(SayHello).Hello()) // will print "Salutations"
+    	return nil
     }
 
     Constructor
@@ -71,17 +72,17 @@ We are able to get a value for IfaceAlpha:
 A constructor is a function that takes injected values as parameters, and
 returns a value and an error.
 
-    type IfaceBeta interface {
+    type SayHelloToSomeone interface {
     	Greetings() string
     }
 
-    type IfaceBetaOne struct {
-    	ifaceAlpha IFaceAlpha
+    type SayHelloToSomeoneOne struct {
+    	sayHello SayHello
     	person string
     }
 
-    func (i *IfaceBetaOne) Greetings() string {
-    	return fmt.Sprintf("%s, %s!", i.ifaceAlpha.Hello(), i.person)
+    func (i *SayHelloToSomeoneOne) Greetings() string {
+    	return fmt.Sprintf("%s, %s!", i.sayHello.Hello(), i.person)
     }
 
 We can set up a constructor to take zero values, or values that require a
@@ -89,22 +90,23 @@ binding in some module passed to NewInjector().
 
     func doStuff() error {
     	m1 := inject.NewModule()
-    	m1.Bind((*IfaceAlpha)(nil)).ToSingleton(&IfaceAlphaOne{"Salutations"})
+    	m1.Bind((*SayHello)(nil)).ToSingleton(&SayHelloOne{"Salutations"})
     	m2 := inject.NewModule()
-    	m2.Bind((*IfaceBeta)(nil)).ToConstructor(newIfaceBeta)
+    	m2.Bind((*SayHelloToSomeone)(nil)).ToConstructor(newSayHelloToSomeone)
     	injector, err := inject.NewInjector(m1, m2)
     	if err != nil {
     		return err
     	}
-    	ifaceBetaObj, err := injector.Get((*IfaceBeta)(nil))
+    	sayHelloToSomeoneObj, err := injector.Get((*SayHelloToSomeone)(nil))
     	if err != nil {
     		return err
     	}
-    	fmt.Println(ifaceBetaObj.(IfaceBeta).Greetings()) // will print "Saluatations, Alice!"
+    	fmt.Println(sayHelloToSomeoneObj.(SayHelloToSomeone).Greetings()) // will print "Saluatations, Alice!"
+    	return nil
     }
 
-    func newIfaceBeta(ifaceAlpha IfaceAlpha) (IfaceBeta, error) {
-    	return &IfaceBetaOne{ifaceAlpha, "Alice"}, nil
+    func newSayHelloToSomeone(sayHello SayHello) (SayHelloToSomeone, error) {
+    	return &SayHelloToSomeoneOne{sayHello, "Alice"}, nil
     }
 
 A singleton constructor will be called exactly once for the entire application.
@@ -115,40 +117,63 @@ A singleton constructor will be called exactly once for the entire application.
 
     func doStuff() error {
     	m1 := inject.NewModule()
-    	m1.Bind((*IfaceAlpha)(nil)).ToSingleton(&IfaceAlphaOne{"Salutations"})
+    	m1.Bind((*SayHello)(nil)).ToSingleton(&SayHelloOne{"Salutations"})
     	m2 := inject.NewModule()
-    	m2.Bind((*IfaceBeta)(nil)).ToSingletonConstructor(newIfaceBeta)
+    	m2.Bind((*SayHelloToSomeone)(nil)).ToSingletonConstructor(newSayHelloToSomeone)
     	injector, err := inject.NewInjector(m1, m2)
     	if err != nil {
     		return err
     	}
-    	ifaceBetaObj1, err := injector.Get((*IfaceBeta)(nil))
+    	sayHelloToSomeoneObj1, err := injector.Get((*SayHelloToSomeone)(nil))
     	if err != nil {
     		return err
     	}
-    	fmt.Println(ifaceBetaObj1.(IfaceBeta).Greetings()) // will print "Saluatations, Alice1!"
-    	ifaceBetaObj2, err := injector.Get((*IfaceBeta)(nil))
+    	fmt.Println(sayHelloToSomeoneObj1.(SayHelloToSomeone).Greetings()) // will print "Saluatations, Alice1!"
+    	sayHelloToSomeoneObj2, err := injector.Get((*SayHelloToSomeone)(nil))
     	if err != nil {
     		return err
     	}
-    	fmt.Println(ifaceBetaObj2.(IfaceBeta).Greetings()) // will print "Saluatations, Alice1!"
+    	fmt.Println(sayHelloToSomeoneObj2.(SayHelloToSomeone).Greetings()) // will print "Saluatations, Alice1!"
+    	return nil
     }
 
-    func newIfaceBeta(ifaceAlpha IfaceAlpha) (IfaceBeta, error) {
+    func newSayHelloToSomeone(sayHello SayHello) (SayHelloToSomeone, error) {
     	unsafeCounter++
-    	return &IfaceBetaOne{ifaceAlpha, fmt.Sprintf("Alice$d", unsafeCounter)}, nil
+    	return &SayHelloToSomeoneOne{sayHello, fmt.Sprintf("Alice$d", unsafeCounter)}, nil
+    }
+
+Functions be called from an injector using the Call function. These functions
+have the same parameter requirements as constructors, but can have any return
+types.
+
+    func doStuffWithAboveM1(m1 inject.Module) error {
+    	injector, err := inject.NewInjector(m1)
+    	if err != nil {
+    		return err
+    	}
+    	values, err := injector.Call(getStuff)
+    	if err != nil {
+    		return err
+    	}
+    	fmt.Println(values[0) // "Salutations"
+    	fmt.Println(values[1]) // 4
+    	return nil
+    }
+
+    func getStuff(sayHello SayHello) (string, int) {
+    	return sayHello.Hello(), 4
     }
 
     Tags
 
 A tag allows named multiple bindings of one type. As an example, let's consider
-if we want to have multiple ways to say hello:
+if we want to have multiple ways to say hello.
 
     func doStuff() error {
     	module := inject.NewModule()
-    	module.BindTagged("english", (*IfaceAlpha)(nil)).ToSingleton(&IfaceAlphaOne{"Hello"})
-    	module.BindTagged("german", (*IfaceAlpha)(nil)).ToSingleton(&IfaceAlphaOne{"Guten Tag"})
-    	module.BindTagged("austrian", (*IfaceAlpha)(nil)).ToSingleton(&IfaceAlphaOne{"Grüß Gott"})
+    	module.BindTagged("english", (*SayHello)(nil)).ToSingleton(&SayHelloOne{"Hello"})
+    	module.BindTagged("german", (*SayHello)(nil)).ToSingleton(&SayHelloOne{"Guten Tag"})
+    	module.BindTagged("austrian", (*SayHello)(nil)).ToSingleton(&SayHelloOne{"Grüß Gott"})
     	injector, err := inject.NewInjector(module)
     	if err != nil {
     		return err
@@ -156,15 +181,130 @@ if we want to have multiple ways to say hello:
     	_ = printHello("english", injector) // not error checking for the sake of shorter docs
     	_ = printHello("german", injector)
     	_ = printHello("austrian", injector)
+    	return nil
     }
 
     func printHello(tag string, injector inject.Injector) error {
-    	ifaceAlphaObj, err := injector.GetTagged(tag)
+    	sayHelloObj, err := injector.GetTagged(tag)
     	if err != nil {
     		return err
     	}
-    	fmt.Println(ifaceAlphaObj.(IfaceAlpha).Hello())
+    	fmt.Println(sayHelloObj.(SayHello).Hello())
+    	return nil
     }
+
+Structs can also be populated using the tag "inject".
+
+    type PopulateOne struct {
+    	// must be public
+    	English SayHello `inject:"english"`
+    	German SayHello `inject:"german"`
+    	Austrian SayHello `inject:"austrian"`
+    }
+
+    func printAllHellos(aboveInjector inject.Injector) error {
+    	populateOne := &PopulateOne{}
+    	if err := injector.Populate(populateOne); err != nil {
+    		return err
+    	}
+    	fmt.Println(populateOne.English.Hello())
+    	fmt.Println(populateOne.German.Hello())
+    	fmt.Println(populateOne.Austrian.Hello())
+    	return nil
+    }
+
+Constructors can be tagged using structs, either named or anonymous.
+
+    type SayHowdy struct { // not interface, for this example
+    	value string
+    }
+
+    func(s *SayHowdy) Howdy() {
+    	return s.value
+    }
+
+    type PopulateTwo struct {
+    	PopulateOne *PopulateOne
+    	SayHowdy *SayHowdy
+    }
+
+    func doStuff(aboveModule inject.Module) error {
+    	module := inject.NewModule()
+    	module.Bind(&PopulateTwo).ToTaggedConstructor(newPopulateTwo)
+    	injector, err := inject.NewInjector(aboveModule, module)
+    	if err != nil {
+    		return err
+    	}
+    	populateTwo, err := injector.Get(&PopulateTwo{})
+    	if err != nil {
+    		return err
+    	}
+    	fmt.Printf("%+v\n", populateTwo)
+    	return nil
+    }
+
+    func newPopulateTwo(populateOne *PopulateOne) (*PopulateTwo, error) {
+    	return &PopulateTwo{
+    		PopulateOne, populateOne,
+    		SayHowdy: &SayHowdy{"howdy"},
+    	}, nil
+    }
+
+    // an anonymous struct can also be used in a constructor.
+    func newPopulateTwoAnonymous(str struct {
+    	// must be public
+    	English SayHello `inject:"english"`
+    	German SayHello `inject:"german"`
+    	Austrian SayHello `inject:"austrian"`
+    }) (*PopulateTwo, error) {
+    	return &PopulateTwo{
+    		PopulateOne: &PopulateOne{
+    			English: str.English,
+    			German: str.German,
+    			Austrian: str.Austrian,
+    		},
+    		SayHowdy: &SayHowdy{"howdy"},
+    	}, nil
+    }
+
+A constructor can mix tagged values with untagged values in the input struct.
+
+    func doStuff(aboveModuleAgain injector.Module) error {
+    	aboveModuleAgain.Bind(&SayHowdy{}).ToSingleton(&SayHowdy{"howdy"})
+    	aboveModuleAgain.Bind(&PopulateTwo).ToTaggedConstructor(newPopulateTwo)
+    	injector, err := inject.NewInjector(aboveModuleAgain)
+    	if err != nil {
+    		return err
+    	}
+    	populateTwo, err := injector.Get(&PopulateTwo{})
+    	if err != nil {
+    		return err
+    	}
+    	fmt.Printf("%+v\n", populateTwo)
+    	return nil
+    }
+
+    func newPopulateTwo(str struct {
+    	English SayHello `inject:"english"`
+    	German SayHello `inject:"german"`
+    	Austrian SayHello `inject:"austrian"`
+    	SayHowdy SayHowdy
+    }) (*PopulateTwo, error) {
+    	return &PopulateTwo{
+    		PopulateOne: &PopulateOne{
+    			English: str.English,
+    			German: str.German,
+    			Austrian: str.Austrian,
+    		},
+    		SayHowdy: str.SayHowdy,
+    	}, nil
+    }
+
+The CallTagged function works similarly to Call, except can take parameters like
+a tagged constructor.
+
+Both Module and Injector implement fmt.Stringer for inspection, however this may
+be added to in the future to allow semantic inspection of bindings.
 
 ## Usage
 

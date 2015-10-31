@@ -676,6 +676,13 @@ func getSecondInterfaceTaggedNoTags(str struct {
 	return &SecondPtrStruct{str.S, str.B}, "hello", nil
 }
 
+func getSecondInterfaceTaggedNoTagsAndError(str struct {
+	S SimpleInterface
+	B BarInterface
+}) (SecondInterface, string, error) {
+	return &SecondPtrStruct{str.S, str.B}, "hello", errors.New("an error")
+}
+
 func TestCallAndCallTaggedSimple(t *testing.T) {
 	module := NewModule()
 	module.BindTagged("tagOne", (*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"hello"})
@@ -720,6 +727,15 @@ func TestCallAndCallTaggedSimple(t *testing.T) {
 	require.Equal(t, SecondPtrStruct{SimpleStruct{"another"}, BarStruct{2}}, *secondPtrStruct)
 	require.Equal(t, "hello", str)
 	require.Nil(t, values[2])
+
+	values, err = injector.CallTagged(getSecondInterfaceTaggedNoTagsAndError)
+	require.NoError(t, err)
+	secondPtrStruct = values[0].(*SecondPtrStruct)
+	str = values[1].(string)
+	require.Equal(t, SecondPtrStruct{SimpleStruct{"another"}, BarStruct{2}}, *secondPtrStruct)
+	require.Equal(t, "hello", str)
+	err = values[2].(error)
+	require.Equal(t, errors.New("an error"), err)
 }
 
 // ***** Populate tests *****
