@@ -12,22 +12,20 @@ type injector struct {
 }
 
 func newInjector(modules []Module) (Injector, error) {
-	injector := injector{make(map[bindingKey]resolvedBinding)}
+	injector := &injector{make(map[bindingKey]resolvedBinding)}
 	for _, m := range modules {
 		castModule, ok := m.(*module)
 		if !ok {
 			return nil, errCannotCastModule
 		}
-		err := installModuleToInjector(&injector, castModule)
-		if err != nil {
+		if err := installModuleToInjector(injector, castModule); err != nil {
 			return nil, err
 		}
 	}
-	err := validate(&injector)
-	if err != nil {
+	if err := validate(injector); err != nil {
 		return nil, err
 	}
-	return &injector, nil
+	return injector, nil
 }
 
 func installModuleToInjector(injector *injector, module *module) error {
@@ -54,8 +52,7 @@ func installModuleToInjector(injector *injector, module *module) error {
 
 func validate(injector *injector) error {
 	for _, resolvedBinding := range injector.bindings {
-		err := resolvedBinding.validate()
-		if err != nil {
+		if err := resolvedBinding.validate(); err != nil {
 			return err
 		}
 	}
@@ -218,13 +215,11 @@ func (i *injector) getTaggedConstant(tag string, constantKind constantKind) (int
 
 func (i *injector) Call(function interface{}) ([]interface{}, error) {
 	funcReflectType := reflect.TypeOf(function)
-	err := verifyIsFunc(funcReflectType)
-	if err != nil {
+	if err := verifyIsFunc(funcReflectType); err != nil {
 		return nil, err
 	}
 	bindingKeys := getParameterBindingKeysForFunc(funcReflectType)
-	err = i.validateBindingKeys(bindingKeys)
-	if err != nil {
+	if err := i.validateBindingKeys(bindingKeys); err != nil {
 		return nil, err
 	}
 	reflectValues, err := i.getReflectValues(bindingKeys)
@@ -237,13 +232,11 @@ func (i *injector) Call(function interface{}) ([]interface{}, error) {
 
 func (i *injector) CallTagged(taggedFunction interface{}) ([]interface{}, error) {
 	taggedFuncReflectType := reflect.TypeOf(taggedFunction)
-	err := verifyIsTaggedFunc(taggedFuncReflectType)
-	if err != nil {
+	if err := verifyIsTaggedFunc(taggedFuncReflectType); err != nil {
 		return nil, err
 	}
 	bindingKeys := getParameterBindingKeysForTaggedFunc(taggedFuncReflectType)
-	err = i.validateBindingKeys(bindingKeys)
-	if err != nil {
+	if err := i.validateBindingKeys(bindingKeys); err != nil {
 		return nil, err
 	}
 	reflectValues, err := i.getReflectValues(bindingKeys)
@@ -258,18 +251,15 @@ func (i *injector) CallTagged(taggedFunction interface{}) ([]interface{}, error)
 
 func (i *injector) Populate(populateStructPtr interface{}) error {
 	populateStructPtrReflectType := reflect.TypeOf(populateStructPtr)
-	err := verifyIsStructPtr(populateStructPtrReflectType)
-	if err != nil {
+	if err := verifyIsStructPtr(populateStructPtrReflectType); err != nil {
 		return err
 	}
 	populateStructValue := reflect.Indirect(reflect.ValueOf(populateStructPtr))
-	err = verifyStructCanBePopulated(populateStructValue.Type())
-	if err != nil {
+	if err := verifyStructCanBePopulated(populateStructValue.Type()); err != nil {
 		return err
 	}
 	bindingKeys := getStructFieldBindingKeys(populateStructValue.Type())
-	err = i.validateBindingKeys(bindingKeys)
-	if err != nil {
+	if err := i.validateBindingKeys(bindingKeys); err != nil {
 		return err
 	}
 	reflectValues, err := i.getReflectValues(bindingKeys)
@@ -311,8 +301,7 @@ func (i *injector) getReflectValues(bindingKeys []bindingKey) ([]reflect.Value, 
 
 func (i *injector) validateBindingKeys(bindingKeys []bindingKey) error {
 	for _, bindingKey := range bindingKeys {
-		_, err := i.getBinding(bindingKey)
-		if err != nil {
+		if _, err := i.getBinding(bindingKey); err != nil {
 			return err
 		}
 	}

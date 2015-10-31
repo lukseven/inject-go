@@ -64,8 +64,7 @@ func verifyIsFunc(funcReflectType reflect.Type) error {
 		if isInterface(parameterReflectType) {
 			parameterReflectType = reflect.PtrTo(parameterReflectType)
 		}
-		err := verifyParameterCanBeInjected(parameterReflectType, "")
-		if err != nil {
+		if err := verifyParameterCanBeInjected(parameterReflectType, ""); err != nil {
 			return err
 		}
 	}
@@ -86,19 +85,14 @@ func verifyIsTaggedFunc(funcReflectType reflect.Type) error {
 	if inReflectType.Name() != "" {
 		return errTaggedParametersInvalid.withTag("funcReflectType", funcReflectType)
 	}
-	err := verifyStructCanBePopulated(inReflectType)
-	if err != nil {
-		return err
-	}
-	return nil
+	return verifyStructCanBePopulated(inReflectType)
 }
 
 func verifyStructCanBePopulated(structReflectType reflect.Type) error {
 	numFields := structReflectType.NumField()
 	for i := 0; i < numFields; i++ {
 		structFieldReflectType, tag := getStructFieldReflectTypeAndTag(structReflectType.Field(i))
-		err := verifyParameterCanBeInjected(structFieldReflectType, tag)
-		if err != nil {
+		if err := verifyParameterCanBeInjected(structFieldReflectType, tag); err != nil {
 			return err
 		}
 	}

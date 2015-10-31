@@ -184,6 +184,7 @@ func (m *module) verifyTag(tag string) bool {
 func (m *module) verifySupportedTypes(froms []interface{}, isSupportedFunc func(reflect.Type) bool) bool {
 	ok := true
 	for _, from := range froms {
+		// adds an error, so want to loop all the way through
 		if !m.verifySupportedType(reflect.TypeOf(from), isSupportedFunc) {
 			ok = false
 		}

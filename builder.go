@@ -62,8 +62,7 @@ func (b *baseBuilder) ToTaggedSingletonConstructor(constructor interface{}) {
 func (b *baseBuilder) to(object interface{}, verifyFunc func(reflect.Type, reflect.Type) error, newBindingFunc func(interface{}) binding) {
 	objectReflectType := reflect.TypeOf(object)
 	for _, bindingKey := range b.bindingKeys {
-		err := verifyFunc(bindingKey.reflectType(), objectReflectType)
-		if err != nil {
+		if err := verifyFunc(bindingKey.reflectType(), objectReflectType); err != nil {
 			b.module.addBindingError(err)
 			return
 		}
@@ -92,35 +91,24 @@ func verifyBindingReflectType(bindingKeyReflectType reflect.Type, bindingReflect
 }
 
 func verifyConstructorReflectType(bindingKeyReflectType reflect.Type, constructorReflectType reflect.Type) error {
-	err := verifyIsFunc(constructorReflectType)
-	if err != nil {
+	if err := verifyIsFunc(constructorReflectType); err != nil {
 		return err
 	}
-	err = verifyConstructorReturnValues(bindingKeyReflectType, constructorReflectType)
-	if err != nil {
-		return err
-	}
-	return nil
+	return verifyConstructorReturnValues(bindingKeyReflectType, constructorReflectType)
 }
 
 func verifyTaggedConstructorReflectType(bindingKeyReflectType reflect.Type, constructorReflectType reflect.Type) error {
-	err := verifyIsTaggedFunc(constructorReflectType)
-	if err != nil {
+	if err := verifyIsTaggedFunc(constructorReflectType); err != nil {
 		return err
 	}
-	err = verifyConstructorReturnValues(bindingKeyReflectType, constructorReflectType)
-	if err != nil {
-		return err
-	}
-	return nil
+	return verifyConstructorReturnValues(bindingKeyReflectType, constructorReflectType)
 }
 
 func verifyConstructorReturnValues(bindingKeyReflectType reflect.Type, constructorReflectType reflect.Type) error {
 	if constructorReflectType.NumOut() != 2 {
 		return errConstructorReturnValuesInvalid.withTag("constructorReflectType", constructorReflectType)
 	}
-	err := verifyBindingReflectType(bindingKeyReflectType, constructorReflectType.Out(0))
-	if err != nil {
+	if err := verifyBindingReflectType(bindingKeyReflectType, constructorReflectType.Out(0)); err != nil {
 		return err
 	}
 	if !constructorReflectType.Out(1).AssignableTo(errorReflectType) {
