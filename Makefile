@@ -1,4 +1,4 @@
-all: test
+all: doc test
 
 deps:
 	go get -d -v ./...
@@ -29,12 +29,7 @@ errcheck: testdeps
 pretest: lint vet errcheck
 
 test: testdeps pretest
-	go test -test.v ./...
-
-cov: testdeps
-	go get -v github.com/axw/gocov/gocov
-	go get golang.org/x/tools/cmd/cover
-	gocov test | gocov report
+	go test ./...
 
 doc:
 	go get -v github.com/robertkrimen/godocdown/godocdown
