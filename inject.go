@@ -61,6 +61,8 @@ We are able to get a value for SayHello.
 		return nil
 	}
 
+See the Injector interface for other methods.
+
 
 	Constructor
 
@@ -156,6 +158,8 @@ requirements as constructors, but can have any return types.
 	func getStuff(sayHello SayHello) (string, int) {
 		return sayHello.Hello(), 4
 	}
+
+See the methods on Module and Constructor for more details.
 
 
 	Tags

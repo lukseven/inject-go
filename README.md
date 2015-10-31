@@ -67,6 +67,8 @@ We are able to get a value for SayHello.
     	return nil
     }
 
+See the Injector interface for other methods.
+
     Constructor
 
 A constructor is a function that takes injected values as parameters, and
@@ -163,6 +165,8 @@ types.
     func getStuff(sayHello SayHello) (string, int) {
     	return sayHello.Hello(), 4
     }
+
+See the methods on Module and Constructor for more details.
 
     Tags
 
