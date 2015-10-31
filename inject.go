@@ -1,5 +1,105 @@
 /*
 Package inject is guice-inspired dependency injection for Go.
+
+https://github.com/google/guice/wiki/Motivation
+
+
+Concepts:
+
+
+	Module
+
+A Module is analogous to Guice's AbstractModule, used for setting up your dependencies.
+This allows you to bind structs, struct pointers, interfaces, and primitives to
+singletons, constructors, with or withot tags.
+
+An interface can have a binding to another type, or to a singleton or constructor.
+
+	type IfaceAlpha interface {
+		Hello() string
+	}
+
+	type IfaceAlphaOne struct {
+		value string
+	}
+
+	func (i *IfaceAlphaOne) Hello() string {
+		return i.value
+	}
+
+	module := inject.NewModule()
+	module.Bind((*IfaceAlpha)(nil)).To(&IfaceAlphaOne{}) // valid, but must provide a binding to *IfaceAlphaOne.
+	module.Bind(&IfaceAlphaOne{}).ToSingleton(&IfaceAlphaOne{"Salutations"}) // there we go
+
+An interface can also be bound to a singleton or constructor.
+
+	module.Bind((*IfaceAlpha)(nil)).ToSingleton(&IfaceAlphaOne{"Salutations"})
+
+A struct, struct pointer, or primitive must have a direct binding to a singleton or constructor.
+
+
+	Injector
+
+An Injector is analogous to Guice's Injector, providing your dependencies.
+
+Given the binding:
+
+	module.Bind((*IfaceAlpha)(nil)).ToSingleton(&IfaceAlphaOne{"Salutations"})
+
+We are able to get a value for IfaceAlpha:
+
+	func printHello(aboveModule inject.Module) error {
+		injector, err := inject.NewInjector(aboveModule)
+		if err != nil {
+			return err
+		}
+		ifaceAlphaObj, err := injector.Get((*IfaceAlpha)(nil))
+		if err != nil {
+			return err
+		}
+		fmt.Println(ifaceAlphaObj.(IfaceAlpha).Hello()) // will print "Salutations"
+	}
+
+
+	Constructor
+
+A constructor is a function that takes injected values as parameters, and returns a value and an error.
+
+	type IfaceBeta interface {
+		Greetings() string
+	}
+
+	type IfaceBetaOne struct {
+		ifaceAlpha IFaceAlpha
+		person string
+	}
+
+	func (i *IfaceBetaOne) Greetings() string {
+		return fmt.Sprintf("%s, %s!", i.ifaceAlpha.Hello(), i.person)
+	}
+
+We can set up a constructor to take zero values, or values that require a binding in some module
+passed to NewInjector().
+
+	func doStuff() error {
+		m1 := inject.NewModule()
+		m1.Bind((*IfaceAlpha)(nil)).ToSingleton(&IfaceAlphaOne{"Salutations"})
+		m2 := inject.NewModule()
+		m2.Bind((*IfaceBeta)(nil)).ToConstructor(newIfaceBeta)
+		injector, err := inject.NewInjector(m1, m2)
+		if err != nil {
+			return err
+		}
+		ifaceBetaObj, err := injector.Get((*IfaceBeta)(nil))
+		if err != nil {
+			return err
+		}
+		fmt.Println(ifaceBetaObj.(IfaceBeta).Greetings()) // will print "Saluatations, Alice!"
+	}
+
+	func newIfaceBetaOne(ifaceAlpha IfaceAlpha) (IfaceBeta, error) {
+		return &IfaceBetaOne{ifaceAlpha, "Alice}, nil
+	}
 */
 package inject // import "go.pedge.io/inject"
 
@@ -7,6 +107,7 @@ import (
 	"fmt"
 )
 
+// Module sets up your dependencies.
 type Module interface {
 	fmt.Stringer
 	Bind(from ...interface{}) Builder
@@ -31,8 +132,10 @@ type Module interface {
 	BindTaggedString(tag string) Builder
 }
 
+// NewModule creates a new Module.
 func NewModule() Module { return newModule() }
 
+// Builder is the return value from a Bind call from a Module.
 type Builder interface {
 	ToSingleton(singleton interface{})
 	ToConstructor(constructor interface{})
@@ -41,11 +144,13 @@ type Builder interface {
 	ToTaggedSingletonConstructor(constructor interface{})
 }
 
+// InterfaceBuilder is the return value when binding an interface from a Module.
 type InterfaceBuilder interface {
 	Builder
 	To(to interface{})
 }
 
+// Injector provides your dependencies.
 type Injector interface {
 	fmt.Stringer
 	Get(from interface{}) (interface{}, error)
@@ -71,4 +176,5 @@ type Injector interface {
 	Populate(populateStruct interface{}) error
 }
 
+// NewInjector creates a new Injector for the specified Modules.
 func NewInjector(modules ...Module) (Injector, error) { return newInjector(modules) }
