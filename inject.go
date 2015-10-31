@@ -28,7 +28,7 @@ An interface can have a binding to another type, or to a singleton or constructo
 	}
 
 	module := inject.NewModule()
-	module.Bind((*IfaceAlpha)(nil)).To(&IfaceAlphaOne{}) // valid, but must provide a binding to *IfaceAlphaOne.
+	module.BindInterface((*IfaceAlpha)(nil)).To(&IfaceAlphaOne{}) // valid, but must provide a binding to *IfaceAlphaOne.
 	module.Bind(&IfaceAlphaOne{}).ToSingleton(&IfaceAlphaOne{"Salutations"}) // there we go
 
 An interface can also be bound to a singleton or constructor.
@@ -97,8 +97,67 @@ passed to NewInjector().
 		fmt.Println(ifaceBetaObj.(IfaceBeta).Greetings()) // will print "Saluatations, Alice!"
 	}
 
-	func newIfaceBetaOne(ifaceAlpha IfaceAlpha) (IfaceBeta, error) {
-		return &IfaceBetaOne{ifaceAlpha, "Alice}, nil
+	func newIfaceBeta(ifaceAlpha IfaceAlpha) (IfaceBeta, error) {
+		return &IfaceBetaOne{ifaceAlpha, "Alice"}, nil
+	}
+
+A singleton constructor will be called exactly once for the entire application.
+
+	var (
+		unsafeCounter := 0
+	)
+
+	func doStuff() error {
+		m1 := inject.NewModule()
+		m1.Bind((*IfaceAlpha)(nil)).ToSingleton(&IfaceAlphaOne{"Salutations"})
+		m2 := inject.NewModule()
+		m2.Bind((*IfaceBeta)(nil)).ToSingletonConstructor(newIfaceBeta)
+		injector, err := inject.NewInjector(m1, m2)
+		if err != nil {
+			return err
+		}
+		ifaceBetaObj1, err := injector.Get((*IfaceBeta)(nil))
+		if err != nil {
+			return err
+		}
+		fmt.Println(ifaceBetaObj1.(IfaceBeta).Greetings()) // will print "Saluatations, Alice1!"
+		ifaceBetaObj2, err := injector.Get((*IfaceBeta)(nil))
+		if err != nil {
+			return err
+		}
+		fmt.Println(ifaceBetaObj2.(IfaceBeta).Greetings()) // will print "Saluatations, Alice1!"
+	}
+
+	func newIfaceBeta(ifaceAlpha IfaceAlpha) (IfaceBeta, error) {
+		unsafeCounter++
+		return &IfaceBetaOne{ifaceAlpha, fmt.Sprintf("Alice$d", unsafeCounter)}, nil
+	}
+
+	Tags
+
+A tag allows named multiple bindings of one type. As an example, let's consider if we want to
+have multiple ways to say hello:
+
+	func doStuff() error {
+		module := inject.NewModule()
+		module.BindTagged("english", (*IfaceAlpha)(nil)).ToSingleton(&IfaceAlphaOne{"Hello"})
+		module.BindTagged("german", (*IfaceAlpha)(nil)).ToSingleton(&IfaceAlphaOne{"Guten Tag"})
+		module.BindTagged("austrian", (*IfaceAlpha)(nil)).ToSingleton(&IfaceAlphaOne{"Grüß Gott"})
+		injector, err := inject.NewInjector(module)
+		if err != nil {
+			return err
+		}
+		_ = printHello("english", injector) // not error checking for the sake of shorter docs
+		_ = printHello("german", injector)
+		_ = printHello("austrian", injector)
+	}
+
+	func printHello(tag string, injector inject.Injector) error {
+		ifaceAlphaObj, err := injector.GetTagged(tag)
+		if err != nil {
+			return err
+		}
+		fmt.Println(ifaceAlphaObj.(IfaceAlpha).Hello())
 	}
 */
 package inject // import "go.pedge.io/inject"
