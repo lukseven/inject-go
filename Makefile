@@ -1,4 +1,4 @@
-all: doc test
+all: test
 
 deps:
 	go get -d -v ./...
@@ -31,11 +31,6 @@ pretest: lint vet errcheck
 test: testdeps pretest
 	go test ./...
 
-doc:
-	go get -v github.com/robertkrimen/godocdown/godocdown
-	rm -f README.md
-	godocdown go.pedge.io/inject > README.md
-
 clean:
 	go clean ./...
 
@@ -51,5 +46,4 @@ clean:
 	errcheck \
 	pretest \
 	test \
-	doc \
 	clean
