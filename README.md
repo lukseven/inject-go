@@ -10,7 +10,7 @@ Package inject is guice-inspired dependency injection for Go.
 
 https://github.com/google/guice/wiki/Motivation
 
-This project is in no way affiliated with the Guice, but I recommend reading
+This project is in no way affiliated with the Guice project, but I recommend reading
 their docs to get the concepts.
 
 ### Concepts
