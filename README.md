@@ -11,7 +11,7 @@ Package inject is guice-inspired dependency injection for Go.
 https://github.com/google/guice/wiki/Motivation
 
 This project is in no way affiliated with the Guice project, but I recommend reading
-their docs to get the concepts.
+their docs to better understand the concepts.
 
 ### Concepts
 
@@ -60,7 +60,7 @@ func NewModule() Module { return newModule() }
 
 A Module is analogous to Guice's AbstractModule, used for setting up your
 dependencies. This allows you to bind structs, struct pointers, interfaces, and
-primitives to singletons, constructors, with or withot tags.
+primitives to singletons, constructors, with or without tags.
 
 An interface can have a binding to another type, or to a singleton or
 constructor.
@@ -91,6 +91,8 @@ module.Bind((*SayHello)(nil)).ToSingleton(&SayHelloOne{"Salutations"})
 
 A struct, struct pointer, or primitive must have a direct binding to a singleton
 or constructor.
+
+All errors from binding will be returned as one error when calling inject.NewInjector(...).
 
 ##### Injector
 
