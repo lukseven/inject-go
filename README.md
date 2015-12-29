@@ -1,7 +1,7 @@
-[![CircleCI](https://circleci.com/gh/peter-edge/go-inject/tree/master.png)](https://circleci.com/gh/peter-edge/go-inject/tree/master)
-[![Go Report Card](http://goreportcard.com/badge/peter-edge/go-inject)](http://goreportcard.com/report/peter-edge/go-inject)
+[![CircleCI](https://circleci.com/gh/peter-edge/inject-go/tree/master.png)](https://circleci.com/gh/peter-edge/inject-go/tree/master)
+[![Go Report Card](http://goreportcard.com/badge/peter-edge/inject-go)](http://goreportcard.com/report/peter-edge/inject-go)
 [![GoDoc](http://img.shields.io/badge/GoDoc-Reference-blue.svg)](https://godoc.org/go.pedge.io/inject)
-[![MIT License](http://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/peter-edge/go-inject/blob/master/LICENSE)
+[![MIT License](http://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/peter-edge/inject-go/blob/master/LICENSE)
 
 ```go
 import "go.pedge.io/inject"
