@@ -413,7 +413,7 @@ be added to in the future to allow semantic inspection of bindings.
 
 For testing, production modules may be overridden with test bindings as follows:
 
-```
+```go
 	module := createProductionModule()
 
 	override := NewModule()
