@@ -414,10 +414,10 @@ be added to in the future to allow semantic inspection of bindings.
 For testing, production modules may be overridden with test bindings as follows:
 
 ```go
-	module := createProductionModule()
+module := createProductionModule()
 
-	override := NewModule()
-	override.Bind((*ExternalService)(nil)).ToSingleton(createMockExternalService())
+override := NewModule()
+override.Bind((*ExternalService)(nil)).ToSingleton(createMockExternalService())
 
-	injector, err := NewInjector(Override(module).With(override))
+injector, err := NewInjector(Override(module).With(override))
 ```
