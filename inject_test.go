@@ -847,3 +847,72 @@ func TestBindTaggedConstantPopulate(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeNotSupportedYet)
 }
+
+func TestOverride(t *testing.T) {
+	module := NewModule()
+	module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+	module.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
+	module.Bind((*SecondInterface)(nil)).ToConstructor(createSecondInterface)
+
+	override1 := NewModule()
+	override1.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"yo, yo!"})
+
+	override2 := NewModule()
+	override2.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{3})
+
+	injector, err := NewInjector(Override(module).With(override1, override2))
+	require.NoError(t, err)
+	object, err := injector.Get((*SecondInterface)(nil))
+	require.NoError(t, err)
+	secondInterface := object.(SecondInterface)
+	require.Equal(t, "yo, yo!", secondInterface.Foo().Foo())
+	require.Equal(t, 3, secondInterface.Bar().Bar())
+}
+
+func TestOverrideErrorsInSource(t *testing.T) {
+	module := NewModule()
+	module.Bind((*SimpleInterface)(nil)).ToSingleton(SimplePtrStruct{"hello"})
+	module.Bind((*BarInterface)(nil)).ToSingleton(BarPtrStruct{1})
+
+	override := NewModule()
+	override.Bind((*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"hello"})
+	override.Bind((*BarInterface)(nil)).ToSingleton(BarStruct{1})
+
+	_, err := NewInjector(Override(module).With(override))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "1:inject:")
+	require.Contains(t, err.Error(), "2:inject:")
+	require.Contains(t, err.Error(), injectErrorTypeNotAssignable)
+}
+
+func TestOverrideErrorsInOverride(t *testing.T) {
+	module := NewModule()
+	module.Bind((*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"hello"})
+	module.Bind((*BarInterface)(nil)).ToSingleton(BarStruct{1})
+
+	override := NewModule()
+	override.Bind((*SimpleInterface)(nil)).ToSingleton(SimplePtrStruct{"hello"})
+	override.Bind((*BarInterface)(nil)).ToSingleton(BarPtrStruct{1})
+
+	_, err := NewInjector(Override(module).With(override))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "1:inject:")
+	require.Contains(t, err.Error(), "2:inject:")
+	require.Contains(t, err.Error(), injectErrorTypeNotAssignable)
+}
+
+func TestOverrideErrorsInBoth(t *testing.T) {
+	module := NewModule()
+	module.Bind((*SimpleInterface)(nil)).ToSingleton(SimpleStruct{"hello"})
+	module.Bind((*BarInterface)(nil)).ToSingleton(BarPtrStruct{1})
+
+	override := NewModule()
+	override.Bind((*BarInterface)(nil)).ToSingleton(BarStruct{1})
+	override.Bind((*SimpleInterface)(nil)).ToSingleton(SimplePtrStruct{"hello"})
+
+	_, err := NewInjector(Override(module).With(override))
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "1:inject:")
+	require.Contains(t, err.Error(), "2:inject:")
+	require.Contains(t, err.Error(), injectErrorTypeNotAssignable)
+}

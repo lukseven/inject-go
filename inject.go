@@ -307,6 +307,16 @@ The CallTagged function works similarly to Call, except can take parameters like
 
 Both Module and Injector implement fmt.Stringer for inspection, however this may be added to in the future
 to allow semantic inspection of bindings.
+
+For testing, production modules may be overridden with test bindings as follows:
+
+	module := createProductionModule()
+
+	override := NewModule()
+	override.Bind((*ExternalService)(nil)).ToSingleton(createMockExternalService())
+
+	injector, err := NewInjector(Override(module).With(override))
+
 */
 package inject // import "go.pedge.io/inject"
 
