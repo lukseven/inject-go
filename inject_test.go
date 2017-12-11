@@ -916,3 +916,88 @@ func TestOverrideErrorsInBoth(t *testing.T) {
 	require.Contains(t, err.Error(), "2:inject:")
 	require.Contains(t, err.Error(), injectErrorTypeNotAssignable)
 }
+
+func TestInstall(t *testing.T) {
+	sub1 := NewModule()
+	sub1.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
+
+	sub2 := NewModule()
+	sub2.Bind((*SecondInterface)(nil)).ToConstructor(createSecondInterface)
+
+	module := NewModule()
+	module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+	module.Install(sub1)
+	module.Install(sub2)
+
+	injector, err := NewInjector(module)
+	require.NoError(t, err)
+	object, err := injector.Get((*SecondInterface)(nil))
+	require.NoError(t, err)
+	secondInterface := object.(SecondInterface)
+	require.Equal(t, "hello", secondInterface.Foo().Foo())
+	require.Equal(t, 1, secondInterface.Bar().Bar())
+}
+
+func TestInstallDuplicateBinding(t *testing.T) {
+	sub1 := NewModule()
+	sub1.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"}) // duplicate binding
+
+	module := NewModule()
+	module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+
+	module.Install(sub1)
+
+	_, err := NewInjector(module)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "1:inject:")
+	require.Contains(t, err.Error(), injectErrorTypeAlreadyBound)
+}
+
+func TestInstallErrorsInSource(t *testing.T) {
+	sub1 := NewModule()
+	sub1.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
+	sub1.Bind((*SecondInterface)(nil)).ToConstructor(createSecondInterface)
+
+	module := NewModule()
+	module.Bind((*SimpleInterface)(nil)).ToSingleton(SimplePtrStruct{"hello"}) // invalid binding
+
+	module.Install(sub1)
+
+	_, err := NewInjector(module)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "1:inject:")
+	require.Contains(t, err.Error(), injectErrorTypeNotAssignable)
+}
+
+func TestInstallErrorsInTarget(t *testing.T) {
+	sub := NewModule()
+	sub.Bind((*BarInterface)(nil)).ToSingleton(BarPtrStruct{1}) // invalid binding
+	sub.Bind((*SecondInterface)(nil)).ToConstructor(createSecondInterface)
+
+	module := NewModule()
+	module.Bind((*SimpleInterface)(nil)).ToSingleton(&SimplePtrStruct{"hello"})
+
+	module.Install(sub)
+
+	_, err := NewInjector(module)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "1:inject:")
+	require.Contains(t, err.Error(), injectErrorTypeNotAssignable)
+}
+
+func TestInstallErrorsInBoth(t *testing.T) {
+	sub := NewModule()
+	sub.Bind((*BarInterface)(nil)).ToSingleton(BarPtrStruct{1}) // invalid binding
+	sub.Bind((*SecondInterface)(nil)).ToConstructor(createSecondInterface)
+
+	module := NewModule()
+	module.Bind((*SimpleInterface)(nil)).ToSingleton(SimplePtrStruct{"hello"}) // invalid binding
+
+	module.Install(sub)
+
+	_, err := NewInjector(module)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "1:inject:")
+	require.Contains(t, err.Error(), "2:inject:")
+	require.Contains(t, err.Error(), injectErrorTypeNotAssignable)
+}

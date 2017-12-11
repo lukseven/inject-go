@@ -41,6 +41,7 @@ type Module interface {
 	BindTaggedComplex64(tag string) Builder
 	BindTaggedComplex128(tag string) Builder
 	BindTaggedString(tag string) Builder
+	Install(others ...Module)
 }
 
 type Builder interface {

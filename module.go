@@ -145,6 +145,18 @@ func (m *module) String() string {
 	return fmt.Sprintf("module{%s}", strings.Join(m.keyValueStrings(), " "))
 }
 
+func (m *module) Install(others ...Module) {
+	for _, mod := range others {
+		m.install(mod.(*module))
+	}
+}
+func (m *module) install(o *module) {
+	m.bindingErrors = append(m.bindingErrors, o.bindingErrors...)
+	for key, value := range o.bindings {
+		m.setBinding(key, value)
+	}
+}
+
 func (m *module) keyValueStrings() []string {
 	strings := make([]string, len(m.bindings))
 	i := 0
