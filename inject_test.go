@@ -27,12 +27,20 @@ func (s SimpleStruct) Foo() string {
 	return s.foo
 }
 
+func createSimpleInterface() (SimpleInterface, error) {
+	return &SimpleStruct{foo: "default"}, nil
+}
+
 type SimplePtrStruct struct {
 	foo string
 }
 
 func (s *SimplePtrStruct) Foo() string {
 	return s.foo
+}
+
+func createSimplePtrInterface() (SimpleInterface, error) {
+	return &SimplePtrStruct{foo: "default"}, nil
 }
 
 func TestSimpleStructSingletonDirect(t *testing.T) {
@@ -1000,4 +1008,56 @@ func TestInstallErrorsInBoth(t *testing.T) {
 	require.Contains(t, err.Error(), "1:inject:")
 	require.Contains(t, err.Error(), "2:inject:")
 	require.Contains(t, err.Error(), injectErrorTypeNotAssignable)
+}
+
+func callWithSecondInterface(s SecondInterface) SecondInterface {
+	return s
+}
+
+func TestBindConstructor(t *testing.T) {
+	tests := []struct {
+		name        string
+		constructor interface{}
+		singleton   bool
+	}{
+		{"BindAutoWithSimple", createSimpleInterface, false},
+		{"BindAutoSingletonWithSimple", createSimpleInterface, true},
+		{"BindAutoWithSimplePrt", createSimplePtrInterface, false},
+		{"BindAutoSingletonWithSimplePtr", createSimplePtrInterface, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			doBindConstructor(t, tt.constructor, tt.singleton)
+		})
+	}
+}
+
+func doBindConstructor(t *testing.T, constructor interface{}, singleton bool) {
+	module := NewModule()
+	if singleton {
+		module.BindSingletonConstructor(constructor)
+	} else {
+		module.BindConstructor(constructor)
+	}
+	module.Bind((*BarInterface)(nil)).ToSingleton(&BarPtrStruct{1})
+	module.BindConstructor(createSecondInterface)
+
+	injector, err := NewInjector(module)
+	require.NoError(t, err)
+
+	res, err := injector.Call(callWithSecondInterface)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(res))
+	require.NotNil(t, res[0])
+	secondInterfaceFromCall, ok := res[0].(SecondInterface)
+	require.True(t, ok)
+
+	object, err := injector.Get((*SecondInterface)(nil))
+	require.NoError(t, err)
+	secondInterface := object.(SecondInterface)
+	require.Equal(t, "default", secondInterface.Foo().Foo())
+	require.Equal(t, 1, secondInterface.Bar().Bar())
+
+	require.Exactly(t, object, res[0])
+	require.Equal(t, singleton, secondInterface.Foo() == secondInterfaceFromCall.Foo())
 }

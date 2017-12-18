@@ -142,7 +142,18 @@ A singleton constructor will be called exactly once for the entire application.
 		return &SayHelloToSomeoneOne{sayHello, fmt.Sprintf("Alice%d", unsafeCounter)}, nil
 	}
 
-Functions be called from an injector using the Call function. These functions have the same parameter
+The simplest way of binding an interface to a constructor function is to use
+the `BindConstructor` or `BindSingletonConstructor` methods. They automatically
+determine the interface type that is bound to the constructor from the
+constructor's return value. The following examples are equivalent to the more
+verbose ones above:
+
+	func newSayHello(...) (SayHello, error) { ... }
+
+	module.BindSingletonConstructor(newSayHello)
+	module.BindConstructor(newSayHello)
+
+Functions can be called from an injector using the Call function. These functions have the same parameter
 requirements as constructors, but can have any return types.
 
 	func doStuffWithAboveM1(m1 inject.Module) error {
@@ -330,6 +341,8 @@ import (
 // to make sure multiple goroutines are not calling a single module.
 type Module interface {
 	fmt.Stringer
+	BindConstructor(fns ...interface{})
+	BindSingletonConstructor(fns ...interface{})
 	Bind(from ...interface{}) Builder
 	BindTagged(tag string, from ...interface{}) Builder
 	BindInterface(fromInterface ...interface{}) InterfaceBuilder

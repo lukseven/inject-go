@@ -21,6 +21,8 @@ their docs to better understand the concepts.
 ```go
 type Module interface {
 	fmt.Stringer
+	BindConstructor(fns ...interface{})
+	BindSingletonConstructor(fns ...interface{})
 	Bind(from ...interface{}) Builder
 	BindTagged(tag string, from ...interface{}) Builder
 	BindInterface(fromInterface ...interface{}) InterfaceBuilder
@@ -72,6 +74,10 @@ type SayHello interface {
 	Hello() string
 }
 
+func newSayHello() SayHello {
+    return &SayHelloOne{"Salutations"}
+}
+
 type SayHelloOne struct {
 	value string
 }
@@ -89,6 +95,22 @@ An interface can also be bound to a singleton or constructor.
 
 ```go
 module.Bind((*SayHello)(nil)).ToSingleton(&SayHelloOne{"Salutations"})
+module.Bind((*SayHello)(nil)).ToSingletonConstructor(newSayHello)
+module.Bind((*SayHello)(nil)).ToConstructor(newSayHello)
+```
+
+Constructor functions may specify parameters, which are injected automatically
+when the function is called on construction of the bound object.
+
+The simplest way of binding an interface to a constructor function is to use
+the `BindConstructor` or `BindSingletonConstructor` methods. They automatically
+determine the interface type that is bound to the constructor from the 
+constructor's return value. The following examples are equivalent to the more 
+verbose ones above:
+
+```go
+module.BindSingletonConstructor(newSayHello)
+module.BindConstructor(newSayHello)
 ```
 
 A struct, struct pointer, or primitive must have a direct binding to a singleton

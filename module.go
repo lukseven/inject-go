@@ -15,6 +15,33 @@ func newModule() *module {
 	return &module{make(map[bindingKey]binding), make([]error, 0)}
 }
 
+func (m *module) BindConstructor(fns ...interface{}) {
+	m.bindAuto(false, fns)
+}
+
+func (m *module) BindSingletonConstructor(fns ...interface{}) {
+	m.bindAuto(true, fns)
+}
+
+func (m *module) bindAuto(singleton bool, fns []interface{}) {
+	for _, f := range fns {
+		t := reflect.TypeOf(f)
+		if err := verifyConstructorReflectType(nil, t); err != nil {
+			m.addBindingError(err)
+			return
+		}
+		out := t.Out(0)
+		if out.Kind() == reflect.Interface {
+			out = reflect.PtrTo(out)
+		}
+		if singleton {
+			m.Bind(out).ToSingletonConstructor(f)
+		} else {
+			m.Bind(out).ToConstructor(f)
+		}
+	}
+}
+
 func (m *module) Bind(froms ...interface{}) Builder {
 	if !m.verifySupportedTypes(froms, isSupportedBindReflectType) {
 		return newNoOpBuilder()
@@ -131,7 +158,10 @@ func (m *module) bind(newBindingKeyFunc func(reflect.Type) bindingKey, from []in
 	}
 	bindingKeys := make([]bindingKey, lenFrom)
 	for i := 0; i < lenFrom; i++ {
-		fromReflectType := reflect.TypeOf(from[i])
+		fromReflectType, ok := from[i].(reflect.Type)
+		if !ok {
+			fromReflectType = reflect.TypeOf(from[i])
+		}
 		if fromReflectType == nil {
 			m.addBindingError(errNil)
 			return newNoOpBuilder()
@@ -197,7 +227,11 @@ func (m *module) verifySupportedTypes(froms []interface{}, isSupportedFunc func(
 	ok := true
 	for _, from := range froms {
 		// adds an error, so want to loop all the way through
-		if !m.verifySupportedType(reflect.TypeOf(from), isSupportedFunc) {
+		fromReflectType, ok := from.(reflect.Type)
+		if !ok {
+			fromReflectType = reflect.TypeOf(from)
+		}
+		if !m.verifySupportedType(fromReflectType, isSupportedFunc) {
 			ok = false
 		}
 	}

@@ -108,8 +108,10 @@ func verifyConstructorReturnValues(bindingKeyReflectType reflect.Type, construct
 	if constructorReflectType.NumOut() != 2 {
 		return errConstructorReturnValuesInvalid.withTag("constructorReflectType", constructorReflectType)
 	}
-	if err := verifyBindingReflectType(bindingKeyReflectType, constructorReflectType.Out(0)); err != nil {
-		return err
+	if bindingKeyReflectType != nil {
+		if err := verifyBindingReflectType(bindingKeyReflectType, constructorReflectType.Out(0)); err != nil {
+			return err
+		}
 	}
 	if !constructorReflectType.Out(1).AssignableTo(errorReflectType) {
 		return errConstructorReturnValuesInvalid.withTag("constructorReflectType", constructorReflectType)
