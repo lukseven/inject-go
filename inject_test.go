@@ -1088,3 +1088,29 @@ func doBindConstructor(t *testing.T, constructor interface{}, singleton bool) {
 	require.Exactly(t, object, res[0])
 	require.Equal(t, singleton, secondInterface.Foo() == secondInterfaceFromCall.Foo())
 }
+
+func TestGetInjector(t *testing.T) {
+	module := NewModule()
+	injector, err := NewInjector(module)
+	require.NoError(t, err)
+	object, err := injector.Get((*Injector)(nil))
+	require.NoError(t, err)
+	i := object.(Injector)
+	require.Exactly(t, injector, i)
+}
+
+func callWithInjector(injector Injector) Injector {
+	return injector
+}
+
+func TestInjectInjector(t *testing.T) {
+	module := NewModule()
+	injector, err := NewInjector(module)
+	require.NoError(t, err)
+
+	res, err := injector.Call(callWithInjector)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(res))
+	i := res[0].(Injector)
+	require.Exactly(t, injector, i)
+}

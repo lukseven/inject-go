@@ -13,6 +13,7 @@ type injector struct {
 
 func newInjector(modules []Module) (Injector, error) {
 	injector := &injector{make(map[bindingKey]resolvedBinding)}
+	modules = append(modules, createInjectorModule(injector))
 	for _, m := range modules {
 		castModule, ok := m.(*module)
 		if !ok {
@@ -26,6 +27,11 @@ func newInjector(modules []Module) (Injector, error) {
 		return nil, err
 	}
 	return injector, nil
+}
+func createInjectorModule(injector *injector) Module {
+	m := NewModule()
+	m.Bind((*Injector)(nil)).ToSingleton(injector)
+	return m
 }
 
 func installModuleToInjector(injector *injector, module *module) error {
