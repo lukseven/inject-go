@@ -192,12 +192,11 @@ func (t *taggedSingletonConstructorBinding) resolvedBinding(module *module, inje
 
 func callConstructor(constructor interface{}, reflectValues []reflect.Value) (interface{}, error) {
 	returnValues := reflect.ValueOf(constructor).Call(reflectValues)
-	return1 := returnValues[0].Interface()
-	return2 := returnValues[1].Interface()
-	switch {
-	case return2 != nil:
-		return nil, return2.(error)
-	default:
-		return return1, nil
+	if len(returnValues) == 2 {
+		ret := returnValues[1].Interface()
+		if ret != nil {
+			return nil, ret.(error)
+		}
 	}
+	return returnValues[0].Interface(), nil
 }

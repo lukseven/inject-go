@@ -179,12 +179,20 @@ See the Injector interface for other methods.
 ### Constructor
 
 A constructor is a function that takes injected values as parameters, and
-returns a value and an error.
+returns a value and optionally an error.
 
 ```go
 type SayHelloToSomeone interface {
 	Greetings() string
 }
+
+func newSayHelloToSomeone(sayHello SayHello) SayHelloToSomeone {
+  return &SayHelloToSomeoneOne{sayHello, "Alice"}
+}
+
+// Alternative with error:
+// func newSayHelloToSomeone(sayHello SayHello) (SayHelloToSomeone, error) { ... }
+
 
 type SayHelloToSomeoneOne struct {
 	sayHello SayHello
@@ -215,10 +223,6 @@ func doStuff() error {
   }
   fmt.Println(sayHelloToSomeoneObj.(SayHelloToSomeone).Greetings()) // will print "Saluatations, Alice!"
   return nil
-}
-
-func newSayHelloToSomeone(sayHello SayHello) (SayHelloToSomeone, error) {
-  return &SayHelloToSomeoneOne{sayHello, "Alice"}, nil
 }
 ```
 

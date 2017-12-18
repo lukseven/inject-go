@@ -27,8 +27,8 @@ func (s SimpleStruct) Foo() string {
 	return s.foo
 }
 
-func createSimpleInterface() (SimpleInterface, error) {
-	return &SimpleStruct{foo: "default"}, nil
+func createSimpleInterface() SimpleInterface {
+	return &SimpleStruct{foo: "default"}
 }
 
 type SimplePtrStruct struct {
