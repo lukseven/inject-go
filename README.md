@@ -14,9 +14,9 @@ https://github.com/google/guice/wiki/Motivation
 This project is in no way affiliated with the Guice project, but I recommend reading
 their docs to better understand the concepts.
 
-### Concepts
+## Concepts
 
-##### Module
+### Module
 
 ```go
 type Module interface {
@@ -118,7 +118,7 @@ or constructor.
 
 All errors from binding will be returned as one error when calling inject.NewInjector(...).
 
-##### Injector
+### Injector
 
 ```go
 type Injector interface {
@@ -176,7 +176,7 @@ func printHello(aboveModule inject.Module) error {
 
 See the Injector interface for other methods.
 
-##### Constructor
+### Constructor
 
 A constructor is a function that takes injected values as parameters, and
 returns a value and an error.
@@ -283,7 +283,7 @@ func getStuff(sayHello SayHello) (string, int) {
 
 See the methods on Module and Constructor for more details.
 
-##### Tags
+### Tags
 
 A tag allows named multiple bindings of one type. As an example, let's consider
 if we want to have multiple ways to say hello.
@@ -430,16 +430,25 @@ func newPopulateTwo(str struct {
 The CallTagged function works similarly to Call, except can take parameters like
 a tagged constructor.
 
+## Diagnostics
+
 Both Module and Injector implement fmt.Stringer for inspection, however this may
 be added to in the future to allow semantic inspection of bindings.
+
+## Unit Testing
 
 For testing, production modules may be overridden with test bindings as follows:
 
 ```go
-module := createProductionModule()
+func createProductionModule() Module {
+    ...
+    m.Bind((*ExternalService)(nil)).ToSingleton(NewProductionService())
+    ...
+}
 
+module := createProductionModule()
 override := NewModule()
-override.Bind((*ExternalService)(nil)).ToSingleton(createMockExternalService())
+override.Bind((*ExternalService)(nil)).ToSingleton(createMockService())
 
 injector, err := NewInjector(Override(module).With(override))
 ```
