@@ -105,6 +105,7 @@ func verifyTaggedConstructorReflectType(bindingKeyReflectType reflect.Type, cons
 }
 
 func verifyConstructorReturnValues(bindingKeyReflectType reflect.Type, constructorReflectType reflect.Type) error {
+	numOut := constructorReflectType.NumOut()
 	if numOut < 1 || numOut > 2 {
 		return errConstructorReturnValuesInvalid.withTag("constructorReflectType", constructorReflectType)
 	}
