@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"time"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -854,6 +856,31 @@ func TestBindTaggedConstantPopulate(t *testing.T) {
 	err = injector.Populate(&populateStructOneTagWithIntErr)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), injectErrorTypeNotSupportedYet)
+}
+
+func newSimpleStructFromTaggedStringAnonymousStruct(p struct {
+	Time time.Time
+	Val  string `inject:"tag_one"`
+}) *SimpleStruct {
+	return &SimpleStruct{foo: fmt.Sprintf("%s-%s", p.Val, p.Time)}
+}
+
+func TestInjectTaggedStringInConstructorWithAnonymousStruct(t *testing.T) {
+	module := NewModule()
+	now := time.Now()
+	module.Bind(time.Time{}).ToSingleton(now)
+	module.BindTaggedString("tag_one").ToSingleton("Value of tag_one")
+	module.Bind((*SimpleStruct)(nil)).ToTaggedSingletonConstructor(newSimpleStructFromTaggedStringAnonymousStruct)
+	injector, err := NewInjector(module)
+	require.NoError(t, err)
+
+	v, err := injector.GetTaggedString("tag_one")
+	require.NoError(t, err)
+	require.Equal(t, v, "Value of tag_one")
+
+	s, err := injector.Get((*SimpleStruct)(nil))
+	require.NoError(t, err)
+	require.Equal(t, fmt.Sprintf("%s-%s", "Value of tag_one", now), s.(*SimpleStruct).foo)
 }
 
 func TestOverride(t *testing.T) {
