@@ -1130,6 +1130,14 @@ func callAndIncrement(s SimpleInterface) {
 	callAndIncrementSimple = s
 }
 
+type moduleType int
+
+const (
+	regular moduleType = iota
+	installed
+	overridden
+)
+
 func TestEagerSingletons(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -1163,24 +1171,30 @@ func TestEagerSingletons(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			doEagerSingletons(t, tt.modCreator, tt.eagerly, false)
+			doEagerSingletons(t, tt.modCreator, tt.eagerly, regular)
 		})
-		t.Run(tt.name+"_nested_modules", func(t *testing.T) {
-			doEagerSingletons(t, tt.modCreator, tt.eagerly, true)
+		t.Run(tt.name+"_installed_module", func(t *testing.T) {
+			doEagerSingletons(t, tt.modCreator, tt.eagerly, installed)
+		})
+		t.Run(tt.name+"_overriden_module", func(t *testing.T) {
+			doEagerSingletons(t, tt.modCreator, tt.eagerly, overridden)
 		})
 	}
 }
 
-func doEagerSingletons(t *testing.T, creator func() Module, eagerly bool, nestedModule bool) {
+func doEagerSingletons(t *testing.T, creator func() Module, eagerly bool, modType moduleType) {
 	simpleInterfaceCreateCount = 0
 	callAndIncrementCount = 0
 	var module Module
 
-	if nestedModule {
+	switch modType {
+	case regular:
+		module = creator()
+	case installed:
 		module = NewModule()
 		module.Install(creator())
-	} else {
-		module = creator()
+	case overridden:
+		module = Override(creator()).With(NewModule())
 	}
 	_, err := NewInjector(module)
 	require.NoError(t, err)

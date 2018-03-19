@@ -30,6 +30,8 @@ func addBindings(target *module, source *module) {
 	// also add any binding errors from the source modules, because
 	// error checking is only done at creation of the injector
 	target.bindingErrors = append(target.bindingErrors, source.bindingErrors...)
+	// plus the eager singletons
+	target.eager = append(target.eager, source.eager...)
 }
 
 // Override returns a builder that allows replacing bindings of the given
