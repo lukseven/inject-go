@@ -9,37 +9,37 @@ import (
 type module struct {
 	bindings      map[bindingKey]binding
 	bindingErrors []error
+	eager         []*singletonBuilder
 }
 
 func newModule() *module {
-	return &module{make(map[bindingKey]binding), make([]error, 0)}
+	return &module{bindings: make(map[bindingKey]binding), bindingErrors: make([]error, 0)}
 }
 
-func (m *module) BindConstructor(fns ...interface{}) {
-	m.bindAuto(false, fns)
+func (m *module) BindConstructor(fn interface{}) {
+	m.bindAuto(false, fn)
 }
 
-func (m *module) BindSingletonConstructor(fns ...interface{}) {
-	m.bindAuto(true, fns)
+func (m *module) BindSingletonConstructor(fn interface{}) SingletonBuilder {
+	return m.bindAuto(true, fn)
 }
 
-func (m *module) bindAuto(singleton bool, fns []interface{}) {
-	for _, f := range fns {
-		t := reflect.TypeOf(f)
-		if err := verifyConstructorReflectType(nil, t); err != nil {
-			m.addBindingError(err)
-			return
-		}
-		out := t.Out(0)
-		if out.Kind() == reflect.Interface {
-			out = reflect.PtrTo(out)
-		}
-		if singleton {
-			m.Bind(out).ToSingletonConstructor(f)
-		} else {
-			m.Bind(out).ToConstructor(f)
-		}
+func (m *module) bindAuto(singleton bool, fn interface{}) SingletonBuilder {
+	t := reflect.TypeOf(fn)
+	if err := verifyConstructorReflectType(nil, t); err != nil {
+		m.addBindingError(err)
+		return nil
 	}
+	out := t.Out(0)
+	if out.Kind() == reflect.Interface {
+		out = reflect.PtrTo(out)
+	}
+	if singleton {
+		m.Bind(out).ToSingletonConstructor(fn)
+		return newSingletonBuilder(m, out)
+	}
+	m.Bind(out).ToConstructor(fn)
+	return nil
 }
 
 func (m *module) Bind(froms ...interface{}) Builder {

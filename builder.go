@@ -20,11 +20,15 @@ func (n *noOpBuilder) ToSingleton(singleton interface{}) {}
 
 func (n *noOpBuilder) ToConstructor(constructor interface{}) {}
 
-func (n *noOpBuilder) ToSingletonConstructor(construtor interface{}) {}
+func (n *noOpBuilder) ToSingletonConstructor(construtor interface{}) SingletonBuilder {
+	return nil
+}
 
 func (n *noOpBuilder) ToTaggedConstructor(constructor interface{}) {}
 
-func (n *noOpBuilder) ToTaggedSingletonConstructor(constructor interface{}) {}
+func (n *noOpBuilder) ToTaggedSingletonConstructor(constructor interface{}) SingletonBuilder {
+	return nil
+}
 
 type baseBuilder struct {
 	module      *module
@@ -47,16 +51,18 @@ func (b *baseBuilder) ToConstructor(constructor interface{}) {
 	b.to(constructor, verifyConstructorReflectType, newConstructorBinding)
 }
 
-func (b *baseBuilder) ToSingletonConstructor(constructor interface{}) {
+func (b *baseBuilder) ToSingletonConstructor(constructor interface{}) SingletonBuilder {
 	b.to(constructor, verifyConstructorReflectType, newSingletonConstructorBinding)
+	return newSingletonBuilder(b.module, b.bindingKeys[0].reflectType())
 }
 
 func (b *baseBuilder) ToTaggedConstructor(constructor interface{}) {
 	b.to(constructor, verifyTaggedConstructorReflectType, newTaggedConstructorBinding)
 }
 
-func (b *baseBuilder) ToTaggedSingletonConstructor(constructor interface{}) {
+func (b *baseBuilder) ToTaggedSingletonConstructor(constructor interface{}) SingletonBuilder {
 	b.to(constructor, verifyTaggedConstructorReflectType, newTaggedSingletonConstructorBinding)
+	return newSingletonBuilder(b.module, b.bindingKeys[0].reflectType())
 }
 
 func (b *baseBuilder) to(object interface{}, verifyFunc func(reflect.Type, reflect.Type) error, newBindingFunc func(interface{}) binding) {
@@ -75,6 +81,31 @@ func (b *baseBuilder) to(object interface{}, verifyFunc func(reflect.Type, refle
 
 func (b *baseBuilder) setBinding(bindingKey bindingKey, binding binding) {
 	b.module.setBinding(bindingKey, binding)
+}
+
+type singletonBuilder struct {
+	module *module
+	t      reflect.Type
+	fn     interface{}
+}
+
+func (b *singletonBuilder) Eagerly() {
+	if b == nil {
+		return
+	}
+	b.module.eager = append(b.module.eager, b)
+}
+
+func (b *singletonBuilder) EagerlyAndCall(function interface{}) {
+	if b == nil {
+		return
+	}
+	b.fn = function
+	b.module.eager = append(b.module.eager, b)
+}
+
+func newSingletonBuilder(module *module, t reflect.Type) SingletonBuilder {
+	return &singletonBuilder{module: module, t: t}
 }
 
 func verifyBindingReflectType(bindingKeyReflectType reflect.Type, bindingReflectType reflect.Type) error {

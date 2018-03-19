@@ -14,6 +14,7 @@ type injector struct {
 func newInjector(modules []Module) (Injector, error) {
 	injector := &injector{make(map[bindingKey]resolvedBinding)}
 	modules = append(modules, createInjectorModule(injector))
+	var eager []*singletonBuilder
 	for _, m := range modules {
 		castModule, ok := m.(*module)
 		if !ok {
@@ -22,9 +23,20 @@ func newInjector(modules []Module) (Injector, error) {
 		if err := installModuleToInjector(injector, castModule); err != nil {
 			return nil, err
 		}
+		eager = append(eager, castModule.eager...)
 	}
 	if err := validate(injector); err != nil {
 		return nil, err
+	}
+	for _, e := range eager {
+		// create the singleton
+		injector.get(newBindingKey(e.t))
+		if e.fn != nil {
+			_, err := injector.Call(e.fn)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 	return injector, nil
 }

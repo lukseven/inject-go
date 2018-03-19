@@ -21,8 +21,8 @@ their docs to better understand the concepts.
 ```go
 type Module interface {
 	fmt.Stringer
-	BindConstructor(fns ...interface{})
-	BindSingletonConstructor(fns ...interface{})
+	BindConstructor(fn interface{})
+	BindSingletonConstructor(fn interface{})
 	Bind(from ...interface{}) Builder
 	BindTagged(tag string, from ...interface{}) Builder
 	BindInterface(fromInterface ...interface{}) InterfaceBuilder
@@ -49,14 +49,28 @@ type Module interface {
 type Builder interface {
 	ToSingleton(singleton interface{})
 	ToConstructor(constructor interface{})
-	ToSingletonConstructor(constructor interface{})
+	ToSingletonConstructor(constructor interface{}) SingletonBuilder
 	ToTaggedConstructor(constructor interface{})
-	ToTaggedSingletonConstructor(constructor interface{})
+	ToTaggedSingletonConstructor(constructor interface{}) SingletonBuilder
 }
 
 type InterfaceBuilder interface {
 	Builder
 	To(to interface{})
+}
+
+// SingletonBuilder is returned when binding a singleton constructor.
+type SingletonBuilder interface {
+	// Eagerly creates the singleton (by calling its constructor) right after
+	// creation of the injector.
+	Eagerly()
+
+	// EagerlyAndCall creates the singleton eagerly as with Eagerly() above,
+	// and in addition also calls the given function. That function could, for
+	// example, set a global variable (a "traditional singleton") with the
+	// created singleton instance. This can be useful when integrating
+	// 3rd-party libraries that rely on such singletons. Use with caution!
+	EagerlyAndCall(function interface{})
 }
 
 func NewModule() Module { return newModule() }
@@ -261,7 +275,31 @@ func newSayHelloToSomeone(sayHello SayHello) (SayHelloToSomeone, error) {
 }
 ```
 
-Functions be called from an injector using the Call function. These functions
+### Eager Singletons
+
+A singleton bound through a constructor function can be marked as _eager_, in which case it will be constructed automatically by the injector during the injector creation process. 
+
+```go
+module.BindSingletonConstructor(c).Eagerly()
+```
+
+The advantage is that every time the singleton is injected it is already available, whereas a normal (_lazy_) singleton has to be created before injecting it the first time. Eager singletons also reveal initialization problems sooner - at the time of injector creation rather than the first time the singleton is used.
+
+In addition, an eager singleton can be combined with an additional arbitrary function call, that will also be performed by the injector on construction. This can be used, for example, to initialize a "traditional" singleton implemented with a global variable:
+
+```go
+func newAcmeLib() acme.Lib { ... }
+
+func NewModule() {
+    module = inject.NewModule()
+    module.BindSingletonConstructor(newAcmeLib).EagerlyAndCall(acme.SetInstance)
+    return module
+}
+```
+
+### Calling Arbitrary Functions
+
+Arbitrary functions can be called from an injector using the Call function. These functions
 have the same parameter requirements as constructors, but can have any return
 types.
 

@@ -1,5 +1,4 @@
-/*
-Package inject is guice-inspired dependency injection for Go.
+/* Package inject is guice-inspired dependency injection for Go.
 
 https://github.com/google/guice/wiki/Motivation
 
@@ -7,10 +6,7 @@ This project is in no way affiliated with the Guice project, but I recommend rea
 docs to better understand the concepts.
 
 
-Concepts
-
-
-	Module
+Module
 
 A Module is analogous to Guice's AbstractModule, used for setting up your dependencies.
 This allows you to bind structs, struct pointers, interfaces, and primitives to
@@ -42,7 +38,8 @@ A struct, struct pointer, or primitive must have a direct binding to a singleton
 
 All errors from binding will be returned as one error when calling inject.NewInjector(...).
 
-	Injector
+
+Injector
 
 An Injector is analogous to Guice's Injector, providing your dependencies.
 
@@ -68,7 +65,7 @@ We are able to get a value for SayHello.
 See the Injector interface for other methods.
 
 
-	Constructor
+Constructor
 
 A constructor is a function that takes injected values as parameters, and returns a value and an error.
 
@@ -153,6 +150,28 @@ verbose ones above:
 	module.BindSingletonConstructor(newSayHello)
 	module.BindConstructor(newSayHello)
 
+
+Eager Singletons
+
+A singleton bound through a constructor function can be marked as _eager_, in which case it will be constructed automatically by the injector during the injector creation process.
+
+	module.BindSingletonConstructor(c).Eagerly()
+
+The advantage is that every time the singleton is injected it is already available, whereas a normal (_lazy_) singleton has to be created before injecting it the first time. Eager singletons also reveal initialization problems sooner - at the time of injector creation rather than the first time the singleton is used.
+
+In addition, an eager singleton can be combined with an additional arbitrary function call, that will also be performed by the injector on construction. This can be used, for example, to initialize a "traditional" singleton implemented with a global variable:
+
+	func newAcmeLib() acme.Lib { ... }
+
+	func NewModule() {
+		module = inject.NewModule()
+		module.BindSingletonConstructor(newAcmeLib).EagerlyAndCall(acme.SetInstance)
+		return module
+	}
+
+
+Calling Arbitrary Functions
+
 Functions can be called from an injector using the Call function. These functions have the same parameter
 requirements as constructors, but can have any return types.
 
@@ -177,7 +196,7 @@ requirements as constructors, but can have any return types.
 See the methods on Module and Constructor for more details.
 
 
-	Tags
+Tags
 
 A tag allows named multiple bindings of one type. As an example, let's consider if we want to
 have multiple ways to say hello.
@@ -316,8 +335,13 @@ A constructor can mix tagged values with untagged values in the input struct.
 The CallTagged function works similarly to Call, except can take parameters like a tagged constructor.
 
 
+Diagnostics
+
 Both Module and Injector implement fmt.Stringer for inspection, however this may be added to in the future
 to allow semantic inspection of bindings.
+
+
+Unit Testing
 
 For testing, production modules may be overridden with test bindings as follows:
 
@@ -341,8 +365,8 @@ import (
 // to make sure multiple goroutines are not calling a single module.
 type Module interface {
 	fmt.Stringer
-	BindConstructor(fns ...interface{})
-	BindSingletonConstructor(fns ...interface{})
+	BindConstructor(fn interface{})
+	BindSingletonConstructor(fn interface{}) SingletonBuilder
 	Bind(from ...interface{}) Builder
 	BindTagged(tag string, from ...interface{}) Builder
 	BindInterface(fromInterface ...interface{}) InterfaceBuilder
@@ -373,15 +397,29 @@ func NewModule() Module { return newModule() }
 type Builder interface {
 	ToSingleton(singleton interface{})
 	ToConstructor(constructor interface{})
-	ToSingletonConstructor(constructor interface{})
+	ToSingletonConstructor(constructor interface{}) SingletonBuilder
 	ToTaggedConstructor(constructor interface{})
-	ToTaggedSingletonConstructor(constructor interface{})
+	ToTaggedSingletonConstructor(constructor interface{}) SingletonBuilder
 }
 
 // InterfaceBuilder is the return value when binding an interface from a Module.
 type InterfaceBuilder interface {
 	Builder
 	To(to interface{})
+}
+
+// SingletonBuilder is returned when binding a singleton constructor.
+type SingletonBuilder interface {
+	// Eagerly creates the singleton (by calling its constructor) right after
+	// creation of the injector.
+	Eagerly()
+
+	// EagerlyAndCall creates the singleton eagerly as with Eagerly() above,
+	// and in addition also calls the given function. That function could, for
+	// example, set a global variable (a "traditional singleton") with the
+	// created singleton instance. This can be useful when integrating
+	// 3rd-party libraries that rely on such singletons. Use with caution!
+	EagerlyAndCall(function interface{})
 }
 
 // Injector provides your dependencies.

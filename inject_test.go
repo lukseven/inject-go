@@ -1114,3 +1114,70 @@ func TestInjectInjector(t *testing.T) {
 	i := res[0].(Injector)
 	require.Exactly(t, injector, i)
 }
+
+var simpleInterfaceCreateCount = 0
+
+func createSimpleInterfaceAndCount() SimpleInterface {
+	simpleInterfaceCreateCount++
+	return &SimpleStruct{foo: "default"}
+}
+
+var callAndIncrementCount = 0
+var callAndIncrementSimple SimpleInterface
+
+func callAndIncrement(s SimpleInterface) {
+	callAndIncrementCount++
+	callAndIncrementSimple = s
+}
+
+func TestEagerSingletons(t *testing.T) {
+	tests := []struct {
+		name       string
+		modCreator func() Module
+		eagerly    bool
+	}{
+		{"BindSingletonConstructor.Eagerly", func() Module {
+			module := NewModule()
+			singletonBuilder := module.BindSingletonConstructor(createSimpleInterfaceAndCount)
+			singletonBuilder.Eagerly()
+			return module
+		}, true},
+		{"BindSingletonConstructor.EagerlyAndCall", func() Module {
+			module := NewModule()
+			singletonBuilder := module.BindSingletonConstructor(createSimpleInterfaceAndCount)
+			singletonBuilder.EagerlyAndCall(callAndIncrement)
+			return module
+		}, false},
+		{"Bind.ToSingletonConstructor.Eagerly", func() Module {
+			module := NewModule()
+			singletonBuilder := module.Bind((*SimpleInterface)(nil)).ToSingletonConstructor(createSimpleInterfaceAndCount)
+			singletonBuilder.Eagerly()
+			return module
+		}, true},
+		{"Bind.ToSingletonConstructor.EagerlyAndCall", func() Module {
+			module := NewModule()
+			singletonBuilder := module.Bind((*SimpleInterface)(nil)).ToSingletonConstructor(createSimpleInterfaceAndCount)
+			singletonBuilder.EagerlyAndCall(callAndIncrement)
+			return module
+		}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			doEagerSingletons(t, tt.modCreator, tt.eagerly)
+		})
+	}
+}
+
+func doEagerSingletons(t *testing.T, creator func() Module, eagerly bool) {
+	simpleInterfaceCreateCount = 0
+	callAndIncrementCount = 0
+	_, err := NewInjector(creator())
+	require.NoError(t, err)
+
+	require.Equal(t, 1, simpleInterfaceCreateCount)
+	if eagerly {
+		require.Equal(t, 0, callAndIncrementCount)
+	} else {
+		require.Equal(t, 1, callAndIncrementCount)
+	}
+}
