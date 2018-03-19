@@ -1163,15 +1163,26 @@ func TestEagerSingletons(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			doEagerSingletons(t, tt.modCreator, tt.eagerly)
+			doEagerSingletons(t, tt.modCreator, tt.eagerly, false)
+		})
+		t.Run(tt.name+"_nested_modules", func(t *testing.T) {
+			doEagerSingletons(t, tt.modCreator, tt.eagerly, true)
 		})
 	}
 }
 
-func doEagerSingletons(t *testing.T, creator func() Module, eagerly bool) {
+func doEagerSingletons(t *testing.T, creator func() Module, eagerly bool, nestedModule bool) {
 	simpleInterfaceCreateCount = 0
 	callAndIncrementCount = 0
-	_, err := NewInjector(creator())
+	var module Module
+
+	if nestedModule {
+		module = NewModule()
+		module.Install(creator())
+	} else {
+		module = creator()
+	}
+	_, err := NewInjector(module)
 	require.NoError(t, err)
 
 	require.Equal(t, 1, simpleInterfaceCreateCount)

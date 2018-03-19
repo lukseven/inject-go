@@ -182,6 +182,7 @@ func (m *module) Install(others ...Module) {
 }
 func (m *module) install(o *module) {
 	m.bindingErrors = append(m.bindingErrors, o.bindingErrors...)
+	m.eager = append(m.eager, o.eager...)
 	for key, value := range o.bindings {
 		m.setBinding(key, value)
 	}
