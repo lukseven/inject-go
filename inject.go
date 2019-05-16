@@ -1,4 +1,5 @@
-/* Package inject is guice-inspired dependency injection for Go.
+/*
+Package inject is guice-inspired dependency injection for Go.
 
 https://github.com/google/guice/wiki/Motivation
 
@@ -335,6 +336,20 @@ A constructor can mix tagged values with untagged values in the input struct.
 The CallTagged function works similarly to Call, except can take parameters like a tagged constructor.
 
 
+Child Injectors
+
+A child injector is built from an existing injector (it's parent). It inherits all bindings and singletons of its parent
+injector and can add its own additional bindings. However, it is not allowed to redefine bindings that already exist in
+the parent injector.
+
+Child injectors allow building injector hierarchies that resolve the problem where a given interface has multiple
+implementations and dependent components require one or the other implementation depending on some runtime condition
+that is not available at creation time of the (parent) injector.
+
+See this discussion on hierarchical injectors for further information and possible alternatives using factories:
+https://publicobject.com/2008/06/whats-hierarchical-injector.html
+
+
 Diagnostics
 
 Both Module and Injector implement fmt.Stringer for inspection, however this may be added to in the future
@@ -446,6 +461,13 @@ type Injector interface {
 	Call(function interface{}) ([]interface{}, error)
 	CallTagged(taggedFunction interface{}) ([]interface{}, error)
 	Populate(populateStruct interface{}) error
+
+	// NewChildInjector creates a child injector for the specified modules. The
+	// bindings of this injector (the parent) will be available in the child
+	// injector in addition to the bindings defined in any child modules. An
+	// attempt to redefine bindings of the parent injector in child modules will
+	// result in an error.
+	NewChildInjector(modules ...Module) (Injector, error)
 }
 
 // NewInjector creates a new Injector for the specified Modules.

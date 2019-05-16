@@ -7,12 +7,21 @@ import (
 	"strings"
 )
 
+var injectorReflectType = reflect.TypeOf((*Injector)(nil))
+
 type injector struct {
+	// the parent injector for child injectors or nil otherwise
+	parent *injector
+	// resolved bindings
 	bindings map[bindingKey]resolvedBinding
 }
 
 func newInjector(modules []Module) (Injector, error) {
-	injector := &injector{make(map[bindingKey]resolvedBinding)}
+	injector := &injector{nil, make(map[bindingKey]resolvedBinding)}
+	return initInjector(injector, modules)
+}
+
+func initInjector(injector *injector, modules []Module) (Injector, error) {
 	modules = append(modules, createInjectorModule(injector))
 	var eager []*singletonBuilder
 	for _, m := range modules {
@@ -30,7 +39,10 @@ func newInjector(modules []Module) (Injector, error) {
 	}
 	for _, e := range eager {
 		// create the singleton
-		injector.get(newBindingKey(e.t))
+		_, err := injector.get(newBindingKey(e.t))
+		if err != nil {
+			return nil, err
+		}
 		if e.fn != nil {
 			_, err := injector.Call(e.fn)
 			if err != nil {
@@ -40,6 +52,7 @@ func newInjector(modules []Module) (Injector, error) {
 	}
 	return injector, nil
 }
+
 func createInjectorModule(injector *injector) Module {
 	m := NewModule()
 	m.Bind((*Injector)(nil)).ToSingleton(injector)
@@ -58,6 +71,12 @@ func installModuleToInjector(injector *injector, module *module) error {
 	for bindingKey, binding := range module.bindings {
 		if foundBinding, ok := injector.bindings[bindingKey]; ok {
 			return errAlreadyBound.withTag("bindingKey", bindingKey).withTag("foundBinding", foundBinding)
+		}
+		// check parent bindings, but allow replacing the binding of the injector
+		if injector.parent != nil && bindingKey.reflectType() != injectorReflectType {
+			if foundBinding, ok := injector.parent.bindings[bindingKey]; ok {
+				return errAlreadyBound.withTag("bindingKey", bindingKey).withTag("foundBinding", foundBinding).withTag("scope", "parent")
+			}
 		}
 		resolvedBinding, err := binding.resolvedBinding(module, injector)
 		if err != nil {
@@ -78,14 +97,24 @@ func validate(injector *injector) error {
 }
 
 func (i *injector) String() string {
-	return fmt.Sprintf("injector{%s}", strings.Join(i.keyValueStrings(), " "))
+	parent := ""
+	if i.parent != nil {
+		parent = ", parent " + i.parent.String()
+	}
+	return fmt.Sprintf("injector{%s}%s", strings.Join(i.keyValueStrings(), " "), parent)
 }
 
 func (i *injector) keyValueStrings() []string {
 	strings := make([]string, len(i.bindings))
 	ii := 0
 	for bindingKey, binding := range i.bindings {
-		strings[ii] = fmt.Sprintf("%s:%s", bindingKey.String(), binding.String())
+		var bindingString string
+		if bindingKey.reflectType() == injectorReflectType {
+			bindingString = fmt.Sprintf("this@%p", i)
+		} else {
+			bindingString = binding.String()
+		}
+		strings[ii] = fmt.Sprintf("%s:%s", bindingKey.String(), bindingString)
 		ii++
 	}
 	return strings
@@ -288,6 +317,15 @@ func (i *injector) Populate(populateStructPtr interface{}) error {
 	return nil
 }
 
+func (i *injector) NewChildInjector(modules ...Module) (Injector, error) {
+	injector := &injector{i, make(map[bindingKey]resolvedBinding)}
+	_, err := initInjector(injector, modules)
+	if err != nil {
+		return nil, err
+	}
+	return injector, nil
+}
+
 func (i *injector) get(bindingKey bindingKey) (interface{}, error) {
 	binding, err := i.getBinding(bindingKey)
 	if err != nil {
@@ -297,6 +335,14 @@ func (i *injector) get(bindingKey bindingKey) (interface{}, error) {
 }
 
 func (i *injector) getBinding(bindingKey bindingKey) (resolvedBinding, error) {
+	// get binding from parent, if any, but not the injector itself
+	if i.parent != nil && bindingKey.reflectType() != injectorReflectType {
+		binding, err := i.parent.getBinding(bindingKey)
+		if err == nil {
+			return binding, nil
+		}
+	}
+	// get local binding
 	binding, ok := i.bindings[bindingKey]
 	if !ok {
 		return nil, errNoBinding.withTag("bindingKey", bindingKey)

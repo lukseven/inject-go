@@ -23,6 +23,7 @@ func (o *override) With(overrides ...Module) Module {
 	}
 	return m
 }
+
 func addBindings(target *module, source *module) {
 	for k, v := range source.bindings {
 		target.bindings[k] = v
